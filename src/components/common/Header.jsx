@@ -27,8 +27,6 @@ export default function Header() {
     setCategoryColumns(grouped);
   }, []);
 
-  // dev 브랜치 PR 승인 테스트 추후 삭제
-
   return (
     <header className="w-full border-b border-[#ddd] relative">
       <div className="flex flex-col mx-auto pt-4">
