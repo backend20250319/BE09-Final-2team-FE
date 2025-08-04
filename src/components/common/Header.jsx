@@ -29,7 +29,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="w-full border-b border-[#ddd] relative">
+    <header className="w-full border-b border-[#ddd] fixed bg-white">
       <div className="flex flex-col mx-auto pt-4">
         {/* 첫 번째 줄: 로고, 검색창, 우측 메뉴 */}
         <div className="flex mx-auto gap-10">
@@ -71,21 +71,28 @@ export default function Header() {
                         {/* 호버 브리지 - 버튼과 메뉴 사이 공백을 채워줌 */}
                         <div className="absolute -top-[11px] left-0 w-full h-[10px] bg-transparent"></div>
                         <div className="overflow-y-auto max-h-[500px]">
-                          <div className="py-6 px-6">
+                          <div className="">
                             {/* 3열 그리드 구성 */}
-                            <div className="grid grid-cols-3 gap-8">
+                            <div className="grid grid-cols-3">
                               {/* 1열, 2열, 3열 순회 */}
                               {[1, 2, 3].map((colNum) => (
-                                <div key={colNum} className="space-y-6">
+                                <div key={colNum} className={`space-y-6 py-6 ${colNum % 2 === 1 ? "bg-gray-200" : ""}`}>
                                   {/* 해당 열에 포함된 그룹들을 렌더링 */}
                                   {(categoryColumns[colNum] || []).map((group, idx) => (
                                     <div key={idx}>
-                                      <h3 className="font-bold text-sm mb-4 text-gray-800">{group.title}</h3>
+                                      <Link href="#">
+                                        <h3 className="block text-body text-sm py-1.5 text-heading font-semibold px-5 xl:px-8 2xl:px-10 hover:text-heading hover:bg-gray-300">
+                                          {group.title}
+                                        </h3>
+                                      </Link>
                                       {group.items && group.items.length > 0 && (
-                                        <ul className="space-y-2">
+                                        <ul>
                                           {group.items.map((item, i) => (
                                             <li key={i}>
-                                              <Link href="#" className="text-gray-600 hover:text-gray-800 text-sm">
+                                              <Link
+                                                href="#"
+                                                className="text-[#5a5a5a] text-sm block py-1.5 px-5 xl:px-8 2xl:px-10 hover:text-black hover:bg-gray-300"
+                                              >
                                                 {item}
                                               </Link>
                                             </li>
