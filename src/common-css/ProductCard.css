@@ -1,0 +1,241 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.product-card {
+    background-color: #ffffff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-bottom: 7px;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-image-container {
+    position: relative;
+    background-color: #e3e3e3;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.product-image {
+    margin-top: 0;
+}
+
+/* 상품 상태 오버레이 (판매보류, 판매완료, 예약중 등) */
+.status-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.status-text {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+    text-align: center;
+}
+
+.wishlist-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 3;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.wishlist-button:hover {
+    transform: scale(1.1);
+}
+
+.wishlist-button svg {
+    width: 18px;
+    height: 16px;
+}
+
+.wishlist-button.wishlisted svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.product-info {
+    padding: 0 10px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.product-name {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #000000;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-price {
+    padding: 0 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+}
+
+.price {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.193359375em;
+    color: #000000;
+}
+
+.product-location {
+    padding: 0 10px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.location-time {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #999999;
+    margin-top: 3.5px;
+}
+
+.product-tags {
+    padding: 0 10px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.tag {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 1.193359375em;
+    padding: 2px 9px;
+    border-radius: 1.25px;
+    display: inline-block;
+}
+
+.product-tag {
+    background-color: #f4f6f7;
+    color: #85b3eb;
+}
+
+.review-section {
+    padding: 0 10px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.review-button {
+    background-color: #65a2ee;
+    border: none;
+    border-radius: 3px;
+    padding: 5.5px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+    width: 100%;
+    justify-content: center;
+}
+
+.review-button:hover:not(:disabled) {
+    background-color: #5a91d8;
+}
+
+.review-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.review-button span {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+}
+
+/* 판매보류 상태일 때 추가 스타일 */
+.product-card.statused .product-image {
+    filter: grayscale(30%);
+}
+
+.product-card.statused .status-overlay {
+    opacity: 1;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .product-card {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* 접근성 개선 */
+.wishlist-button:focus,
+.review-button:focus {
+    outline: 2px solid #65a2ee;
+    outline-offset: 2px;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-card {
+    animation: fadeIn 0.3s ease-out;
+}
