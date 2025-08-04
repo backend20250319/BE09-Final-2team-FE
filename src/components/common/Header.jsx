@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { mockCategoryData } from "./data/HeaderCategoryData";
 import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
+import ChatSidebar from "./Sidebar";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -68,7 +69,7 @@ export default function Header() {
                     {isCategoryOpen && (
                       <div className="absolute top-[55px] left-0 bg-white border border-[#ddd] shadow-lg z-50 rounded-md min-w-[720px] max-h-[500px]">
                         {/* 호버 브리지 - 버튼과 메뉴 사이 공백을 채워줌 */}
-                        <div className="absolute -top-[55px] left-0 w-full h-[60px] bg-transparent"></div>
+                        <div className="absolute -top-[11px] left-0 w-full h-[10px] bg-transparent"></div>
                         <div className="overflow-y-auto max-h-[500px]">
                           <div className="py-6 px-6">
                             {/* 3열 그리드 구성 */}
@@ -79,7 +80,7 @@ export default function Header() {
                                   {/* 해당 열에 포함된 그룹들을 렌더링 */}
                                   {(categoryColumns[colNum] || []).map((group, idx) => (
                                     <div key={idx}>
-                                      <h3 className="font-bold text-lg mb-4 text-gray-800">{group.title}</h3>
+                                      <h3 className="font-bold text-sm mb-4 text-gray-800">{group.title}</h3>
                                       {group.items && group.items.length > 0 && (
                                         <ul className="space-y-2">
                                           {group.items.map((item, i) => (
@@ -141,10 +142,14 @@ export default function Header() {
             <div className="pt-5">
               <ul className="flex w-full">
                 <li>
-                  <Link href={"#"} className="flex items-center gap-1">
-                    <MessageCircleMore color="#000000" />
-                    <span className="text-sm">채팅하기</span>
-                  </Link>
+                  <ChatSidebar
+                    trigger={
+                      <button className="flex items-center gap-1 cursor-pointer">
+                        <MessageCircleMore color="#000000" />
+                        <span className="text-sm">채팅하기</span>
+                      </button>
+                    }
+                  />
                 </li>
                 <li className="px-3">|</li>
                 <li>
