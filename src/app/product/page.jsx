@@ -1,6 +1,5 @@
 'use client';
-
-import ProductCard from '../../components/common/ProductCard';
+import ProductCard from '@/components/common/ProductCard';
 
 export default function Page() {
     // TODO: 실제로는 API로 값을 받아와야 함
