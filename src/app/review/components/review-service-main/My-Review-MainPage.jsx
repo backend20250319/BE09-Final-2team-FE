@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import './Myreviewmainpage.css';
 import Sidebar from '@/components/common/Sidebar';
 import { Button } from '@/components/ui/button';
+import 
 
 const mockReviews = [
     { id: 1, title: '아가 까까 팜', rating: 5, date: '2014년 02월 02일', image: 'https://i.namu.wiki/i/Hv0V4WWCm_FEi9CgeCx6B59r4WXsbx8rw42vpmwtge33R0d5qOrmU9Ys8ly7aEuCs7yKRz4QaQk53vL1ZoXO4w.webp' },
@@ -13,17 +14,6 @@ const mockReviews = [
 ];
 
 const MyReviewMainPage = () => {
-    const [open, setOpen] = useState(false);
-
-    const handleReviewClick = (reviewTitle) => {
-        alert(`'${reviewTitle}' 리뷰 상세 페이지로 이동합니다.`);
-    };
-
-    const handleReviewDetailLinkClick = (e, reviewTitle) => {
-        e.preventDefault();
-        e.stopPropagation();
-        alert(`'${reviewTitle}' 리뷰 상세 페이지로 이동합니다.`);
-    };
 
     return (
         <div className="page-container">
