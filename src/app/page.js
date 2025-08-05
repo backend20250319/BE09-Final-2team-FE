@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import ConfirmModal, { MODAL_TYPES } from "@/components/common/ConfirmModal";
-import Main from "./(main)/Main";
-import { useState } from "react";
+import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
+import Main from './(main)/Main';
+import { useState } from 'react';
 
 export default function Home() {
   return (

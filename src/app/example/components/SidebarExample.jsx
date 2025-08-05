@@ -65,6 +65,9 @@ export default function SidebarExample() {
 <Sidebar 
   title="제목" 
   trigger={<Button>열기</Button>}
+  titleClassName="text-center text-lg"
+  titleStyle={{ color: '#3b82f6' }}
+  titleProps={{ 'aria-label': '사이드바 제목' }}
 >
   {/* 사이드바 내용 */}
 </Sidebar>`}
@@ -79,6 +82,8 @@ export default function SidebarExample() {
                     { prop: "children", desc: "사이드바 내부 내용", required: true },
                     { prop: "width", desc: "사이드바 너비 (기본: max-w-[600px])", required: false },
                     { prop: "titleClassName", desc: "제목의 CSS 클래스", required: false },
+                    { prop: "titleStyle", desc: "제목의 인라인 스타일", required: false },
+                    { prop: "titleProps", desc: "제목에 전달할 추가 props", required: false },
                     { prop: "footer", desc: "하단 액션 버튼 영역", required: false },
                   ].map((item) => (
                     <div key={item.prop} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -99,7 +104,11 @@ export default function SidebarExample() {
 
             <div className="border-t pt-6">
               <h3 className="text-lg font-semibold mb-4">실제 예제</h3>
-              <Sidebar title="기본 사이드바" trigger={<Button variant="default">기본 사이드바 열기</Button>}>
+              <Sidebar
+                title="기본 사이드바"
+                titleClassName="text-center text-lg"
+                trigger={<Button variant="default">기본 사이드바 열기</Button>}
+              >
                 <div className="space-y-4">
                   <div className="bg-blue-50 p-4 rounded-lg">
                     <h4 className="font-semibold mb-2 text-blue-800">✨ 주요 특징</h4>
