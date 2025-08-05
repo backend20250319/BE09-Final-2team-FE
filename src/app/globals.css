@@ -124,6 +124,13 @@ body {
 }
 
 @layer base {
+  html,
+  body {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
   * {
     @apply border-border outline-ring/50;
   }
