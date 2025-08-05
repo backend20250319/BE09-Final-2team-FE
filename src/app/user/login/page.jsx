@@ -23,18 +23,17 @@ export default function Login() {
                     <button className="login-btn" type="submit">
                         로그인
                     </button>
+                    <div className="login-sns">
+                        <button className="sns-btn kakao">카카오 아이디로 로그인</button>
+                    </div>
                 </form>
                 <div className="login-links">
                     <a href="#" className="signup-link">계정이 없으신가요? 회원가입</a>
                     <div className="find-links">
                         <a href="#" className="find-link">아이디 찾기</a>
-                        <span className="divider">|</span>
+                        <span className="divider"> | </span>
                         <a href="#" className="find-link">비밀번호 찾기</a>
                     </div>
-                </div>
-                <div className="login-sns">
-                    <button className="sns-btn google">구글 아이디로 로그인</button>
-                    <button className="sns-btn kakao">카카오 아이디로 로그인</button>
                 </div>
             </div>
         </div>
