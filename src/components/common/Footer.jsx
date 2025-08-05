@@ -24,27 +24,27 @@ export default function Footer() {
           <ul className="flex">
             <li className="w-5 h-5 mr-5 last:mr-0 text-[#787e89]">
               <Link href="#">
-                <Image src={"/footer/naver.png"} width={20} height={20} alt="naver.png" />
+                <Image src={"/images/footer/naver.png"} width={20} height={20} alt="naver.png" />
               </Link>
             </li>
             <li className="w-5 h-5 mr-5 last:mr-0 text-[#787e89]">
               <Link href="#">
-                <Image src={"/footer/naver-cafe.png"} width={20} height={20} alt="naver-cafe.png" />
+                <Image src={"/images/footer/naver-cafe.png"} width={20} height={20} alt="naver-cafe.png" />
               </Link>
             </li>
             <li className="w-5 h-5 mr-5 last:mr-0 text-[#787e89]">
               <Link href="#">
-                <Image src={"/footer/youtube.png"} width={20} height={20} alt="youtube.png" />
+                <Image src={"/images/footer/youtube.png"} width={20} height={20} alt="youtube.png" />
               </Link>
             </li>
             <li className="w-5 h-5 mr-5 last:mr-0 text-[#787e89]">
               <Link href="#">
-                <Image src={"/footer/facebook.png"} width={20} height={20} alt="facebook.png" />
+                <Image src={"/images/footer/facebook.png"} width={20} height={20} alt="facebook.png" />
               </Link>
             </li>
             <li className="w-5 h-5 mr-5 last:mr-0 text-[#787e89]">
               <Link href="#">
-                <Image src={"/footer/instar.png"} width={20} height={20} alt="instar.png" />
+                <Image src={"/images/footer/instar.png"} width={20} height={20} alt="instar.png" />
               </Link>
             </li>
           </ul>
@@ -89,7 +89,7 @@ export default function Footer() {
           <div className="mt-5 lg:mt-0 flex justify-end">
             <div className="text-xs w-full [&amp;&gt;button]:lg:ml-auto">
               <Link href="/">
-                <Image src={"/footer/footer-logo.png"} alt="footer-logo.png" width={184} height={184} />
+                <Image src={"/images/footer/footer-logo.png"} alt="footer-logo.png" width={184} height={184} />
               </Link>
             </div>
           </div>
