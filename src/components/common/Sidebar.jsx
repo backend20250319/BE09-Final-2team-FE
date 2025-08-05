@@ -10,10 +10,11 @@ export default function Sidebar({
   children,
   width = "max-w-[600px]",
   titleClassName = "text-center",
-  titleStyle = {}, // 인라인 스타일을 위한 옵션
-  titleProps = {}, // 추가 props를 위한 옵션
+  titleStyle = {},
+  titleProps = {},
   footer,
-  onBack, // 뒤로가기 함수
+  onBack = false,
+  onClose = false,
 }) {
   const [open, setOpen] = useState(false);
 
@@ -25,30 +26,31 @@ export default function Sidebar({
         <SheetHeader className="mb-4 pt-4">
           <div className="flex items-center justify-between relative">
             {/* 뒤로가기 버튼 */}
-            <div className="flex items-center">
-              {onBack && (
-                <button
-                  onClick={() => {
-                    onBack();
-                    setOpen(false);
-                  }}
-                  className="p-1 hover:bg-gray-100 rounded-full transition-colors"
-                  aria-label="뒤로가기"
-                >
-                  <ChevronLeft />
-                </button>
-              )}
-            </div>
+            {onBack ? (
+              <button
+                onClick={() => setOpen(false)}
+                className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+                aria-label="뒤로가기"
+              >
+                <ChevronLeft />
+              </button>
+            ) : (
+              <div className="w-6 h-6" />
+            )}
 
             {/* 중앙 타이틀 */}
-            <SheetTitle className={`${titleClassName}`} style={titleStyle} {...titleProps}>
+            <SheetTitle className={titleClassName} style={titleStyle} {...titleProps}>
               {title}
             </SheetTitle>
 
             {/* 닫기 버튼 */}
-            <SheetClose className="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="닫기">
-              <X className="w-6 h-6" />
-            </SheetClose>
+            {onClose ? (
+              <SheetClose className="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="닫기">
+                <X className="w-6 h-6" />
+              </SheetClose>
+            ) : (
+              <div className="w-6 h-6" />
+            )}
           </div>
         </SheetHeader>
 
