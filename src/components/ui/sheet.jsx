@@ -56,10 +56,6 @@ function SheetContent({ className, children, side = "right", ...props }) {
         {...props}
       >
         {children}
-        <SheetPrimitive.Close className="ring-offset-background focus:ring-ring data-[state=open]:bg-secondary absolute top-4 right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none">
-          <XIcon className="size-8" />
-          <span className="sr-only">Close</span>
-        </SheetPrimitive.Close>
       </SheetPrimitive.Content>
     </SheetPortal>
   );
@@ -70,7 +66,7 @@ function SheetHeader({ className, ...props }) {
 }
 
 function SheetFooter({ className, ...props }) {
-  return <div data-slot="sheet-footer" className={cn("mt-auto flex flex-col gap-2 p-4", className)} {...props} />;
+  return <div data-slot="sheet-footer" className={cn("mt-auto flex flex gap-2 p-4", className)} {...props} />;
 }
 
 function SheetTitle({ className, ...props }) {
