@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { mockCategoryData } from "./data/HeaderCategoryData";
 import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
+import ChatSidebar from "./Sidebar";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -28,14 +29,14 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="w-full border-b border-[#ddd] relative">
+    <header className="w-full border-b border-[#ddd] fixed bg-white z-50">
       <div className="flex flex-col mx-auto pt-4">
         {/* 첫 번째 줄: 로고, 검색창, 우측 메뉴 */}
         <div className="flex mx-auto gap-10">
           <div className="left">
             <Link href={"/"}>
               <div className="flex items-center gap-2">
-                <Image src="/header/header-logo.png" width={128} height={128} alt="header-logo.png" />
+                <Image src="/images/header/header-logo.png" width={128} height={128} alt="header-logo.png" />
               </div>
             </Link>
           </div>
@@ -68,24 +69,31 @@ export default function Header() {
                     {isCategoryOpen && (
                       <div className="absolute top-[55px] left-0 bg-white border border-[#ddd] shadow-lg z-50 rounded-md min-w-[720px] max-h-[500px]">
                         {/* 호버 브리지 - 버튼과 메뉴 사이 공백을 채워줌 */}
-                        <div className="absolute -top-[55px] left-0 w-full h-[60px] bg-transparent"></div>
+                        <div className="absolute -top-[11px] left-0 w-full h-[10px] bg-transparent"></div>
                         <div className="overflow-y-auto max-h-[500px]">
-                          <div className="py-6 px-6">
+                          <div className="">
                             {/* 3열 그리드 구성 */}
-                            <div className="grid grid-cols-3 gap-8">
+                            <div className="grid grid-cols-3">
                               {/* 1열, 2열, 3열 순회 */}
                               {[1, 2, 3].map((colNum) => (
-                                <div key={colNum} className="space-y-6">
+                                <div key={colNum} className={`space-y-6 py-6 ${colNum % 2 === 1 ? "bg-gray-200" : ""}`}>
                                   {/* 해당 열에 포함된 그룹들을 렌더링 */}
                                   {(categoryColumns[colNum] || []).map((group, idx) => (
                                     <div key={idx}>
-                                      <h3 className="font-bold text-lg mb-4 text-gray-800">{group.title}</h3>
+                                      <Link href="#">
+                                        <h3 className="block text-body text-sm py-1.5 text-heading font-semibold px-5 xl:px-8 2xl:px-10 hover:text-heading hover:bg-gray-300">
+                                          {group.title}
+                                        </h3>
+                                      </Link>
                                       {group.items && group.items.length > 0 && (
-                                        <ul className="space-y-2">
+                                        <ul>
                                           {group.items.map((item, i) => (
                                             <li key={i}>
-                                              <Link href="#" className="text-gray-600 hover:text-gray-800 text-sm">
-                                                {item}
+                                              <Link
+                                                href={item.href}
+                                                className="text-[#5a5a5a] text-sm block py-1.5 px-5 xl:px-8 2xl:px-10 hover:text-black hover:bg-gray-300"
+                                              >
+                                                {item.name}
                                               </Link>
                                             </li>
                                           ))}
@@ -113,7 +121,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/header/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
+                      <Image src={"/images/header/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
                       육아꿀팁
                     </Button>
                   </Link>
@@ -121,7 +129,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/header/shopping-bag.png"} width={18} height={18} alt="공동구매" />
+                      <Image src={"/images/header/shopping-bag.png"} width={18} height={18} alt="공동구매" />
                       공동구매
                     </Button>
                   </Link>
@@ -129,7 +137,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="bg-[#85B3EB] hover:bg-[#65A2EE] w-[110px] h-[44px]">
-                      <Image src={"/header/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
+                      <Image src={"/images/header/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
                       이벤트
                     </Button>
                   </Link>
@@ -141,10 +149,14 @@ export default function Header() {
             <div className="pt-5">
               <ul className="flex w-full">
                 <li>
-                  <Link href={"#"} className="flex items-center gap-1">
-                    <MessageCircleMore color="#000000" />
-                    <span className="text-sm">채팅하기</span>
-                  </Link>
+                  <ChatSidebar
+                    trigger={
+                      <button className="flex items-center gap-1 cursor-pointer">
+                        <MessageCircleMore color="#000000" />
+                        <span className="text-sm">채팅하기</span>
+                      </button>
+                    }
+                  />
                 </li>
                 <li className="px-3">|</li>
                 <li>
