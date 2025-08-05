@@ -36,7 +36,7 @@ export default function Header() {
           <div className="left">
             <Link href={"/"}>
               <div className="flex items-center gap-2">
-                <Image src="/header/header-logo.png" width={128} height={128} alt="header-logo.png" />
+                <Image src="/images/header/header-logo.png" width={128} height={128} alt="header-logo.png" />
               </div>
             </Link>
           </div>
@@ -90,10 +90,10 @@ export default function Header() {
                                           {group.items.map((item, i) => (
                                             <li key={i}>
                                               <Link
-                                                href="#"
+                                                href={item.href}
                                                 className="text-[#5a5a5a] text-sm block py-1.5 px-5 xl:px-8 2xl:px-10 hover:text-black hover:bg-gray-300"
                                               >
-                                                {item}
+                                                {item.name}
                                               </Link>
                                             </li>
                                           ))}
@@ -121,7 +121,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/header/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
+                      <Image src={"/images/header/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
                       육아꿀팁
                     </Button>
                   </Link>
@@ -129,7 +129,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/header/shopping-bag.png"} width={18} height={18} alt="공동구매" />
+                      <Image src={"/images/header/shopping-bag.png"} width={18} height={18} alt="공동구매" />
                       공동구매
                     </Button>
                   </Link>
@@ -137,7 +137,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="bg-[#85B3EB] hover:bg-[#65A2EE] w-[110px] h-[44px]">
-                      <Image src={"/header/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
+                      <Image src={"/images/header/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
                       이벤트
                     </Button>
                   </Link>
