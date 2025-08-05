@@ -29,7 +29,7 @@ export default function Header() {
   }, []);
 
   return (
-    <header className="w-full border-b border-[#ddd] fixed bg-white">
+    <header className="w-full border-b border-[#ddd] fixed bg-white z-50">
       <div className="flex flex-col mx-auto pt-4">
         {/* 첫 번째 줄: 로고, 검색창, 우측 메뉴 */}
         <div className="flex mx-auto gap-10">
