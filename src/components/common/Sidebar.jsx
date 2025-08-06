@@ -8,7 +8,7 @@ export default function Sidebar({
   title,
   trigger,
   children,
-  width = "max-w-[600px]",
+  className = "pb-5 flex flex-col",
   titleClassName = "text-center",
   titleStyle = {},
   titleProps = {},
@@ -22,8 +22,8 @@ export default function Sidebar({
     <Sheet open={open} onOpenChange={setOpen}>
       <div onClick={() => setOpen(true)}>{trigger}</div>
 
-      <SheetContent side="right" className={`${width} px-5 pb-5 flex flex-col`}>
-        <SheetHeader className="mb-4 pt-4">
+      <SheetContent side="right" className={`${className} max-w-[600px]`}>
+        <SheetHeader className="pt-4 border-b">
           <div className="flex items-center justify-between relative">
             {/* 뒤로가기 버튼 */}
             {onBack ? (
@@ -45,7 +45,7 @@ export default function Sidebar({
 
             {/* 닫기 버튼 */}
             {onClose ? (
-              <SheetClose className="p-1 hover:bg-gray-100 rounded-full transition-colors" aria-label="닫기">
+              <SheetClose className="pr-5 hover:bg-gray-100 rounded-full transition-colors" aria-label="닫기">
                 <X className="w-6 h-6" />
               </SheetClose>
             ) : (
@@ -54,7 +54,7 @@ export default function Sidebar({
           </div>
         </SheetHeader>
 
-        <div className="flex-1 overflow-y-auto pr-2">{children}</div>
+        <div className="flex-1 overflow-y-auto px-5">{children}</div>
 
         {footer && <div className="border-t pt-4 mt-4">{footer}</div>}
       </SheetContent>

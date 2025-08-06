@@ -1,15 +1,15 @@
 "use client";
 
+import ChatListSidebar from "@/app/chat/components/ChatListSideBar";
+import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
 import { Heart, Menu, MessageCircleMore, Search, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
-import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { mockCategoryData } from "./data/HeaderCategoryData";
-import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
-import ChatSidebar from "@/app/chat/components/ChatSideBar";
 import WishlistSidebar from "./WishlistSidebar";
 
 export default function Header() {
@@ -152,14 +152,14 @@ export default function Header() {
             <div className="pt-5">
               <ul className="flex w-full">
                 <li>
-                  <ChatSidebar
+                  <ChatListSidebar
                     trigger={
                       <button className="flex items-center gap-1 cursor-pointer">
                         <MessageCircleMore color="#000000" />
                         <span className="text-sm">채팅하기</span>
                       </button>
                     }
-                  />
+                  ></ChatListSidebar>
                 </li>
                 <li className="px-3">|</li>
                 <li>
