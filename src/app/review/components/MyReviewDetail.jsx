@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import './Myreviewpage.css';
-import MyReviewEdit from '../review-edit-page/My-Review-Edit';
+import './MyReviewDetail.css';
+import MyReviewEdit from './MyReviewEditForm';
 
 const MyReviewPage = ({ review, onClose }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');

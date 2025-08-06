@@ -1,9 +1,9 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import './Myreviewedit.css';
+import './MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 
-const MyReviewEdit = ({ onClose }) => {
+const MyReviewEditForm = ({ onClose }) => {
     const [rating, setRating] = useState(3);
     const [answers, setAnswers] = useState({
         kind: true,
@@ -181,4 +181,4 @@ const MyReviewEdit = ({ onClose }) => {
     );
 };
 
-export default MyReviewEdit;
+export default MyReviewEditForm;
