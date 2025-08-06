@@ -1,6 +1,5 @@
-import Header from '@/components/common/Header';
+import ClientLayout from "@/app/ClientLayout";
 import './globals.css';
-import Footer from '@/components/common/Footer';
 
 export const metadata = {
     title: 'Momnect',
@@ -11,9 +10,9 @@ export default function RootLayout({ children }) {
     return (
         <html lang='ko'>
             <body>
-                <Header />
-                <main className='pt-[144px] h-screen'>{children}</main>
-                <Footer />
+                <ClientLayout>
+                    {children}
+                </ClientLayout>
             </body>
         </html>
     );
