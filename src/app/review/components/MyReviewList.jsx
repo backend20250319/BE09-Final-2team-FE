@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import './Myreviewmainpage.css';
+import './MyReviewList.css';
 import Sidebar from '@/components/common/Sidebar';
 import { Button } from '@/components/ui/button';
-import MyReviewPage from '../my-review-page/My-Review-Page';
+import MyReviewPage from './MyReviewDetail';
 
 const mockReviews = [
     { id: 1, title: '아가 까까 팜', rating: 5, date: '2014년 02월 02일', image: 'https://i.namu.wiki/i/Hv0V4WWCm_FEi9CgeCx6B59r4WXsbx8rw42vpmwtge33R0d5qOrmU9Ys8ly7aEuCs7yKRz4QaQk53vL1ZoXO4w.webp' },
@@ -13,7 +13,7 @@ const mockReviews = [
     { id: 4, title: '버섯 장난감 판매합니다', rating: 5, date: '2003년 03월 02일', image: 'https://cdn.psnews.co.kr/news/photo/202404/2051984_101923_2627.jpg' },
 ];
 
-const MyReviewMainPage = () => {
+const MyReviewList = () => {
     const [mainOpen, setMainOpen] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
@@ -32,6 +32,7 @@ const MyReviewMainPage = () => {
                 titleClassName="text-xl font-bold text-center"
                 width="max-w-[600px]"
             >
+                <div className="review-bottom-line" />
                 <div className="review-list">
                     {mockReviews.map((review) => (
                         <div key={review.id} className="review-item">
@@ -80,4 +81,4 @@ const MyReviewMainPage = () => {
     );
 };
 
-export default MyReviewMainPage;
+export default MyReviewList;
