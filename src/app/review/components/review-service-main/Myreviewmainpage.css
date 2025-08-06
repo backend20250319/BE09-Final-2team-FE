@@ -11,6 +11,13 @@ body {
     line-height: 1.193359375em;
     overflow-x: hidden;
 }
+.review-bottom-line {
+    width: 100%;
+    height: 1px;
+    background-color: #E0E0E0; /* 피그마 기준 회색 */
+    margin-top: 1px;
+}
+
 
 .page-container {
     width: 100%;

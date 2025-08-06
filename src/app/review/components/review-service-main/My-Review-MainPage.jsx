@@ -32,6 +32,7 @@ const MyReviewMainPage = () => {
                 titleClassName="text-xl font-bold text-center"
                 width="max-w-[600px]"
             >
+                <div className="review-bottom-line" />
                 <div className="review-list">
                     {mockReviews.map((review) => (
                         <div key={review.id} className="review-item">
