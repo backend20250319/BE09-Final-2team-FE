@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import './Myreviewmainpage.css';
 import Sidebar from '@/components/common/Sidebar';
 import { Button } from '@/components/ui/button';
+import MyReviewPage from '../my-review-page/My-Review-Page';
 
 const mockReviews = [
     { id: 1, title: '아가 까까 팜', rating: 5, date: '2014년 02월 02일', image: 'https://i.namu.wiki/i/Hv0V4WWCm_FEi9CgeCx6B59r4WXsbx8rw42vpmwtge33R0d5qOrmU9Ys8ly7aEuCs7yKRz4QaQk53vL1ZoXO4w.webp' },
@@ -13,27 +14,18 @@ const mockReviews = [
 ];
 
 const MyReviewMainPage = () => {
-    const [open, setOpen] = useState(false);
-
-    const handleReviewClick = (reviewTitle) => {
-        alert(`'${reviewTitle}' 리뷰 상세 페이지로 이동합니다.`);
-    };
-
-    const handleReviewDetailLinkClick = (e, reviewTitle) => {
-        e.preventDefault();
-        e.stopPropagation();
-        alert(`'${reviewTitle}' 리뷰 상세 페이지로 이동합니다.`);
-    };
+    const [mainOpen, setMainOpen] = useState(false);
+    const [detailOpen, setDetailOpen] = useState(false);
+    const [selectedReview, setSelectedReview] = useState(null);
 
     return (
         <div className="page-container">
-            {/* 사이드바 */}
             <Sidebar
                 title="나의 리뷰 내역"
-                open={open}
-                onClose={() => setOpen(false)}
+                open={mainOpen}
+                onClose={() => setMainOpen(false)}
                 trigger={
-                    <Button onClick={() => setOpen(true)} variant="default">
+                    <Button onClick={() => setMainOpen(true)} variant="default" >
                         나의 리뷰 열기
                     </Button>
                 }
@@ -42,21 +34,20 @@ const MyReviewMainPage = () => {
             >
                 <div className="review-list">
                     {mockReviews.map((review) => (
-                        <div
-                            key={review.id}
-                            className="review-item"
-                            onClick={() => handleReviewClick(review.title)}
-                        >
+                        <div key={review.id} className="review-item">
                             <div className="review-image">
                                 <img src={review.image} alt={review.title} className="product-image" />
                             </div>
 
                             <div className="review-content relative">
-                                {/* 오른쪽 상단 링크 */}
                                 <a
                                     href="#"
                                     className="review-detail-link absolute top-0 right-0"
-                                    onClick={(e) => handleReviewDetailLinkClick(e, review.title)}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setSelectedReview(review);
+                                        setDetailOpen(true);
+                                    }}
                                 >
                                     리뷰 상세
                                 </a>
@@ -65,18 +56,25 @@ const MyReviewMainPage = () => {
                                 <p className="review-date">{review.date}</p>
                                 <div className="review-stars">
                                     {[...Array(5)].map((_, index) => (
-                                        <span
-                                            key={index}
-                                            className={`star ${index < review.rating ? 'active' : ''}`}
-                                        >
-                      ★
-                    </span>
+                                        <span key={index} className={`star ${index < review.rating ? 'active' : ''}`}>
+                                            ★
+                                        </span>
                                     ))}
                                 </div>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* 중첩된 상세 사이드바 */}
+                {detailOpen && selectedReview && (
+                    <div className="detail-sidebar-wrapper">
+                        <MyReviewPage
+                            review={selectedReview}
+                            onClose={() => setDetailOpen(false)}
+                        />
+                    </div>
+                )}
             </Sidebar>
         </div>
     );
