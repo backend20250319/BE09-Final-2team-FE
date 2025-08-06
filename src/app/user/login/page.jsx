@@ -36,7 +36,7 @@ export default function Login() {
     return (
         <div className="login-root">
             <div className="login-card">
-                <img src="/header/header-logo.png" alt="main visual" className="login-main-image" />
+                <img src="/images/header/header-logo.png" alt="main visual" className="login-main-image" />
                 <form className="login-form" onSubmit={handleSubmit}>
                     <input
                         className="login-input"
