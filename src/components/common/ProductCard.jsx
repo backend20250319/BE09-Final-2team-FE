@@ -9,7 +9,7 @@ const CARD_SIZES = {
     size3: 235,
 };
 
-const ProductCard = ({ product, onReviewClick, size }) => {
+const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemoveFromWishlist, onProductClick }) => {
     const {
         productName,
         price,
@@ -59,63 +59,142 @@ const ProductCard = ({ product, onReviewClick, size }) => {
         setIsWishlisted((prev) => !prev);
     };
 
+    const handleRemoveFromWishlist = (e) => {
+        e.stopPropagation(); // 상품 클릭 이벤트와 분리
+        if (onRemoveFromWishlist) {
+            onRemoveFromWishlist(product.id);
+        }
+    };
+
+    const handleProductClick = () => {
+        if (onProductClick) {
+            onProductClick(product);
+        }
+    };
+
     const handleReviewClick = () => {
         if (onReviewClick) {
             onReviewClick();
         }
     };
 
-    return (
-        <div className={`product-card${trade_status !== 'ON_SALE' ? ' statused' : ''}`} style={{ width: cardWidth }}>
-            <div className='product-image-container' style={{ width: cardWidth, height: cardWidth }}>
-                <img
-                    src={imageUrl}
-                    alt={`${productName} 이미지`}
-                    className='product-image'
-                    style={{ width: cardWidth, height: cardWidth, objectFit: 'cover' }}
-                />
+    // wishlist 모드일 때의 렌더링
+    if (variant === 'wishlist') {
+        return (
+            <div className='wishlist-product-card' onClick={handleProductClick}>
+                {/* 이미지 영역 */}
+                <div className='product-image-container'>
+                    <img
+                        src={imageUrl || 'https://via.placeholder.com/176x176/E3E3E3/999999?text=상품이미지'}
+                        alt={`${productName} 이미지`}
+                        className='product-image'
+                    />
 
-                {trade_status !== 'ON_SALE' && (
-                    <div className='status-overlay'>
-                        <span className='status-text'>{tradeStatusText}</span>
+                    {/* 상품 상태 오버레이 (판매보류, 판매완료, 예약중 등) */}
+                    {trade_status !== 'ON_SALE' && (
+                        <div className='product-status-overlay'>
+                            <span className='product-status-text'>{tradeStatusText}</span>
+                        </div>
+                    )}
+
+                    {/* 찜하기 버튼 */}
+                    <div
+                        className='wishlist-button active'
+                        onClick={handleRemoveFromWishlist}
+                        title='찜한 상품에서 제거'
+                    >
+                        <img src='/images/product/wishlist-on.svg' alt='찜하기됨' width={24} height={24} />
+                    </div>
+                </div>
+
+                {/* 상품 정보 */}
+                <div className='product-info'>
+                    <div className='product-details'>
+                        <h3 className='product-name' title={productName}>
+                            {productName}
+                        </h3>
+                        <div className='product-price'>
+                            <span className='price'>{price}</span>
+                        </div>
+                        <div className='product-location'>
+                            <span className='location-time'>
+                                {location} | {timeAgo}
+                            </span>
+                        </div>
+                        <div className='product-tags'>
+                            <span className={`tag ${status === 'NEW' ? 'new-product' : 'used-product'}`}>
+                                {statusText}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className='product-card-wrapper'>
+            <div
+                className={`product-card-container${trade_status !== 'ON_SALE' ? ' statused' : ''}`}
+                style={{ width: cardWidth }}
+            >
+                <div className='product-card-image-container' style={{ width: cardWidth, height: cardWidth }}>
+                    <img
+                        src={imageUrl}
+                        alt={`${productName} 이미지`}
+                        className='product-card-image'
+                        style={{ width: cardWidth, height: cardWidth, objectFit: 'cover' }}
+                    />
+
+                    {trade_status !== 'ON_SALE' && (
+                        <div className='product-card-status-overlay'>
+                            <span className='product-card-status-text'>{tradeStatusText}</span>
+                        </div>
+                    )}
+
+                    <div
+                        className={`product-card-wishlist-button${isWishlisted ? ' wishlisted' : ''}`}
+                        onClick={handleWishlistClick}
+                    >
+                        <img
+                            src={isWishlisted ? '/images/product/wishlist-on.svg' : '/images/product/wishlist-off.svg'}
+                            alt={isWishlisted ? '찜하기됨' : '찜하기'}
+                            width={24}
+                            height={24}
+                        />
+                    </div>
+                </div>
+
+                <div className='product-card-info'>
+                    <h3 className='product-card-name'>{productName}</h3>
+                </div>
+
+                <div className='product-card-price-container'>
+                    <span className='product-card-price'>{price}</span>
+                </div>
+
+                <div className='product-card-location-container'>
+                    <span className='product-card-location-time'>
+                        {location} | {timeAgo}
+                    </span>
+                </div>
+
+                <div className='product-card-tags-container'>
+                    <span className='product-card-tag'>{statusText}</span>
+                </div>
+
+                {showReviewButton && (
+                    <div className='product-card-review-section'>
+                        <button
+                            className='product-card-review-button'
+                            onClick={handleReviewClick}
+                            disabled={hasWrittenReview}
+                        >
+                            <span>리뷰작성</span>
+                        </button>
                     </div>
                 )}
-
-                <div className={`wishlist-button${isWishlisted ? ' wishlisted' : ''}`} onClick={handleWishlistClick}>
-                    <img
-                        src={isWishlisted ? '/images/product/wishlist-on.svg' : '/images/product/wishlist-off.svg'}
-                        alt={isWishlisted ? '찜하기됨' : '찜하기'}
-                        width={24}
-                        height={24}
-                    />
-                </div>
             </div>
-
-            <div className='product-info'>
-                <h3 className='product-name'>{productName}</h3>
-            </div>
-
-            <div className='product-price'>
-                <span className='price'>{price}</span>
-            </div>
-
-            <div className='product-location'>
-                <span className='location-time'>
-                    {location} | {timeAgo}
-                </span>
-            </div>
-
-            <div className='product-tags'>
-                <span className='tag product-tag'>{statusText}</span>
-            </div>
-
-            {showReviewButton && (
-                <div className='review-section'>
-                    <button className='review-button' onClick={handleReviewClick} disabled={hasWrittenReview}>
-                        <span>리뷰작성</span>
-                    </button>
-                </div>
-            )}
         </div>
     );
 };
