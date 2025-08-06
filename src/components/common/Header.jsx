@@ -9,7 +9,8 @@ import { useRouter } from "next/navigation";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import { mockCategoryData } from "./data/HeaderCategoryData";
 import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
-import ChatSidebar from "./Sidebar";
+import ChatSidebar from "@/app/chat/components/ChatSideBar";
+import WishlistSidebar from "./WishlistSidebar";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
@@ -111,12 +112,14 @@ export default function Header() {
                   </div>
                 </li>
                 <li className="flex justify-center items-center">
-                  <Link href={"#"}>
-                    <Button className="w-[110px] h-[44px]">
-                      <Heart color="#ffffff" fill="#ffffff" />
-                      찜한상품
-                    </Button>
-                  </Link>
+                  <WishlistSidebar
+                    trigger={
+                      <Button className="w-[110px] h-[44px]">
+                        <Heart color="#ffffff" fill="#ffffff" />
+                        찜한상품
+                      </Button>
+                    }
+                  />
                 </li>
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
