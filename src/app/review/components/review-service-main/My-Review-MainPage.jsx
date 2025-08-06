@@ -25,7 +25,7 @@ const MyReviewMainPage = () => {
                 open={mainOpen}
                 onClose={() => setMainOpen(false)}
                 trigger={
-                    <Button onClick={() => setMainOpen(true)} variant="default">
+                    <Button onClick={() => setMainOpen(true)} variant="default" >
                         나의 리뷰 열기
                     </Button>
                 }
