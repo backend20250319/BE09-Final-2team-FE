@@ -1,0 +1,487 @@
+/* Main Page Styles */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 30px;
+    padding: 0 191px 30px;
+    max-width: 1440px;
+    margin: 0 auto;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* Section Titles */
+.main-section-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1.21em;
+    color: #000000;
+    margin: 0;
+    padding: 10px;
+}
+
+/* Hall of Fame Section */
+.main-hall-of-fame-section {
+    width: 100%;
+    max-width: 1058px;
+    padding: 10px;
+}
+
+.main-hall-of-fame-content {
+    display: flex;
+    justify-content: center;
+    align-items: flex-end; /* 하단 정렬로 변경 */
+    gap: 30px;
+    padding: 10px;
+    position: relative;
+    min-height: 320px; /* 최소 높이 설정 */
+}
+
+/* 단상 효과 제거 - Figma에는 실제로 단상이 없음 */
+
+/* 명예의 전당 컨테이너 - 각 프로필과 단상을 포함 */
+.main-hall-of-fame-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+/* 순위별 높이 차이 및 순서 조정 - rank 기반 */
+.main-hall-of-fame-container.rank-1 {
+    order: 2; /* 1위를 가운데(두 번째)로 */
+}
+
+.main-hall-of-fame-container.rank-2 {
+    order: 1; /* 2위를 왼쪽(첫 번째)로 */
+}
+
+.main-hall-of-fame-container.rank-3 {
+    order: 3; /* 3위를 오른쪽(세 번째)로 */
+}
+
+/* 프로필 카드 */
+.main-hall-of-fame-card {
+    position: relative;
+}
+
+/* 단상 스타일 */
+.main-podium {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 180px;
+    border-radius: 10px 10px 0 0;
+    font-weight: bold;
+    font-size: 18px;
+    color: #ffffff;
+}
+
+/* 순위별 단상 높이와 색상 - rank 기반 */
+.main-hall-of-fame-container.rank-1 .main-podium {
+    height: 65px; /* 1위 - 가장 높은 단상 */
+    background-color: #ffe27a; /* 금색 - 1위 */
+}
+
+.main-hall-of-fame-container.rank-2 .main-podium {
+    height: 50px; /* 2위 - 중간 단상 */
+    background-color: #9e9e9e; /* 은색 - 2위 */
+}
+
+.main-hall-of-fame-container.rank-3 .main-podium {
+    height: 40px; /* 3위 - 가장 낮은 단상 */
+    background-color: #ce7430; /* 동색 - 3위 */
+}
+
+.main-user-profile {
+    display: flex;
+    flex-direction: column;
+    width: 250px;
+    border: 1px solid;
+    border-radius: 6px;
+    background-color: #ffffff;
+    overflow: hidden;
+    position: relative;
+}
+
+/* 순위별 테두리 색상 - rank 기반 */
+.main-hall-of-fame-container.rank-1 .main-user-profile {
+    border-color: #ffe27a; /* 1위 - 금색 */
+}
+
+.main-hall-of-fame-container.rank-2 .main-user-profile {
+    border-color: #9e9e9e; /* 2위 - 은색 */
+}
+
+.main-hall-of-fame-container.rank-3 .main-user-profile {
+    border-color: #ce7430; /* 3위 - 동색 */
+}
+
+.main-profile-header {
+    height: 9px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 순위별 헤더 색상 - rank 기반 */
+.main-hall-of-fame-container.rank-1 .main-profile-header {
+    background-color: #ffe27a; /* 1위 - 금색 */
+}
+
+.main-hall-of-fame-container.rank-2 .main-profile-header {
+    background-color: #9e9e9e; /* 2위 - 은색 */
+}
+
+.main-hall-of-fame-container.rank-3 .main-profile-header {
+    background-color: #ce7430; /* 3위 - 동색 */
+}
+
+/* 테두리 윗쪽 숫자 제거 */
+.main-rank-number {
+    display: none;
+}
+
+/* 프로필 섹션 레이아웃 개선 */
+.main-profile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 21px;
+    padding: 20px;
+}
+
+/* 프로필 정보 컨테이너 */
+.main-profile-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 21px;
+    width: 100%;
+}
+
+/* 프로필 이미지 컨테이너 */
+.main-profile-image-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.main-profile-image {
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+/* 사용자 정보 레이아웃 */
+.main-user-details {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+}
+
+.main-user-nickname {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    line-height: 1.19em;
+    text-align: center;
+    color: #000000;
+    margin: 0;
+    width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 통계 정보 레이아웃 */
+.main-user-stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+}
+
+.main-stat-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    width: 100%;
+}
+
+.main-stat-icon {
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+}
+
+.main-stat-label {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 12px;
+    line-height: 1.19em;
+    color: #999999;
+}
+
+.main-stat-value {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 10px;
+    line-height: 1.19em;
+    color: #000000;
+    background-color: #edeff2;
+    padding: 0px 5px;
+    border-radius: 3px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+}
+
+/* 평균 별점 값 스타일 */
+.main-stat-item:nth-child(2) .main-stat-value {
+    background-color: transparent;
+    border: 1px solid #e8e8e8;
+    border-radius: 3px;
+}
+
+/* 순위 배지 */
+.main-rank-badge {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-top: 4px;
+}
+
+/* 메달 컨테이너 위치 조정 */
+.main-medal-container {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    z-index: 3;
+}
+
+.main-medal-image {
+    width: 28px;
+    height: 28px;
+    object-fit: cover;
+}
+
+/* 해시태그 스타일 개선 */
+.main-rank-text {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 700;
+    font-size: 12px;
+    line-height: 1.19em;
+    color: #000000;
+    background-color: rgba(255, 255, 255, 0.95);
+    border: 2px solid #e8e8e8;
+    padding: 4px 8px;
+    border-radius: 12px;
+    height: auto;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* 상품 섹션 스타일 */
+.main-products-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    width: 100%;
+    max-width: 1058px;
+    margin: 0 auto;
+    background-color: transparent;
+}
+
+.main-section-title {
+    font-family: 'Inter', sans-serif;
+    font-weight: 700;
+    font-size: 24px;
+    line-height: 1.21em;
+    color: #000000;
+    margin-bottom: 10px;
+    align-self: flex-start;
+    padding-left: 10px;
+}
+
+.main-products-content {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    padding: 10px;
+    background-color: transparent;
+}
+
+/* 상품 그리드 - 기본 */
+.main-products-grid {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* 상품 그리드 - 스르륵 슬라이드 */
+.main-products-grid {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    justify-content: flex-start;
+    width: 100%;
+    max-width: 1000px;
+    overflow: hidden;
+    margin: 0 auto;
+    background-color: transparent;
+}
+
+.main-products-slider {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    transition: transform 0.4s ease-in-out;
+    width: max-content;
+}
+
+/* 상품 카드 고정 너비 */
+.main-products-slider .product-card {
+    flex-shrink: 0;
+    width: 157px !important;
+    min-width: 157px;
+    max-width: 157px;
+}
+
+/* 네비게이션 화살표 컨테이너 */
+.main-navigation-arrows {
+    position: absolute;
+    top: calc(50% - 90px);
+    left: 0;
+    right: 0;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+/* 화살표 버튼 스타일 - Figma 디자인에 맞게 수정 */
+.main-nav-arrow {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: all;
+    z-index: 10;
+    transition: all 0.2s ease;
+}
+
+.main-nav-arrow.left {
+    left: -15px;
+}
+
+.main-nav-arrow.right {
+    right: -15px;
+}
+
+/* 화살표 버튼 이미지 크기 */
+.main-nav-arrow img {
+    display: block;
+    transition: opacity 0.2s ease;
+    width: 30px;
+    height: 30px;
+}
+
+.main-nav-arrow:hover:not(:disabled) {
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 50%;
+}
+
+/* 비활성화된 화살표 버튼 */
+.main-nav-arrow:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+}
+
+.main-nav-arrow:disabled img {
+    opacity: 0.3;
+}
+
+/* 구분선 스타일 */
+.main-section-divider {
+    width: 100%;
+    height: 0.5px;
+    background-color: #999999;
+    margin: 10px 0;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .main-container {
+        padding: 0 100px 30px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-container {
+        padding: 0 20px 30px;
+    }
+
+    .main-hall-of-fame-content {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .main-hall-of-fame-card {
+        height: auto;
+    }
+
+    .main-products-grid {
+        padding: 0 20px;
+    }
+
+    .main-nav-arrow {
+        width: 24px;
+        height: 24px;
+    }
+
+    .main-nav-arrow.left {
+        left: -12px;
+    }
+
+    .main-nav-arrow.right {
+        right: -12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .main-container {
+        padding: 0 10px 20px;
+    }
+
+    .main-section-title {
+        font-size: 20px;
+    }
+
+    .main-user-profile {
+        width: 200px;
+    }
+
+    .main-products-grid {
+        padding: 0 10px;
+    }
+}
