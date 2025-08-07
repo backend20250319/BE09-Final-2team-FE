@@ -1,29 +1,63 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Sidebar from "@/components/common/Sidebar";
 import './location-management.css';
 
 const TradingAreaManagement = () => {
-    const [searchValue, setSearchValue] = useState('');
-    const [isSearchActive, setIsSearchActive] = useState(false);
     const [selectedAreas, setSelectedAreas] = useState([]);
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+    const [showLimitAlert, setShowLimitAlert] = useState(false);
 
-    const handleSearchChange = (e) => {
-        setSearchValue(e.target.value);
-    };
+    // 드롭다운 영역 참조를 위한 ref
+    const dropdownRef = useRef(null);
+    const searchInputRef = useRef(null);
 
-    const handleSave = () => {
-        if (searchValue.trim() && selectedAreas.length < 3) {
-            setSelectedAreas([...selectedAreas, searchValue.trim()]);
-            setSearchValue('');
-            setIsSearchActive(false); // 저장 후 검색창 비활성화
+    // 외부 클릭 감지
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                isDropdownOpen &&
+                dropdownRef.current &&
+                !dropdownRef.current.contains(event.target) &&
+                searchInputRef.current &&
+                !searchInputRef.current.contains(event.target)
+            ) {
+                setIsDropdownOpen(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isDropdownOpen]);
+
+    const handleAreaSelect = (area) => {
+        // 3개 제한 체크
+        if (selectedAreas.length >= 3) {
+            setShowLimitAlert(true);
+            setTimeout(() => setShowLimitAlert(false), 5000);
+            setIsDropdownOpen(false);
+            return;
         }
+
+        // 중복 체크 후 추가
+        if (!selectedAreas.includes(area)) {
+            setSelectedAreas([...selectedAreas, area]);
+        }
+        setIsDropdownOpen(false);
     };
 
     const handleRemoveArea = (index) => {
         const newAreas = selectedAreas.filter((_, i) => i !== index);
         setSelectedAreas(newAreas);
+        setShowLimitAlert(false);
+    };
+
+    const handleSave = () => {
+        console.log('저장된 거래지역:', selectedAreas);
+        alert('거래지역이 저장되었습니다!');
     };
 
     const SidebarContent = () => (
@@ -33,28 +67,41 @@ const TradingAreaManagement = () => {
 
                 <div className="search-section">
                     <div className="search-input-container">
-                        {!isSearchActive ? (
-                            <div className="fake-input" onClick={() => setIsSearchActive(true)}>
-                                <span className="placeholder-left">주소를 검색하세요</span>
-                                <span className="placeholder-right">예: 서초동, 강남구, 마포구 등</span>
+                        <div
+                            ref={searchInputRef}
+                            className="fake-input"
+                            onClick={() => setIsDropdownOpen(true)}
+                        >
+                            <span className="placeholder-left">주소를 검색하세요</span>
+                            <span className="placeholder-right">예: 서초동, 강남구, 마포구 등</span>
+                        </div>
+
+                        {isDropdownOpen && (
+                            <div ref={dropdownRef} className="search-dropdown">
+                                <div className="dropdown-content">
+                                    <div className="dropdown-results">
+                                        {['서초동', '양재동', '신사동', '역삼동', '논현동'].map(area => (
+                                            <div
+                                                key={area}
+                                                className="dropdown-item"
+                                                onClick={() => handleAreaSelect(area)}
+                                            >
+                                                {area}
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
                             </div>
-                        ) : (
-                            <input
-                                type="text"
-                                className="real-input"
-                                value={searchValue}
-                                onChange={handleSearchChange}
-                                onBlur={() => {
-                                    if (!searchValue.trim()) {
-                                        setIsSearchActive(false);
-                                    }
-                                }}
-                                placeholder="주소를 검색하세요"
-                                autoFocus
-                            />
                         )}
                     </div>
                 </div>
+
+                {/* 3개 제한 알림 */}
+                {showLimitAlert && (
+                    <div className="limit-alert">
+                        최대 3개 지역이 선택되었습니다. 다른 지역을 선택하려면 기존 지역을 삭제해주세요.
+                    </div>
+                )}
 
                 <div className="selected-areas-section">
                     <div className="selected-areas-header">

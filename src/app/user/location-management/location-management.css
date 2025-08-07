@@ -1,4 +1,3 @@
-/* Trading Area Management Styles - 3번째 이미지 레이아웃 */
 .trading-area-container {
     width: 100%;
     max-width: 600px;
@@ -106,6 +105,61 @@
     position: relative;
 }
 
+/* 3개 제한 알림창 스타일 */
+.limit-alert {
+    background-color: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #D97706;
+    text-align: center;
+    animation: alertLifecycle 6s ease-in-out forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* selected-areas-section 크기 조정 */
+.selected-areas-section {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 140px; /* 3개 아이템이 보이도록 조정 */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selected-areas-content {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 80px;
+    padding-top: 4px;
+}
+
+/* 3개 아이템을 위한 areas-list 높이 조정 */
+.areas-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 120px; /* 최대 높이 설정 */
+}
+
 /* Selected Areas Section */
 .selected-areas-section {
     width: 100%;
@@ -175,19 +229,24 @@
 .areas-list {
     width: 100%;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: wrap;
     gap: 8px;
+    align-items: flex-start;
 }
 
 .area-item {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 10px 12px;
-    background-color: #F8F9FA;
-    border-radius: 8px;
+    padding: 6px 12px;
+    background-color: #D2E6FF;
+    border-radius: 20px;
     border: 1px solid #E9ECEF;
     transition: all 0.2s ease;
+    font-size: 13px; /* 폰트 크기 줄임 */
+    width: auto; /* 내용에 맞춰 크기 조절 */
+    max-width: fit-content;
 }
 
 .area-item:hover {
@@ -199,16 +258,16 @@
     font-size: 14px;
     font-weight: 500;
     color: #374151;
+    margin-right: 6px;
 }
 
 .remove-area-btn {
     background: none;
     border: none;
-    color: #9CA3AF;
+    color: #64748B;
     font-size: 18px;
-    font-weight: bold;
     cursor: pointer;
-    padding: 2px;
+    padding: 5px;
     width: 20px;
     height: 20px;
     display: flex;
@@ -216,6 +275,7 @@
     justify-content: center;
     border-radius: 50%;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 
 .remove-area-btn:hover {
@@ -247,66 +307,79 @@
     background-color: #5A8AEF;
 }
 
-/* 우편번호 모달 스타일 */
-.postcode-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000;
-}
-
-.postcode-content {
+/* 드롭다운 메인 컨테이너 */
+.search-dropdown {
+    width: 100%; /*  너비 명시 */
     background: white;
+    border: 1px solid #DCD7D7;
     border-radius: 12px;
-    padding: 20px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow: hidden;
-    position: relative;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 4px; /* 검색창과의 간격 */
+    animation: dropdownAppear 0.2s ease-out;
 }
 
-.postcode-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 16px;
-    border-bottom: 1px solid #E5E7EB;
+/* 드롭다운 등장 애니메이션 */
+@keyframes dropdownAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
-.postcode-header h3 {
-    margin: 0;
-    font-size: 18px;
-    font-weight: 600;
-    color: #374151;
+/* 드롭다운 내용 */
+.dropdown-content {
+    padding: 8px;
 }
 
-.postcode-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: #9CA3AF;
+/* 검색 결과 리스트 */
+.dropdown-results {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 각 검색 결과 아이템 */
+.dropdown-item {
+    padding: 12px 16px;
     cursor: pointer;
-    padding: 0;
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #374151;
     transition: all 0.2s ease;
+    margin: 2px 0;
 }
 
-.postcode-close:hover {
+.dropdown-item:hover {
     background-color: #F3F4F6;
-    color: #374151;
+    color: #1F2937;
+    font-weight: 500;
+}
+
+.dropdown-item:active {
+    background-color: #E5E7EB;
+}
+
+/* 스크롤바 스타일링 */
+.dropdown-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.dropdown-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.dropdown-results::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
 }
 
 /* Responsive Design */
