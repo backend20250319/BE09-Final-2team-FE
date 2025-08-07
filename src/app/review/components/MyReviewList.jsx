@@ -5,6 +5,7 @@ import './MyReviewList.css';
 import Sidebar from '@/components/common/Sidebar';
 import { Button } from '@/components/ui/button';
 import MyReviewPage from './MyReviewDetail';
+import MyReviewAddForm from './MyReviewAddForm';
 
 const mockReviews = [
     { id: 1, title: '아가 까까 팜', rating: 5, date: '2014년 02월 02일', image: 'https://i.namu.wiki/i/Hv0V4WWCm_FEi9CgeCx6B59r4WXsbx8rw42vpmwtge33R0d5qOrmU9Ys8ly7aEuCs7yKRz4QaQk53vL1ZoXO4w.webp' },
@@ -17,13 +18,15 @@ const MyReviewList = () => {
     const [mainOpen, setMainOpen] = useState(false);
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
+    const [addOpen, setAddOpen] = useState(false);
 
     return (
         <div className="page-container">
+            {/* 메인 사이드바 - 리뷰 목록과 상세 페이지를 포함 */}
             <Sidebar
                 title="나의 리뷰 내역"
                 open={mainOpen}
-                onClose={() => setMainOpen(false)}
+                onClose={() => { setMainOpen(false); setDetailOpen(false); }}
                 trigger={
                     <Button onClick={() => setMainOpen(true)} variant="default" >
                         나의 리뷰 열기
@@ -32,51 +35,61 @@ const MyReviewList = () => {
                 titleClassName="text-xl font-bold text-center"
                 width="max-w-[600px]"
             >
-                <div className="review-bottom-line" />
-                <div className="review-list">
-                    {mockReviews.map((review) => (
-                        <div key={review.id} className="review-item">
-                            <div className="review-image">
-                                <img src={review.image} alt={review.title} className="product-image" />
-                            </div>
+                {/* detailOpen 상태에 따라 상세 페이지를 렌더링하거나 목록을 렌더링합니다. */}
+                {detailOpen && selectedReview ? (
+                    <MyReviewPage
+                        review={selectedReview}
+                        onClose={() => setDetailOpen(false)}
+                    />
+                ) : (
+                    <>
+                        <div className="review-bottom-line" />
+                        <div className="review-list">
+                            {mockReviews.map((review) => (
+                                <div key={review.id} className="review-item">
+                                    <div className="review-image">
+                                        <img src={review.image} alt={review.title} className="product-image" />
+                                    </div>
 
-                            <div className="review-content relative">
-                                <a
-                                    href="#"
-                                    className="review-detail-link absolute top-0 right-0"
-                                    onClick={(e) => {
-                                        e.preventDefault();
-                                        setSelectedReview(review);
-                                        setDetailOpen(true);
-                                    }}
-                                >
-                                    리뷰 상세
-                                </a>
+                                    <div className="review-content relative">
+                                        <a
+                                            href="#"
+                                            className="review-detail-link absolute top-0 right-0"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                setSelectedReview(review);
+                                                setDetailOpen(true);
+                                            }}
+                                        >
+                                            리뷰 상세
+                                        </a>
 
-                                <h3 className="product-title">{review.title}</h3>
-                                <p className="review-date">{review.date}</p>
-                                <div className="review-stars">
-                                    {[...Array(5)].map((_, index) => (
-                                        <span key={index} className={`star ${index < review.rating ? 'active' : ''}`}>
-                                            ★
-                                        </span>
-                                    ))}
+                                        <h3 className="product-title">{review.title}</h3>
+                                        <p className="review-date">{review.date}</p>
+                                        <div className="review-stars">
+                                            {[...Array(5)].map((_, index) => (
+                                                <span key={index} className={`star ${index < review.rating ? 'active' : ''}`}>
+                                                    ★
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-
-                {/* 중첩된 상세 사이드바 */}
-                {detailOpen && selectedReview && (
-                    <div className="detail-sidebar-wrapper">
-                        <MyReviewPage
-                            review={selectedReview}
-                            onClose={() => setDetailOpen(false)}
-                        />
-                    </div>
+                    </>
                 )}
             </Sidebar>
+
+            <br/>
+            <div className="page-container">
+                {/* 등록 버튼은 독립적으로 MyReviewAddForm을 렌더링합니다. */}
+                <Button onClick={() => setAddOpen(true)} variant="default">
+                    나의 등록 열기
+                </Button>
+            </div>
+
+            {addOpen && <MyReviewAddForm onClose={() => setAddOpen(false)} />}
         </div>
     );
 };
