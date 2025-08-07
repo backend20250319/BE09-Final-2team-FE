@@ -16,11 +16,10 @@
 
 /* Left Sidebar */
 .sidebar {
-    width: 200px;
+    width: fit-content;
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    width: fit-content; /* 내용을 크기에 맞춤 */
     gap: 20px;
 }
 
@@ -53,6 +52,7 @@
     text-decoration: none;
     transition: color 0.3s ease;
     padding: 4px 0;
+    cursor: pointer;
 }
 
 .menu-item:hover {
@@ -74,71 +74,11 @@
     gap: 30px;
 }
 
-/* Tab Section */
-.tab-section {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    /*padding-bottom: 20px;*/
-    border-bottom: 2px solid #E5E5E5;
-}
-
-.tab-list {
-    display: flex;
-    gap: 0;
-}
-
-.tab-item {
-    padding: 12px 40px;
-    background: none;
-    border: none;
-    font-weight: 500;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #9CA3AF;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    border-bottom: 2px solid transparent;
-    position: relative;
-}
-
-.tab-item.active {
-    color: #000000;
-    border-bottom-color: #000000;
-}
-
-.tab-item:hover {
-    color: #000000;
-}
-
-.item-count {
-    font-weight: 400;
-    font-size: 14px;
-    line-height: 1.5;
-    color: #666666;
-}
-
-/* Empty State */
-.empty-state {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 60px 0;
-}
-
-.empty-state p {
-    font-weight: 400;
-    font-size: 16px;
-    line-height: 1.5;
-    color: #666666;
-    text-align: center;
-}
-
-/* Profile Section */
+/* Profile Section - 핵심 높이 맞추기 */
 .profile-section {
     display: flex;
     gap: 30px;
-    align-items: flex-start;
+    align-items: stretch; /* 높이 맞추기의 핵심 */
 }
 
 /* Profile Card */
@@ -150,6 +90,9 @@
     position: relative;
     width: 350px;
     flex-shrink: 0;
+    min-height: 280px; /* 최소 높이 설정 */
+    display: flex;
+    flex-direction: column;
 }
 
 .card-title {
@@ -170,6 +113,8 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
+    flex: 1;
+    justify-content: center;
 }
 
 .profile-avatar {
@@ -244,31 +189,45 @@
 .right-cards {
     flex: 1;
     display: flex;
-    width: ;
-    height: 100%;
     flex-direction: row;
     border: 1px solid #E9ECEF;
     border-radius: 12px;
-    gap: 20px;
+    min-height: 280px; /* profile-card와 동일한 최소 높이 */
+    background: #FFFFFF;
+    overflow: hidden; /* 경계선이 깔끔하게 보이도록 */
 }
 
 /* Child Card */
 .child-card {
     background: #FFFFFF;
-    border-radius: 12px;
-    padding: 30px 20px;
+    border-radius: 12px 0 0 12px;
+    padding: 40px 20px 20px 20px; /* 위쪽 패딩 추가 */
     position: relative;
     flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Transaction Card */
+.transaction-card {
+    background: #FFFFFF;
+    border-radius: 0 12px 12px 0;
+    padding: 40px 20px 20px 20px; /* 위쪽 패딩 추가 */
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 .child-content {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 80px;
+    flex: 1; /* 핵심: 부모의 남은 공간 모두 차지 */
     border: 1px solid #E9ECEF;
     border-radius: 8px;
-    background-color: #FAFAFA;
+    background-color: #FFFFFF;
+    min-height: 140px; /* transaction-content와 동일한 높이 */
 }
 
 .no-child-info {
@@ -280,15 +239,6 @@
     margin: 0;
 }
 
-/* Transaction Card */
-.transaction-card {
-    background: #FFFFFF;
-    border-radius: 12px;
-    padding: 30px 20px;
-    position: relative;
-    flex: 1;
-}
-
 .transaction-content {
     display: flex;
     flex-direction: column;
@@ -296,13 +246,19 @@
     border: 1px solid #E9ECEF;
     border-radius: 8px;
     padding: 20px;
-    background-color: #FAFAFA;
+    background-color: #FFFFFF;
+    flex: 1; /* 핵심: 부모의 남은 공간 모두 차지 */
+    justify-content: center; /* 내용을 세로 중앙 정렬 */
+    /*align-items: center; !* 가로 중앙 정렬 추가 *!*/
+    min-height: 140px; /* child-content와 동일한 높이 */
 }
 
 .transaction-item {
     display: flex;
     align-items: center;
     gap: 10px;
+    width: 100%; /* 전체 너비 사용 */
+    justify-content: flex-start; /* 왼쪽부터 차례로 배치 */
 }
 
 .transaction-label {
@@ -311,6 +267,7 @@
     line-height: 1.33;
     color: #6C757D;
     min-width: 60px;
+    text-align: left;
 }
 
 .transaction-value {
@@ -318,8 +275,8 @@
     font-size: 18px;
     line-height: 1.33;
     color: #6B9AFF;
-    text-align: center;
-    min-width: 30px;
+    text-align: right;
+    margin-left: auto; /* 숫자만 오른쪽 */
 }
 
 .transaction-unit {
@@ -327,6 +284,66 @@
     font-size: 14px;
     line-height: 1.33;
     color: #6C757D;
+    text-align: right;
+}
+
+/* Tab Section */
+.tab-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #E5E5E5;
+}
+
+.tab-list {
+    display: flex;
+    gap: 0;
+}
+
+.tab-item {
+    padding: 12px 40px;
+    background: none;
+    border: none;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+}
+
+.tab-item.active {
+    color: #000000;
+    border-bottom-color: #000000;
+}
+
+.tab-item:hover {
+    color: #000000;
+}
+
+.item-count {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666666;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 0;
+}
+
+.empty-state p {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+    text-align: center;
 }
 
 /* Responsive Design */
@@ -352,13 +369,14 @@
 
     .right-cards {
         flex-direction: row;
-        gap: 30px;
+        gap: 0;
     }
 }
 
 @media (max-width: 768px) {
     .mypage-container {
         padding: 0 10px;
+        width: 100%;
     }
 
     .main-content {
@@ -388,5 +406,14 @@
 
     .right-cards {
         flex-direction: column;
+    }
+
+    .child-card {
+        border-radius: 12px 12px 0 0;
+        border-bottom: 1px solid #E9ECEF;
+    }
+
+    .transaction-card {
+        border-radius: 0 0 12px 12px;
     }
 }

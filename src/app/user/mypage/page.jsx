@@ -32,6 +32,7 @@ const MyPage = () => {
                         </div>
                     </div>
                 </div>
+
                 {/* Right Content Area */}
                 <div className="content-area">
                     {/* Profile Cards Section - 상단에 위치 */}
@@ -88,11 +89,7 @@ const MyPage = () => {
                                     </div>
                                 </div>
                             </div>
-
-
                         </div>
-
-
                     </div>
 
                     {/* Tab Navigation - 프로필 카드 섹션 하단에 위치 */}
@@ -116,7 +113,7 @@ const MyPage = () => {
 
                     {/* Empty State */}
                     <div className="empty-state">
-                        <p>선택된 조건에 해당하는 상품이 없습니다.</p>
+                        <p>등록된 상품이 없습니다.</p>
                     </div>
                 </div>
             </div>
