@@ -1,0 +1,406 @@
+.trading-area-container {
+    width: 100%;
+    max-width: 600px;
+    background-color: #FFFFFF;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    min-height: 85vh; /* 높이 유지 */
+    justify-content: space-between; /* 위아래로 밀어내기 */
+}
+
+/* 상단 그룹 (안내문구 + 검색 + 선택영역) */
+.top-group {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* 하단 그룹 (저장 버튼) */
+.bottom-group {
+    display: flex;
+    flex-direction: column;
+}
+
+/* Info Text - 최상단으로 이동 */
+.info-text {
+    font-size: 14px;
+    font-weight: 400;
+    color: #666666;
+    margin: 0;
+    text-align: center;
+    padding: 12px 16px;
+    background-color: #F8F9FA;
+    border-radius: 8px;
+    border: 1px solid #E9ECEF;
+}
+
+/* Search Section */
+.search-section {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.fake-input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    padding: 0 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background-color: #FFFFFF;
+    cursor: pointer;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.fake-input:hover {
+    border-color: #85B3EB;
+    box-shadow: 0 0 0 3px rgba(133, 179, 235, 0.1);
+}
+
+.placeholder-left {
+    font-size: 14px;
+    color: #999999;
+    font-weight: 400;
+}
+
+.placeholder-right {
+    font-size: 14px;
+    color: #CCCCCC;
+    font-weight: 400;
+}
+
+.real-input {
+    width: 100%;
+    height: 44px;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #000000;
+    background-color: #FFFFFF;
+    outline: none;
+    box-sizing: border-box;
+    transition: all 0.2s ease;
+}
+
+.real-input:focus {
+    border-color: #85B3EB;
+    box-shadow: 0 0 0 3px rgba(133, 179, 235, 0.1);
+}
+
+.real-input::placeholder {
+    color: #999999;
+}
+
+.search-input-container {
+    width: 100%;
+    position: relative;
+}
+
+/* 3개 제한 알림창 스타일 */
+.limit-alert {
+    background-color: #FEF3C7;
+    border: 1px solid #F59E0B;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #D97706;
+    text-align: center;
+    animation: alertLifecycle 6s ease-in-out forwards;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* selected-areas-section 크기 조정 */
+.selected-areas-section {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 140px; /* 3개 아이템이 보이도록 조정 */
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selected-areas-content {
+    flex: 1;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 80px;
+    padding-top: 4px;
+}
+
+/* 3개 아이템을 위한 areas-list 높이 조정 */
+.areas-list {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 120px; /* 최대 높이 설정 */
+}
+
+/* Selected Areas Section */
+.selected-areas-section {
+    width: 100%;
+    background-color: #FFFFFF;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    padding: 16px;
+    min-height: 100px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.selected-areas-header {
+    display: flex;
+    align-items: center;
+    gap: 20px; /* 간격 줄이기 */
+}
+
+.selected-areas-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000000;
+    line-height: 20px;
+}
+
+.area-count-badge {
+    background-color: #D2E6FF;
+    border-radius: 20px;
+    padding: 4px 10px;
+    min-width: 40px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.area-count-badge span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #2563EB;
+}
+
+.selected-areas-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 60px; /* 높이 줄임 */
+}
+
+.empty-state {
+    text-align: center;
+    color: #999999;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.empty-state p {
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 18px;
+    margin: 0;
+}
+
+.areas-list {
+    width: 100%;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+}
+
+.area-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 12px;
+    background-color: #D2E6FF;
+    border-radius: 20px;
+    border: 1px solid #E9ECEF;
+    transition: all 0.2s ease;
+    font-size: 13px; /* 폰트 크기 줄임 */
+    width: auto; /* 내용에 맞춰 크기 조절 */
+    max-width: fit-content;
+}
+
+.area-item:hover {
+    background-color: #F1F3F4;
+    border-color: #D1D5DB;
+}
+
+.area-item span {
+    font-size: 14px;
+    font-weight: 500;
+    color: #374151;
+    margin-right: 6px;
+}
+
+.remove-area-btn {
+    background: none;
+    border: none;
+    color: #64748B;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 5px;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.remove-area-btn:hover {
+    background-color: #FEE2E2;
+    color: #DC2626;
+}
+
+/* Save Button */
+.save-button {
+    width: 100%;
+    height: 44px;
+    background-color: #DDDDDD;
+    border: none;
+    border-radius: 8px;
+    color: #999999;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: not-allowed;
+    transition: all 0.2s ease;
+}
+
+.save-button.active {
+    background-color: #6B9AFF;
+    color: #FFFFFF;
+    cursor: pointer;
+}
+
+.save-button.active:hover {
+    background-color: #5A8AEF;
+}
+
+/* 드롭다운 메인 컨테이너 */
+.search-dropdown {
+    width: 100%; /*  너비 명시 */
+    background: white;
+    border: 1px solid #DCD7D7;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    margin-top: 4px; /* 검색창과의 간격 */
+    animation: dropdownAppear 0.2s ease-out;
+}
+
+/* 드롭다운 등장 애니메이션 */
+@keyframes dropdownAppear {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* 드롭다운 내용 */
+.dropdown-content {
+    padding: 8px;
+}
+
+/* 검색 결과 리스트 */
+.dropdown-results {
+    max-height: 200px;
+    overflow-y: auto;
+}
+
+/* 각 검색 결과 아이템 */
+.dropdown-item {
+    padding: 12px 16px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #374151;
+    transition: all 0.2s ease;
+    margin: 2px 0;
+}
+
+.dropdown-item:hover {
+    background-color: #F3F4F6;
+    color: #1F2937;
+    font-weight: 500;
+}
+
+.dropdown-item:active {
+    background-color: #E5E7EB;
+}
+
+/* 스크롤바 스타일링 */
+.dropdown-results::-webkit-scrollbar {
+    width: 6px;
+}
+
+.dropdown-results::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.dropdown-results::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.dropdown-results::-webkit-scrollbar-thumb:hover {
+    background: #a1a1a1;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .trading-area-container {
+        padding: 16px;
+        gap: 16px;
+    }
+
+    .selected-areas-section {
+        padding: 14px;
+        min-height: 100px;
+    }
+
+    .info-text {
+        padding: 10px 14px;
+        font-size: 13px;
+    }
+
+    .postcode-content {
+        width: 95%;
+        padding: 16px;
+    }
+}
