@@ -180,7 +180,7 @@ export default function Header() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="center" className="w-25">
                         <DropdownMenuItem asChild className="text-xs w-full justify-center">
-                          <Link href="/user/mypage">마이페이지</Link>
+                          <Link href="/src/app/(user)/mypage">마이페이지</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout} className="text-xs w-full justify-center">
                           로그아웃
