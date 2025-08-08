@@ -6,6 +6,7 @@ import Sidebar from '@/components/common/Sidebar';
 import { Button } from '@/components/ui/button';
 import MyReviewPage from './MyReviewDetail';
 import MyReviewAddForm from './MyReviewAddForm';
+import UserReviewList from './UserReviewList';
 
 const mockReviews = [
     { id: 1, title: '아가 까까 팜', rating: 5, date: '2014년 02월 02일', image: 'https://i.namu.wiki/i/Hv0V4WWCm_FEi9CgeCx6B59r4WXsbx8rw42vpmwtge33R0d5qOrmU9Ys8ly7aEuCs7yKRz4QaQk53vL1ZoXO4w.webp' },
@@ -19,7 +20,7 @@ const MyReviewList = () => {
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
     const [addOpen, setAddOpen] = useState(false);
-
+    const [userReviewOpen, setUserReviewOpen] = useState(false);
     return (
         <div className="page-container">
             {/* 메인 사이드바 - 리뷰 목록과 상세 페이지를 포함 */}
@@ -82,15 +83,22 @@ const MyReviewList = () => {
             </Sidebar>
 
             <br/>
-            <div className="page-container">
-                {/* 등록 버튼은 독립적으로 MyReviewAddForm을 렌더링합니다. */}
+            {/* 나의 등록 열기 */}
+            <div className="button-group">
                 <Button onClick={() => setAddOpen(true)} variant="default">
                     나의 등록 열기
                 </Button>
+                <br/><br/>
+                <Button onClick={() => setUserReviewOpen(true)} variant="default">
+                    받은 리뷰 보기
+                </Button>
             </div>
 
+            {/* 등록 및 받은리뷰 사이드바 */}
             {addOpen && <MyReviewAddForm onClose={() => setAddOpen(false)} />}
+            {userReviewOpen && <UserReviewList onClose={() => setUserReviewOpen(false)} />}
         </div>
+
     );
 };
 
