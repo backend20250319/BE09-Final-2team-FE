@@ -44,7 +44,9 @@ export default function ChatListSidebar({ trigger }) {
   };
 
   return (
+    // ChatListSidebar.jsx
     <Sidebar
+      sidebarKey="chatList"
       title="채팅 목록"
       trigger={
         <button className="flex items-center gap-1 cursor-pointer">
@@ -53,20 +55,13 @@ export default function ChatListSidebar({ trigger }) {
         </button>
       }
     >
-      <div className="space-y-4">
-        <ul className="[&>li]:border-b">
-          {chatRoomData.map((chat) => (
-            <li key={chat.id}>
-              <ChatRoomSidebar
-                chat={{
-                  ...chat,
-                  ...productMap[chat.productId], // productId로 상품 정보 매핑
-                }}
-              />
-            </li>
-          ))}
-        </ul>
-      </div>
+      <ul className="[&>li]:border-b">
+        {chatRoomData.map((chat) => (
+          <li key={chat.id}>
+            <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
+          </li>
+        ))}
+      </ul>
     </Sidebar>
   );
 }

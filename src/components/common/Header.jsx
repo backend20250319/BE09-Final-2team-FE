@@ -37,7 +37,7 @@ export default function Header() {
           <div className="left">
             <Link href={"/"}>
               <div className="flex items-center gap-2">
-                <Image src="/images/header/header-logo.png" width={128} height={128} alt="header-logo.png" />
+                <Image src="/images/common/main-logo.png" width={128} height={128} alt="header-logo.png" />
               </div>
             </Link>
           </div>
@@ -124,7 +124,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/images/header/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
+                      <Image src={"/images/common/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
                       육아꿀팁
                     </Button>
                   </Link>
@@ -132,7 +132,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="w-[110px] h-[44px]">
-                      <Image src={"/images/header/shopping-bag.png"} width={18} height={18} alt="공동구매" />
+                      <Image src={"/images/common/shopping-bag.png"} width={18} height={18} alt="공동구매" />
                       공동구매
                     </Button>
                   </Link>
@@ -140,7 +140,7 @@ export default function Header() {
                 <li className="flex justify-center items-center">
                   <Link href={"#"}>
                     <Button className="bg-[#85B3EB] hover:bg-[#65A2EE] w-[110px] h-[44px]">
-                      <Image src={"/images/header/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
+                      <Image src={"/images/common/fluent-mdl2_special-event.png"} width={18} height={18} alt="이벤트" />
                       이벤트
                     </Button>
                   </Link>
@@ -180,7 +180,7 @@ export default function Header() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="center" className="w-25">
                         <DropdownMenuItem asChild className="text-xs w-full justify-center">
-                          <Link href="/mypage">마이페이지</Link>
+                          <Link href="/user/mypage">마이페이지</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout} className="text-xs w-full justify-center">
                           로그아웃
