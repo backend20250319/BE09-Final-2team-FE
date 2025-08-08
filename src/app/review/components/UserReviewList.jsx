@@ -48,7 +48,7 @@ const UserReviewList = ({ onClose }) => {
                     </button>
                     <h2 className="review-title">OO님의 거래 리뷰 내역</h2>
                 </div>
-sae
+
                 <div className="average-rating-box">
                     <p>OO님의 총 별점 평균과 총 리뷰 개수는</p>
                     <div className="big-stars">★★★★★</div>
