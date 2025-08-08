@@ -5,31 +5,27 @@ import Sidebar from "@/components/common/Sidebar";
 import './location-management.css';
 import ConfirmModal, {MODAL_TYPES} from "@/components/common/ConfirmModal";
 
-// 상수로 분리된 거래지역 목록
-const AVAILABLE_AREAS = ['서초동', '양재동', '신사동', '역삼동', '논현동'];
+const AVAILABLE_AREAS = ['서초동', '양재동', '신사동', '역삼동', '논현동', '강남동', '청담동', '압구정동', '도곡동', '개포동'];
 
 const TradingAreaManagement = () => {
-    console.log('🔄 TradingAreaManagement 렌더링');
-
     const [selectedAreas, setSelectedAreas] = useState([]);
     const [isSearchMode, setIsSearchMode] = useState(false);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showLimitAlert, setShowLimitAlert] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+    const [focusedIndex, setFocusedIndex] = useState(-1);
 
-    // 초기 상태를 저장할 useRef (변경사항 감지용)
     const initialAreas = useRef([]);
-
     const dropdownRef = useRef(null);
     const searchInputRef = useRef(null);
+    const dropdownItemRefs = useRef([]);
 
-    // 컴포넌트 마운트 시 초기 상태 저장
     useEffect(() => {
         initialAreas.current = [...selectedAreas];
     }, []);
 
-    // 외부 클릭 감지 (드롭다운 닫기)
+    // 외부 클릭 감지
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
@@ -49,34 +45,102 @@ const TradingAreaManagement = () => {
         };
     }, [isDropdownOpen]);
 
+    // 드롭다운이 열릴 때마다 포커스 인덱스 초기화
+    useEffect(() => {
+        if (isDropdownOpen) {
+            setFocusedIndex(-1);
+        }
+    }, [isDropdownOpen]);
+
+    // 포커스된 항목을 화면에 보이도록 스크롤 처리
+    useEffect(() => {
+        if (focusedIndex >= 0 && dropdownItemRefs.current[focusedIndex]) {
+            const focusedElement = dropdownItemRefs.current[focusedIndex];
+            const dropdown = dropdownRef.current;
+
+            if (dropdown && focusedElement) {
+                const dropdownRect = dropdown.getBoundingClientRect();
+                const elementRect = focusedElement.getBoundingClientRect();
+
+                // 요소가 드롭다운 영역을 벗어났는지 확인
+                if (elementRect.bottom > dropdownRect.bottom) {
+                    // 아래로 스크롤
+                    focusedElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'nearest'
+                    });
+                } else if (elementRect.top < dropdownRect.top) {
+                    // 위로 스크롤
+                    focusedElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'nearest',
+                        inline: 'nearest'
+                    });
+                }
+            }
+        }
+    }, [focusedIndex]);
+
     const handleInputChange = (e) => {
-        console.log('Input:', e.target.value);
         setSearchKeyword(e.target.value);
+        setFocusedIndex(-1); // 검색어 변경 시 포커스 초기화
     };
 
-    // 드롭다운 닫기 및 초기화
+    // 키보드 네비게이션 처리
+    const handleInputKeyDown = (e) => {
+        const filteredAreas = searchKeyword === ''
+            ? AVAILABLE_AREAS
+            : AVAILABLE_AREAS.filter(area => area.includes(searchKeyword));
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                // 끝에서 멈추도록 변경
+                const nextIndex = focusedIndex < filteredAreas.length - 1 ? focusedIndex + 1 : focusedIndex;
+                setFocusedIndex(nextIndex);
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                // 처음에서 멈추도록 변경
+                const prevIndex = focusedIndex > 0 ? focusedIndex - 1 : focusedIndex;
+                setFocusedIndex(prevIndex);
+                break;
+            case 'Enter':
+                e.preventDefault();
+                if (focusedIndex >= 0 && focusedIndex < filteredAreas.length) {
+                    handleAreaSelect(filteredAreas[focusedIndex]);
+                } else if (filteredAreas.length > 0) {
+                    handleAreaSelect(filteredAreas[0]);
+                }
+                break;
+            case 'Escape':
+                e.preventDefault();
+                closeDropdown();
+                break;
+        }
+    };
+
     const closeDropdown = () => {
         setIsDropdownOpen(false);
         setIsSearchMode(false);
         setSearchKeyword('');
+        setFocusedIndex(-1);
         if (searchInputRef.current) {
             searchInputRef.current.value = '';
         }
     };
 
     const handleAreaSelect = (area) => {
-        // 3개 제한 체크
         if (selectedAreas.length >= 3) {
             setShowLimitAlert(true);
             setTimeout(() => setShowLimitAlert(false), 5000);
             return;
         }
 
-        // 중복 체크 후 추가
         if (!selectedAreas.includes(area)) {
             setSelectedAreas([...selectedAreas, area]);
         }
-
         closeDropdown();
     };
 
@@ -88,17 +152,14 @@ const TradingAreaManagement = () => {
 
     const handleSave = () => {
         console.log('저장된 거래지역:', selectedAreas);
-        // 저장 후 초기 상태 업데이트
         initialAreas.current = [...selectedAreas];
         setIsConfirmModalOpen(true);
     };
 
     const handleCloseModal = () => setIsConfirmModalOpen(false);
-
-    // 변경사항 있는지 확인
     const hasChanges = JSON.stringify(selectedAreas) !== JSON.stringify(initialAreas.current);
 
-    // 필터링된 지역들
+    // 필터링된 지역 목록
     const filteredAreas = searchKeyword === ''
         ? AVAILABLE_AREAS
         : AVAILABLE_AREAS.filter(area => area.includes(searchKeyword));
@@ -121,7 +182,6 @@ const TradingAreaManagement = () => {
                                             ref={searchInputRef}
                                             className="fake-input"
                                             onClick={() => {
-                                                console.log('검색 모드 활성화');
                                                 setIsSearchMode(true);
                                                 setIsDropdownOpen(true);
                                             }}
@@ -146,39 +206,72 @@ const TradingAreaManagement = () => {
                                             type="text"
                                             className="real-input"
                                             onChange={handleInputChange}
+                                            onKeyDown={handleInputKeyDown}
                                             placeholder="지역명을 입력하세요..."
                                             autoFocus
+                                            aria-describedby="search-instructions"
+                                            aria-activedescendant={
+                                                focusedIndex >= 0 ? `area-option-${focusedIndex}` : undefined
+                                            }
                                         />
                                     )}
 
-                                    {/* 드롭다운 결과 */}
+                                    {/* 숨겨진 사용법 안내 */}
+                                    <div id="search-instructions" className="sr-only">
+                                        방향키로 항목을 선택하고 Enter키로 확정하세요. Escape키로 닫을 수 있습니다.
+                                    </div>
+
                                     {isDropdownOpen && (
                                         <div
                                             ref={dropdownRef}
                                             className="search-dropdown"
                                             role="listbox"
                                             aria-label="거래지역 목록"
+                                            style={{
+                                                maxHeight: '200px',
+                                                overflowY: 'auto'
+                                            }}
                                         >
                                             <div className="dropdown-content">
                                                 <div className="dropdown-results">
-                                                    {filteredAreas.map(area => (
-                                                        <div
-                                                            key={area}
-                                                            className="dropdown-item"
-                                                            role="option"
-                                                            aria-selected="false"
-                                                            onClick={() => handleAreaSelect(area)}
-                                                            onKeyDown={(e) => {
-                                                                if (e.key === 'Enter' || e.key === ' ') {
-                                                                    e.preventDefault();
-                                                                    handleAreaSelect(area);
-                                                                }
-                                                            }}
-                                                            tabIndex={-1}
-                                                        >
-                                                            {area}
+                                                    {filteredAreas.length === 0 ? (
+                                                        <div className="dropdown-item no-results">
+                                                            검색 결과가 없습니다
                                                         </div>
-                                                    ))}
+                                                    ) : (
+                                                        filteredAreas.map((area, index) => (
+                                                            <div
+                                                                key={area}
+                                                                id={`area-option-${index}`}
+                                                                ref={el => dropdownItemRefs.current[index] = el}
+                                                                className={`dropdown-item ${
+                                                                    index === focusedIndex ? 'focused' : ''
+                                                                }`}
+                                                                role="option"
+                                                                aria-selected={index === focusedIndex}
+                                                                onClick={() => handleAreaSelect(area)}
+                                                                onKeyDown={(e) => {
+                                                                    if (e.key === 'Enter' || e.key === ' ') {
+                                                                        e.preventDefault();
+                                                                        handleAreaSelect(area);
+                                                                    }
+                                                                }}
+                                                                onMouseEnter={() => setFocusedIndex(index)}
+                                                                onMouseLeave={() => setFocusedIndex(-1)}
+                                                                tabIndex={-1}
+                                                                style={{
+                                                                    backgroundColor: index === focusedIndex ? '#E3F2FD' : 'white',
+                                                                    color: index === focusedIndex ? '#1976D2' : 'inherit',
+                                                                    fontWeight: index === focusedIndex ? '500' : 'normal',
+                                                                    padding: '12px 16px',
+                                                                    cursor: 'pointer',
+                                                                    borderBottom: '1px solid #f0f0f0'
+                                                                }}
+                                                            >
+                                                                {area}
+                                                            </div>
+                                                        ))
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -186,7 +279,6 @@ const TradingAreaManagement = () => {
                                 </div>
                             </div>
 
-                            {/* 3개 제한 알림 */}
                             {showLimitAlert && (
                                 <div className="limit-alert">
                                     최대 3개 지역이 선택되었습니다. 다른 지역을 선택하려면 기존 지역을 삭제해주세요.
@@ -215,6 +307,7 @@ const TradingAreaManagement = () => {
                                                     <button
                                                         className="remove-area-btn"
                                                         onClick={() => handleRemoveArea(index)}
+                                                        aria-label={`${area} 삭제`}
                                                     >
                                                         ×
                                                     </button>
@@ -239,7 +332,6 @@ const TradingAreaManagement = () => {
                 }
             />
 
-            {/* 확인 모달 */}
             <ConfirmModal
                 open={isConfirmModalOpen}
                 title="저장 완료"
