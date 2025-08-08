@@ -1,8 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import ProductCard from '@/components/common/ProductCard';
 import Sidebar from '@/components/common/Sidebar';
+import { useSidebarStore } from '@/store/sidebarStore';
 import '@/common-css/WishlistSidebar.css';
 
 const WishlistSidebar = ({ trigger }) => {
@@ -12,6 +14,8 @@ const WishlistSidebar = ({ trigger }) => {
     const [filteredProducts, setFilteredProducts] = useState(wishlistProducts);
     const [searchTerm, setSearchTerm] = useState('');
     const [isFocused, setIsFocused] = useState(false);
+    const router = useRouter();
+    const closeSidebar = useSidebarStore((state) => state.closeAll);
 
     /**
      * 백엔드 API에서 위시리스트 데이터를 가져오는 함수
@@ -197,9 +201,10 @@ const WishlistSidebar = ({ trigger }) => {
      * @param {Object} product - 클릭된 상품 정보
      */
     const handleProductClick = (product) => {
-        // TODO: 상품 상세 페이지로 이동
-        console.log('상품 클릭:', product);
-        // router.push(`/product/${product.id}`);
+        // 사이드바 닫기
+        closeSidebar(trigger);
+        // 상품 상세 페이지로 이동
+        router.push(`/product/${product.id}`);
     };
 
     const wishlistContent = (
