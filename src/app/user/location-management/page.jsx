@@ -7,6 +7,8 @@ import ConfirmModal, {MODAL_TYPES} from "@/components/common/ConfirmModal";
 
 const TradingAreaManagement = () => {
     const [selectedAreas, setSelectedAreas] = useState([]);
+    const [isSearchMode, setIsSearchMode] = useState(false);
+    const [searchKeyword, setSearchKeyword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
     const [showLimitAlert, setShowLimitAlert] = useState(false);
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -20,6 +22,13 @@ const TradingAreaManagement = () => {
 
     // 모달을 닫는 함수
     const handleCloseModal = () => setIsConfirmModalOpen(false);
+
+    // 드롭다운 닫기 및 초기화 함수
+    const closeDropdown = () => {
+        setIsDropdownOpen(false);
+        setIsSearchMode(false);  // 검색 모드 초기화
+        setSearchKeyword('');    // 검색어 초기화
+    };
 
     // 2. 컴포넌트가 처음 마운트될 때만 실행되어 초기 상태를 저장하는 useEffect
     useEffect(() => {
@@ -38,7 +47,7 @@ const TradingAreaManagement = () => {
                 searchInputRef.current &&
                 !searchInputRef.current.contains(event.target)
             ) {
-                setIsDropdownOpen(false);
+                closeDropdown(); // setIsDropdownOpen(false) 대신 closeDropdown 사용
             }
         };
 
@@ -48,12 +57,17 @@ const TradingAreaManagement = () => {
         };
     }, [isDropdownOpen]);
 
+    const handleSearch = (e) => {
+        setSearchKeyword(e.target.value);
+        // 나중에 api 호출 로직 추가
+    }
+
     const handleAreaSelect = (area) => {
         // 3개 제한 체크
         if (selectedAreas.length >= 3) {
             setShowLimitAlert(true);
             setTimeout(() => setShowLimitAlert(false), 5000);
-            setIsDropdownOpen(false);
+            closeDropdown(); // setIsDropdownOpen(false) 대신 closeDropdown 사용
             return;
         }
 
@@ -61,7 +75,7 @@ const TradingAreaManagement = () => {
         if (!selectedAreas.includes(area)) {
             setSelectedAreas([...selectedAreas, area]);
         }
-        setIsDropdownOpen(false);
+        closeDropdown(); // setIsDropdownOpen(false) 대신 closeDropdown 사용
     };
 
     const handleRemoveArea = (index) => {
@@ -92,28 +106,73 @@ const TradingAreaManagement = () => {
 
                     <div className="search-section">
                         <div className="search-input-container">
-                            <div
-                                ref={searchInputRef}
-                                className="fake-input"
-                                onClick={() => setIsDropdownOpen(true)}
-                            >
-                                <span className="placeholder-left">주소를 검색하세요</span>
-                                <span className="placeholder-right">예: 서초동, 강남구, 마포구 등</span>
-                            </div>
+                            {!isSearchMode ? (
+                                <div
+                                    ref={searchInputRef}
+                                    className="fake-input"
+                                    onClick={() => {
+                                        setIsDropdownOpen(true);
+                                        setIsSearchMode(true);
+                                    }}
+                                    tabIndex={0} // 키보드 tab 으로 포커스 가능
+                                    role="button" // 스크린 리더가 'button' 으로 인식, 현재 클릭만 하는 트리거라 button 사용
+                                    aria-haspopup="true" // 팝업이 있다고 알림
+                                    aria-expanded={isDropdownOpen} // 현재 열림, 닫힘 상태 알림
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' || e.key === ' ') {
+                                            e.preventDefault();
+                                            setIsDropdownOpen(true);
+                                            setIsSearchMode(true);
+                                        }
+                                    }}
+                                >
+                                    <span className="placeholder-left">주소를 검색하세요</span>
+                                    <span className="placeholder-right">예: 서초동, 강남구, 마포구 등</span>
+                                </div>
+                            ) : (
+                                <input
+                                    ref={searchInputRef}
+                                    type="text"
+                                    className="real-input"
+                                    value={searchKeyword}
+                                    onChange={handleSearch}
+                                    onKeyUp={handleSearch}
+                                    placeholder="지역명을 입력하세요..."
+                                    autoFocus
+                                />
+                            )}
 
                             {isDropdownOpen && (
-                                <div ref={dropdownRef} className="search-dropdown">
+                                <div
+                                    ref={dropdownRef}
+                                    className="search-dropdown"
+                                    role="listbox" // 선택 가능한 옵션들의 리스트
+                                    aria-label="거래지역 목록" // 스크린 리더용 설명
+                                >
                                     <div className="dropdown-content">
                                         <div className="dropdown-results">
-                                            {['서초동', '양재동', '신사동', '역삼동', '논현동'].map(area => (
-                                                <div
-                                                    key={area}
-                                                    className="dropdown-item"
-                                                    onClick={() => handleAreaSelect(area)}
-                                                >
-                                                    {area}
-                                                </div>
-                                            ))}
+                                            {['서초동', '양재동', '신사동', '역삼동', '논현동']
+                                                .filter(area =>
+                                                    searchKeyword === '' || area.includes(searchKeyword)
+                                                )
+                                                .map(area => (
+                                                    <div
+                                                        key={area}
+                                                        className="dropdown-item"
+                                                        role="option" // 각 항목이  선택 옵션임을 표시
+                                                        aria-selected="false" // 현재 선택 상태 (나중에 동적으로 변경)
+                                                        onClick={() => handleAreaSelect(area)}
+                                                        onKeyDown={(e) => { // 키모드 접근성
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                handleAreaSelect(area);
+                                                            }
+                                                        }}
+                                                        tabIndex={-1} // 포커스는 받되, tab 순서에서 제외
+                                                    >
+                                                        {area}
+                                                    </div>
+                                                ))}
                                         </div>
                                     </div>
                                 </div>
