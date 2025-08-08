@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import '@/common-css/ProductCard.css';
 
 const CARD_SIZES = {
+    size0: 132,
     size1: 157,
     size2: 181,
     size3: 235,
@@ -11,6 +13,7 @@ const CARD_SIZES = {
 
 const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemoveFromWishlist, onProductClick }) => {
     const {
+        id,
         productName,
         price,
         location,
@@ -23,6 +26,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     } = product;
     const [isWishlisted, setIsWishlisted] = useState(false);
     const cardWidth = CARD_SIZES[size] || CARD_SIZES.size1;
+    const router = useRouter();
 
     // trade_status 영어값을 한글로 변환
     const getTradeStatusText = (status) => {
@@ -69,6 +73,9 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     const handleProductClick = () => {
         if (onProductClick) {
             onProductClick(product);
+        } else {
+            // 기본 동작: 상품 상세 페이지로 이동
+            router.push(`/product/${id}`);
         }
     };
 
@@ -81,7 +88,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     // wishlist 모드일 때의 렌더링
     if (variant === 'wishlist') {
         return (
-            <div className='wishlist-product-card' onClick={handleProductClick}>
+            <div className='wishlist-product-card' onClick={handleProductClick} style={{ cursor: 'pointer' }}>
                 {/* 이미지 영역 */}
                 <div className='product-image-container'>
                     <img
@@ -100,7 +107,10 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                     {/* 찜하기 버튼 */}
                     <div
                         className='wishlist-button active'
-                        onClick={handleRemoveFromWishlist}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveFromWishlist(e);
+                        }}
                         title='찜한 상품에서 제거'
                     >
                         <img src='/images/product/wishlist-on.svg' alt='찜하기됨' width={24} height={24} />
@@ -136,7 +146,8 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
         <div className='product-card-wrapper'>
             <div
                 className={`product-card-container${trade_status !== 'ON_SALE' ? ' statused' : ''}`}
-                style={{ width: cardWidth }}
+                style={{ width: cardWidth, cursor: 'pointer' }}
+                onClick={handleProductClick}
             >
                 <div className='product-card-image-container' style={{ width: cardWidth, height: cardWidth }}>
                     <img
@@ -154,7 +165,10 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
 
                     <div
                         className={`product-card-wishlist-button${isWishlisted ? ' wishlisted' : ''}`}
-                        onClick={handleWishlistClick}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            handleWishlistClick();
+                        }}
                     >
                         <img
                             src={isWishlisted ? '/images/product/wishlist-on.svg' : '/images/product/wishlist-off.svg'}
@@ -187,7 +201,10 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                     <div className='product-card-review-section'>
                         <button
                             className='product-card-review-button'
-                            onClick={handleReviewClick}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                handleReviewClick();
+                            }}
                             disabled={hasWrittenReview}
                         >
                             <span>리뷰작성</span>

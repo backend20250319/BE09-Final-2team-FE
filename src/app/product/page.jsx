@@ -2,6 +2,7 @@
 import ProductCard from '@/components/common/ProductCard';
 import WishlistSidebar from '@/components/common/WishlistSidebar';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export default function Page() {
     // TODO: 실제로는 API로 값을 받아와야 함
@@ -14,7 +15,7 @@ export default function Page() {
         imageUrl:
             'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
         trade_status: 'SOLD', // ON_SALE(판매중), RESERVED(예약중), ON_HOLD(판매보류), SOLD(판매완료)
-        status: 'NEW', // NEW(새상품), USED(중고)
+        status: 'USED', // NEW(새상품), USED(중고)
         hasWrittenReview: false,
         showReviewButton: false,
     };
@@ -30,7 +31,14 @@ export default function Page() {
             <WishlistSidebar trigger={<Button>찜한 상품</Button>} />
 
             {/* 상품 카드 - product 예시는 위에 있음 */}
-            <ProductCard product={product} size='size3' />
+            <ProductCard product={product} size='size0' />
+
+            {/* Product Detail Page Link */}
+            <div style={{ marginTop: '20px', padding: '20px' }}>
+                <Link href='/product/detail'>
+                    <Button>상품 상세 페이지 보기</Button>
+                </Link>
+            </div>
         </div>
     );
 }
