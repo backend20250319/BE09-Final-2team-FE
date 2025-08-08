@@ -1,13 +1,12 @@
 "use client";
 
 import Sidebar from "@/components/common/Sidebar";
-import Image from "next/image";
-import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { formatDateToString, formatStringToDate, numberWithCommas } from "@/utils/format";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useSidebar } from "@/hooks/useSidebar";
+import { formatDateToString, formatStringToDate, numberWithCommas } from "@/utils/format";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function ChatRoomSidebar({ chat }) {
   const { close, closeAll } = useSidebar(`chatRoom_${chat.id}`);
