@@ -123,6 +123,14 @@ body {
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+body {
+  -ms-overflow-style: none;
+}
+
+::-webkit-scrollbar {
+  display: none;
+}
+
 @layer base {
   html,
   body {
