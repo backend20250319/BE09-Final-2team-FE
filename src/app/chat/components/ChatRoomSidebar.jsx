@@ -25,16 +25,17 @@ export default function ChatRoomSidebar({ chat }) {
 
   const router = useRouter();
 
-  // 메시지 전송
-  const handleSend = (e) => {
-    e.preventDefault();
+  // 메시지 전송 함수 (이벤트 없이도 사용 가능하게 수정)
+  const sendMessage = () => {
     if (!text.trim()) return;
+
     const newMessage = {
       from: myId,
       text,
       timestamp: new Date().toISOString(),
       read: false,
     };
+
     setMessages((prev) => [...prev, newMessage]);
     setText("");
 
@@ -43,11 +44,17 @@ export default function ChatRoomSidebar({ chat }) {
     }, 0);
   };
 
-  // 엔터키 전송
+  // Submit 이벤트 처리
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendMessage(); // 이벤트 객체를 넘기지 않음
+  };
+
+  // Enter 키 입력 처리
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(e);
+      sendMessage(); // 직접 호출 (이벤트 없이)
     }
   };
 
