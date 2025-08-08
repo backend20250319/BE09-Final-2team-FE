@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { SyncLoader } from "react-spinners";
 
 export default function Loading() {
   return (

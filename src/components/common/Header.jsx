@@ -9,14 +9,27 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
-import { mockCategoryData } from "./data/HeaderCategoryData";
 import WishlistSidebar from "./WishlistSidebar";
+import { mockCategoryData } from "./data/haderCategoryData";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(true); // 추후 실제 로그인 상태로 교체
   const [categoryColumns, setCategoryColumns] = useState({});
   const router = useRouter();
+  const [keyword, setKeyword] = useState("");
+
+  const handleSearch = () => {
+    if (keyword.trim()) {
+      router.push(`/product/search?keyword=${encodeURIComponent(keyword.trim())}`);
+    }
+
+    setKeyword("");
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") handleSearch();
+  };
 
   const handleLogout = () => {
     // 실제 로그아웃 로직 추가 필요
@@ -45,10 +58,13 @@ export default function Header() {
             <div className="bg-[#F1F4F6] relative rounded-[6px] w-[612px] h-[44px] pl-4 pr-11 py-[10px] mb-4">
               <input
                 type="text"
+                value={keyword || ""}
+                onChange={(e) => setKeyword(e.target.value)}
+                onKeyDown={handleKeyDown}
                 className="w-full outline-none bg-transparent"
                 placeholder="어떤 육아 용품을 찾고 계신가요?"
               />
-              <div className="absolute top-[10px] right-[16px] cursor-pointer">
+              <div className="absolute top-[10px] right-[16px] cursor-pointer" onClick={handleSearch}>
                 <Search />
               </div>
             </div>
@@ -122,7 +138,7 @@ export default function Header() {
                   />
                 </li>
                 <li className="flex justify-center items-center">
-                  <Link href={"#"}>
+                  <Link href="/post?tab=tips">
                     <Button className="w-[110px] h-[44px]">
                       <Image src={"/images/common/tabler_bulb.png"} width={24} height={24} alt="육아꿀팁" />
                       육아꿀팁
@@ -130,7 +146,7 @@ export default function Header() {
                   </Link>
                 </li>
                 <li className="flex justify-center items-center">
-                  <Link href={"#"}>
+                  <Link href="/post?tab=groupbuy">
                     <Button className="w-[110px] h-[44px]">
                       <Image src={"/images/common/shopping-bag.png"} width={18} height={18} alt="공동구매" />
                       공동구매
@@ -159,7 +175,7 @@ export default function Header() {
                         <span className="text-sm">채팅하기</span>
                       </button>
                     }
-                  ></ChatListSidebar>
+                  />
                 </li>
                 <li className="px-3">|</li>
                 <li>
@@ -190,7 +206,10 @@ export default function Header() {
                   </li>
                 ) : (
                   <li>
-                    <button onClick={() => router.push("/")} className="flex items-center gap-1 cursor-pointer">
+                    <button
+                      onClick={() => router.push("/user/login")}
+                      className="flex items-center gap-1 cursor-pointer"
+                    >
                       <User color="#000000" />
                       <span className="text-sm">마이</span>
                     </button>

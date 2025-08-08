@@ -1,0 +1,22 @@
+@keyframes step {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  20% {
+    transform: translateY(-3px);
+  }
+  40% {
+    transform: translateY(2px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+  80% {
+    transform: translateY(1px);
+  }
+}
+
+.animate-step {
+  animation: step 1s infinite ease-in-out;
+}
