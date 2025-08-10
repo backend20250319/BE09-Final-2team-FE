@@ -101,12 +101,12 @@ const MyPage = () => {
                         <div className="transaction-content">
                             <div className="transaction-item">
                                 <span className="transaction-label">총 구매</span>
-                                <span className="transaction-value">0</span>
+                                <span className="transaction-value">{dummyPurchases.length}</span>
                                 <span className="transaction-unit">건</span>
                             </div>
                             <div className="transaction-item">
                                 <span className="transaction-label">총 판매</span>
-                                <span className="transaction-value">0</span>
+                                <span className="transaction-value">{dummySales.length}</span>
                                 <span className="transaction-unit">건</span>
                             </div>
                             <div className="transaction-item">
