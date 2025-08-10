@@ -6,7 +6,7 @@ import Footer from "@/components/common/Footer";
 import "./globals.css";
 
 // 헤더, 푸터 필요없는 경로 작성
-const noLayoutPaths = ["/login"];
+const noLayoutPaths = ["/login", "/signup"];
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
