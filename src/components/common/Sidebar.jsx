@@ -17,7 +17,7 @@ export default function Sidebar({
   onBack = false,
   onClose = false,
 }) {
-  const { isOpen, open, close } = useSidebar(sidebarKey);
+  const { isOpen, open, close, closeAll } = useSidebar(sidebarKey);
 
   return (
     <>
