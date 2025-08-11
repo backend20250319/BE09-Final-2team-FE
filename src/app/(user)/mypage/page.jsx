@@ -2,10 +2,11 @@
 
 import React, { useState } from 'react';
 import './mypage.css'; // mypage.css 파일을 임포트합니다.
+import MyReviewList from '@/app/review/components/MyReviewList'; // 리뷰 추가
 
 const MyPage = () => {
     const [activeTab, setActiveTab] = useState('purchase');
-
+    const [reviewOpen, setReviewOpen] = useState(false); // ✅ 사이드바 상태
     return (
         <div className="mypage-container">
             <div className="main-content">
@@ -28,7 +29,17 @@ const MyPage = () => {
                         <h3 className="menu-title">거래 정보</h3>
                         <div className="menu-items">
                             <a href="#" className="menu-item">찜한 상품</a>
-                            <a href="#" className="menu-item">리뷰 관리</a>
+                            {/* ✅ 리뷰 관리 클릭 시 사이드바 열기 */}
+                            <a
+                                href="#"
+                                className="menu-item"
+                                onClick={(e) => {
+                                    e.preventDefault();
+                                    setReviewOpen(true);
+                                }}
+                            >
+                                리뷰 관리
+                            </a>
                         </div>
                     </div>
                 </div>
@@ -117,6 +128,11 @@ const MyPage = () => {
                     </div>
                 </div>
             </div>
+            {/* ✅ 항상 렌더링 */}
+            <MyReviewList
+                open={reviewOpen}
+                onClose={() => setReviewOpen(false)}
+            />
         </div>
     );
 };

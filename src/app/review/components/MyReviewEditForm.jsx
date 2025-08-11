@@ -49,7 +49,7 @@ const MyReviewEditForm = ({ onClose }) => {
                         },
                     });
                     setModalOpen(true);
-                }, 200);
+                }, 500);
             },
         });
         setModalOpen(true);
@@ -174,7 +174,7 @@ const MyReviewEditForm = ({ onClose }) => {
                             },
                         });
                         setModalOpen(true);
-                    }, 200);
+                    }, 500);
                 }}
             />
         </>
