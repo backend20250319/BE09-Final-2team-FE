@@ -1,7 +1,6 @@
 "use client";
 
 import ChatListSidebar from "./components/ChatListSideBar";
-import ChatRoomSidebar from "./components/ChatRoomSidebar";
 
 export default function Page() {
   return (

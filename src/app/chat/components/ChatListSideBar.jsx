@@ -12,7 +12,7 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
       opponentId: "user1",
       name: "김철수",
       avatar: "",
-      message: "안녕하세요, 상품 문의드립니다.",
+      message: "안녕하세요~ 상품은 미사용 제품이고요 네고는 많이 못해드립니다!",
       date: "7월 28일",
       productId: "p101",
     },
@@ -21,7 +21,7 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
       opponentId: "user2",
       name: "이영희",
       avatar: "",
-      message: "구매하고 싶어요. 아직 판매 중인가요?",
+      message: "아 넵 안녕하세요~",
       date: "7월 29일",
       productId: "p102",
     },
@@ -37,9 +37,9 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
     },
     p102: {
       productImg: "/images/text2.png",
-      productName: "아디다스 백팩",
+      productName: "DSLR 카메라",
       productPrice: 35000,
-      isSale: true,
+      isSale: false,
     },
   };
 
