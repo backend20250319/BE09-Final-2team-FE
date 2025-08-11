@@ -1,9 +1,15 @@
 "use client";
 
+import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import './signup.css';
+import ContentModal from '@/app/(user)/signup/components/ContentModal';
+import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
+import DaumPostcode from 'react-daum-postcode';
 
 export default function Signup() {
+    const router = useRouter(); // 라우터 추가
+
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
         name: '',
@@ -25,16 +31,36 @@ export default function Signup() {
         push: false
     });
 
+    // 모달 상태 추가
+    const [modalStates, setModalStates] = useState({
+        terms: false,
+        privacy: false,
+        age: false,
+        location: false,
+        push: false
+    });
+
+    const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
+
     // 중복 확인 상태
     const [validationStates, setValidationStates] = useState({
-        loginId: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false },
-        email: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false },
-        nickname: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false }
+        loginId: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false},
+        email: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false},
+        nickname: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false}
     });
 
     // 기타 검증 상태
-    const [passwordMatch, setPasswordMatch] = useState({ status: 'default', message: '' });
+    const [passwordMatch, setPasswordMatch] = useState({status: 'default', message: ''});
     const [isFormValid, setIsFormValid] = useState(false);
+
+    // 모달 열기/닫기 함수
+    const openModal = (type) => {
+        setModalStates(prev => ({...prev, [type]: true}));
+    };
+
+    const closeModal = (type) => {
+        setModalStates(prev => ({...prev, [type]: false}));
+    };
 
     // 입력값 변경 핸들러
     const handleInputChange = (field, value) => {
@@ -71,7 +97,7 @@ export default function Signup() {
                     message: '✅ 비밀번호가 일치합니다'
                 });
             } else {
-                setPasswordMatch({ status: 'default', message: '' });
+                setPasswordMatch({status: 'default', message: ''});
             }
         }
     };
@@ -135,7 +161,7 @@ export default function Signup() {
         // 로딩 상태
         setValidationStates(prev => ({
             ...prev,
-            [type]: { status: 'loading', message: '🔄 확인 중...', checked: false }
+            [type]: {status: 'loading', message: '🔄 확인 중...', checked: false}
         }));
 
         try {
@@ -193,21 +219,43 @@ export default function Signup() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log('회원가입 데이터:', { formData, agreements });
-            alert('회원가입이 완료되었습니다!');
+            console.log('회원가입 데이터:', {formData, agreements});
+            router.push('/signup/complete'); // 완료 페이지로 이동
         }
     };
 
     // 주소 검색 (다음 API 연동 예정)
+    const handleAddressComplete = (data) => {
+        let fullAddress = data.address;
+        let extraAddress = '';
+
+        // 법정동명이 있을 경우 추가
+        if (data.addressType === 'R') {
+            if (data.bname !== '') {
+                extraAddress += data.bname;
+            }
+            if (data.buildingName !== '') {
+                extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
+            }
+            fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
+        }
+
+        // 주소를 input에 설정
+        handleInputChange('address', fullAddress);
+
+        // 우편번호 창 닫기
+        setIsPostcodeOpen(false);
+    };
+
+    // 주소 검색 버튼 클릭 핸들러
     const handleAddressSearch = () => {
-        // 임시로 샘플 주소 설정
-        handleInputChange('address', '서울특별시 강남구 역삼동 123-45');
+        setIsPostcodeOpen(true);
     };
 
     return (
         <div className="signup-root">
             <div className="signup-card">
-                <div className="signup-image" />
+                <div className="signup-image"/>
 
                 <form className="signup-form" onSubmit={handleSubmit}>
                     {/* 이름 */}
@@ -351,6 +399,32 @@ export default function Signup() {
                         </div>
                     </div>
 
+
+                    {/* 우편번호 검색 모달 - 폼 마지막에 추가 */}
+                    {isPostcodeOpen && (
+                        <div className="postcode-overlay">
+                            <div className="postcode-modal">
+                                <div className="postcode-header">
+                                    <h3>주소 검색</h3>
+                                    <button
+                                        className="postcode-close"
+                                        onClick={() => setIsPostcodeOpen(false)}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                <DaumPostcode
+                                    onComplete={handleAddressComplete}
+                                    autoClose={false}
+                                    style={{
+                                        width: '100%',
+                                        height: '400px'
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    )}
+
                     {/* 약관 동의 */}
                     <div className="signup-agree">
                         <label>
@@ -361,6 +435,7 @@ export default function Signup() {
                             />
                             전체동의
                         </label>
+
                         <label>
                             <input
                                 type="checkbox"
@@ -368,8 +443,14 @@ export default function Signup() {
                                 onChange={(e) => handleAgreementChange('terms', e.target.checked)}
                             />
                             (필수) 이용약관에 동의합니다
-                            <span className="agreement-link">보기</span>
+                            <span
+                                className="agreement-link"
+                                onClick={() => openModal('terms')}
+                            >
+                                보기
+                            </span>
                         </label>
+
                         <label>
                             <input
                                 type="checkbox"
@@ -377,8 +458,14 @@ export default function Signup() {
                                 onChange={(e) => handleAgreementChange('privacy', e.target.checked)}
                             />
                             (필수) 개인정보 수집 및 이용에 동의합니다
-                            <span className="agreement-link">보기</span>
+                            <span
+                                className="agreement-link"
+                                onClick={() => openModal('privacy')}
+                            >
+                                보기
+                            </span>
                         </label>
+
                         <label>
                             <input
                                 type="checkbox"
@@ -386,8 +473,14 @@ export default function Signup() {
                                 onChange={(e) => handleAgreementChange('age', e.target.checked)}
                             />
                             (필수) 14세 이상입니다
-                            <span className="agreement-link">보기</span>
+                            <span
+                                className="agreement-link"
+                                onClick={() => openModal('age')}
+                            >
+                                보기
+                            </span>
                         </label>
+
                         <label>
                             <input
                                 type="checkbox"
@@ -395,8 +488,14 @@ export default function Signup() {
                                 onChange={(e) => handleAgreementChange('location', e.target.checked)}
                             />
                             (선택) 위치서비스 이용동의
-                            <span className="agreement-link">보기</span>
+                            <span
+                                className="agreement-link"
+                                onClick={() => openModal('location')}
+                            >
+                                보기
+                            </span>
                         </label>
+
                         <label>
                             <input
                                 type="checkbox"
@@ -404,7 +503,12 @@ export default function Signup() {
                                 onChange={(e) => handleAgreementChange('push', e.target.checked)}
                             />
                             (선택) 푸시 알림 이용동의
-                            <span className="agreement-link">보기</span>
+                            <span
+                                className="agreement-link"
+                                onClick={() => openModal('push')}
+                            >
+                                보기
+                            </span>
                         </label>
                     </div>
 
@@ -417,6 +521,42 @@ export default function Signup() {
                     </button>
                 </form>
             </div>
+
+            {/* 모달들 */}
+            <ContentModal
+                open={modalStates.terms}
+                title="이용약관"
+                content={MODAL_CONTENTS.terms}
+                onClose={() => closeModal('terms')}
+            />
+
+            <ContentModal
+                open={modalStates.privacy}
+                title="개인정보처리방침"
+                content={MODAL_CONTENTS.privacy}
+                onClose={() => closeModal('privacy')}
+            />
+
+            <ContentModal
+                open={modalStates.age}
+                title="14세 이상 이용 안내"
+                content={MODAL_CONTENTS.age}
+                onClose={() => closeModal('age')}
+            />
+
+            <ContentModal
+                open={modalStates.location}
+                title="위치서비스 이용약관"
+                content={MODAL_CONTENTS.location}
+                onClose={() => closeModal('location')}
+            />
+
+            <ContentModal
+                open={modalStates.push}
+                title="푸시 알림 서비스 이용약관"
+                content={MODAL_CONTENTS.push}
+                onClose={() => closeModal('push')}
+            />
         </div>
     );
 }
