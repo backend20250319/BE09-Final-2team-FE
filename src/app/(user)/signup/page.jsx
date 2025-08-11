@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import './signup.css';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
@@ -253,19 +254,20 @@ export default function Signup() {
         <div className="signup-root">
             <div className="signup-card">
                 {/* 로고 이미지 */}
-                <div className="signup-image">
-                    <img
-                        src="/images/common/main-logo.png"
-                        alt="Momnect 로고"
-                        style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                            borderRadius: '8px'
-                        }}
-                    />
-                </div>
-
+                <Link href="/">
+                    <div className="signup-image" style={{cursor: 'pointer'}}>
+                        <img
+                            src="/images/common/main-logo.png"
+                            alt="Momnect 로고"
+                            style={{
+                                width: '100%',
+                                height: '100%',
+                                objectFit: 'cover',
+                                borderRadius: '8px'
+                            }}
+                        />
+                    </div>
+                </Link>
                 <form className="signup-form" onSubmit={handleSubmit}>
                     {/* 이름 */}
                     <div className="signup-row">

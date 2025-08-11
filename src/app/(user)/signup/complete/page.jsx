@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import './signup-complete.css';
 
 const SignupComplete = () => {
@@ -21,13 +22,15 @@ const SignupComplete = () => {
             <div className="signup-complete-card">
                 <div className="card-content">
                     {/* 이미지 */}
-                    <div className="image-container">
-                        <img
-                            src="/images/common/main-logo.png"
-                            alt="Momnect 로고"
-                            className="completion-image"
-                        />
-                    </div>
+                    <Link href="/">
+                        <div className="image-container">
+                            <img
+                                src="/images/common/main-logo.png"
+                                alt="Momnect 로고"
+                                className="completion-image"
+                            />
+                        </div>
+                    </Link>
 
                     {/* 환영 메시지 */}
                     <div className="welcome-message">

@@ -1,6 +1,7 @@
 "use client";
 
 import React, {useState, useEffect} from 'react';
+import Link from 'next/link';
 import './login.css';
 
 export default function Login() {
@@ -35,7 +36,9 @@ export default function Login() {
     return (
         <div className="login-root">
             <div className="login-card">
-                <img src="/images/common/main-logo.png" alt="main visual" className="login-main-image" />
+                <Link href="/">
+                    <img src="/images/common/main-logo.png" alt="main visual" className="login-main-image" />
+                </Link>
                 <form className="login-form" onSubmit={handleSubmit}>
                     <input
                         className="login-input"
@@ -62,7 +65,7 @@ export default function Login() {
                     </div>
                 </form>
                 <div className="login-links">
-                    <a href="#" className="signup-link">계정이 없으신가요? 회원가입</a>
+                    <Link href="/signup" className="signup-link">계정이 없으신가요? 회원가입</Link>
                     <div className="find-links">
                         <a href="#" className="find-link">아이디 찾기</a>
                         <span className="divider"> | </span>
