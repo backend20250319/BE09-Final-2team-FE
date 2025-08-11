@@ -21,7 +21,7 @@ const ProductDetail = () => {
     const statusDropdownRef = useRef(null);
 
     // my product 여부
-    const isMyProduct = true;
+    const isMyProduct = false;
 
     // 카테고리 데이터
     const categories = [
@@ -745,7 +745,9 @@ const ProductDetail = () => {
                                             height={36}
                                         />
                                     </button>
-                                    <button className='product-detail-chat-button'>채팅하기</button>
+                                    <ChatListSidebar
+                                        trigger={<button className='product-detail-chat-button'>채팅하기</button>}
+                                    ></ChatListSidebar>
                                 </>
                             )}
                         </div>
