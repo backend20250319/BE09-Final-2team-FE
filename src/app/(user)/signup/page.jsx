@@ -31,7 +31,7 @@ export default function Signup() {
         push: false
     });
 
-    // 모달 상태 추가
+    // 모달 상태
     const [modalStates, setModalStates] = useState({
         terms: false,
         privacy: false,
@@ -40,26 +40,27 @@ export default function Signup() {
         push: false
     });
 
+    // 우편번호 모달 상태
     const [isPostcodeOpen, setIsPostcodeOpen] = useState(false);
 
     // 중복 확인 상태
     const [validationStates, setValidationStates] = useState({
-        loginId: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false},
-        email: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false},
-        nickname: {status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false}
+        loginId: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false },
+        email: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false },
+        nickname: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false }
     });
 
     // 기타 검증 상태
-    const [passwordMatch, setPasswordMatch] = useState({status: 'default', message: ''});
+    const [passwordMatch, setPasswordMatch] = useState({ status: 'default', message: '' });
     const [isFormValid, setIsFormValid] = useState(false);
 
     // 모달 열기/닫기 함수
     const openModal = (type) => {
-        setModalStates(prev => ({...prev, [type]: true}));
+        setModalStates(prev => ({ ...prev, [type]: true }));
     };
 
     const closeModal = (type) => {
-        setModalStates(prev => ({...prev, [type]: false}));
+        setModalStates(prev => ({ ...prev, [type]: false }));
     };
 
     // 입력값 변경 핸들러
@@ -97,7 +98,7 @@ export default function Signup() {
                     message: '✅ 비밀번호가 일치합니다'
                 });
             } else {
-                setPasswordMatch({status: 'default', message: ''});
+                setPasswordMatch({ status: 'default', message: '' });
             }
         }
     };
@@ -161,7 +162,7 @@ export default function Signup() {
         // 로딩 상태
         setValidationStates(prev => ({
             ...prev,
-            [type]: {status: 'loading', message: '🔄 확인 중...', checked: false}
+            [type]: { status: 'loading', message: '🔄 확인 중...', checked: false }
         }));
 
         try {
@@ -199,6 +200,30 @@ export default function Signup() {
         return names[type] || type;
     };
 
+    // 주소 검색 완료 핸들러
+    const handleAddressComplete = (data) => {
+        let fullAddress = data.address;
+        let extraAddress = '';
+
+        if (data.addressType === 'R') {
+            if (data.bname !== '') {
+                extraAddress += data.bname;
+            }
+            if (data.buildingName !== '') {
+                extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
+            }
+            fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
+        }
+
+        handleInputChange('address', fullAddress);
+        setIsPostcodeOpen(false);
+    };
+
+    // 주소 검색 버튼 클릭 핸들러
+    const handleAddressSearch = () => {
+        setIsPostcodeOpen(true);
+    };
+
     // 폼 유효성 검사
     useEffect(() => {
         const requiredFields = ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone', 'address'];
@@ -219,43 +244,27 @@ export default function Signup() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log('회원가입 데이터:', {formData, agreements});
-            router.push('/signup/complete'); // 완료 페이지로 이동
+            console.log('회원가입 데이터:', { formData, agreements });
+            router.push('/signup/complete');
         }
-    };
-
-    // 주소 검색 (다음 API 연동 예정)
-    const handleAddressComplete = (data) => {
-        let fullAddress = data.address;
-        let extraAddress = '';
-
-        // 법정동명이 있을 경우 추가
-        if (data.addressType === 'R') {
-            if (data.bname !== '') {
-                extraAddress += data.bname;
-            }
-            if (data.buildingName !== '') {
-                extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
-            }
-            fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
-        }
-
-        // 주소를 input에 설정
-        handleInputChange('address', fullAddress);
-
-        // 우편번호 창 닫기
-        setIsPostcodeOpen(false);
-    };
-
-    // 주소 검색 버튼 클릭 핸들러
-    const handleAddressSearch = () => {
-        setIsPostcodeOpen(true);
     };
 
     return (
         <div className="signup-root">
             <div className="signup-card">
-                <div className="signup-image"/>
+                {/* 로고 이미지 */}
+                <div className="signup-image">
+                    <img
+                        src="/images/common/main-logo.png"
+                        alt="Momnect 로고"
+                        style={{
+                            width: '100%',
+                            height: '100%',
+                            objectFit: 'cover',
+                            borderRadius: '8px'
+                        }}
+                    />
+                </div>
 
                 <form className="signup-form" onSubmit={handleSubmit}>
                     {/* 이름 */}
@@ -399,32 +408,6 @@ export default function Signup() {
                         </div>
                     </div>
 
-
-                    {/* 우편번호 검색 모달 - 폼 마지막에 추가 */}
-                    {isPostcodeOpen && (
-                        <div className="postcode-overlay">
-                            <div className="postcode-modal">
-                                <div className="postcode-header">
-                                    <h3>주소 검색</h3>
-                                    <button
-                                        className="postcode-close"
-                                        onClick={() => setIsPostcodeOpen(false)}
-                                    >
-                                        ×
-                                    </button>
-                                </div>
-                                <DaumPostcode
-                                    onComplete={handleAddressComplete}
-                                    autoClose={false}
-                                    style={{
-                                        width: '100%',
-                                        height: '400px'
-                                    }}
-                                />
-                            </div>
-                        </div>
-                    )}
-
                     {/* 약관 동의 */}
                     <div className="signup-agree">
                         <label>
@@ -522,7 +505,32 @@ export default function Signup() {
                 </form>
             </div>
 
-            {/* 모달들 */}
+            {/* 우편번호 검색 모달 */}
+            {isPostcodeOpen && (
+                <div className="postcode-overlay">
+                    <div className="postcode-modal">
+                        <div className="postcode-header">
+                            <h3>주소 검색</h3>
+                            <button
+                                className="postcode-close"
+                                onClick={() => setIsPostcodeOpen(false)}
+                            >
+                                ×
+                            </button>
+                        </div>
+                        <DaumPostcode
+                            onComplete={handleAddressComplete}
+                            autoClose={false}
+                            style={{
+                                width: '100%',
+                                height: '400px'
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* 약관 모달들 */}
             <ContentModal
                 open={modalStates.terms}
                 title="이용약관"

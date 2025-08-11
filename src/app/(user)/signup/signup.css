@@ -22,7 +22,6 @@
 .signup-image {
     width: 174px;
     height: 129px;
-    background: url('/images/common/main-logo.png') center/cover no-repeat;
     margin: 0 auto 24px auto;
     border-radius: 8px;
 }
