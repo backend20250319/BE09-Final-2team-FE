@@ -1,14 +1,15 @@
-// components/chat/ChatRoomSidebar.jsx
 "use client";
 
 import Sidebar from "@/components/common/Sidebar";
-import Image from "next/image";
-import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useSidebar } from "@/hooks/useSidebar";
 import { formatDateToString, formatStringToDate, numberWithCommas } from "@/utils/format";
-import Link from "next/link";
+import Image from "next/image";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function ChatRoomSidebar({ chat }) {
+  const { close, closeAll } = useSidebar(`chatRoom_${chat.id}`);
   const [text, setText] = useState("");
   const [messages, setMessages] = useState([
     {
@@ -21,40 +22,46 @@ export default function ChatRoomSidebar({ chat }) {
   const scrollRef = useRef(null);
   const myId = "나";
 
-  // 메시지 전송 처리
-  const handleSend = (e) => {
-    e.preventDefault();
+  const router = useRouter();
+
+  // 메시지 전송 함수 (이벤트 없이도 사용 가능하게 수정)
+  const sendMessage = () => {
     if (!text.trim()) return;
+
     const newMessage = {
       from: myId,
       text,
       timestamp: new Date().toISOString(),
       read: false,
     };
+
     setMessages((prev) => [...prev, newMessage]);
     setText("");
 
-    // 메시지 전송 후 스크롤 하단으로 이동
     setTimeout(() => {
       scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
     }, 0);
   };
 
-  // Enter 키로 메시지 전송 처리
+  // Submit 이벤트 처리
+  const handleSend = (e) => {
+    e.preventDefault();
+    sendMessage(); // 이벤트 객체를 넘기지 않음
+  };
+
+  // Enter 키 입력 처리
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
-      handleSend(e);
+      sendMessage(); // 직접 호출 (이벤트 없이)
     }
   };
 
-  // 시간 포맷 함수 (오전/오후 시:분)
+  // 날짜 포맷
   const formatTime = (iso) => {
     const date = new Date(iso);
     return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
   };
-
-  // 날짜 포맷 함수 (YYYY년 MM월 DD일)
   const formatFullDate = (timestamp) => {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return "";
@@ -62,11 +69,20 @@ export default function ChatRoomSidebar({ chat }) {
     return formatStringToDate(dateString);
   };
 
+  // 상품 클릭 시 사이드바 전부 닫고 이동
+  const handleGoToReview = () => {
+    closeAll();
+    // 상품 상세페이지로 이동
+    // router.push(`/product/${chat.productId}`);
+    // 테스트용
+    router.push("/review");
+  };
+
   return (
     <Sidebar
-      title={`${chat.name}`}
+      sidebarKey={`chatRoom_${chat.id}`}
+      title={chat.name}
       trigger={
-        // 채팅방 목록에 출력되는 미리보기 버튼
         <Button variant="ghost" className="flex items-center gap-4 w-full h-[86px]">
           <div className="w-[60px] h-[60px] bg-gray-200 rounded-full flex items-center justify-center">
             {chat.avatar ? (
@@ -89,34 +105,25 @@ export default function ChatRoomSidebar({ chat }) {
           )}
         </Button>
       }
-      onBack={true}
+      onBack={() => {
+        close(); // 현재 닫고
+        useSidebar("chatList").open(); // chatList 열기
+      }}
     >
       <div>
-        {/* 채팅방 상단 상품 정보 */}
-        {chat && (
-          <div className="rounded-lg flex justify-between">
-            {/* 상품 정보 링크 영역 */}
-            <Link href="#" className="flex items-center gap-4 w-full h-[40px] mb-3 ">
-              {/* 상품 이미지 */}
-              <Image src={chat.productImg} alt="product" width={40} height={40} className="rounded" />
-
-              {/* 상품명 + 가격 */}
-              <div className="flex-1 min-w-0">
-                <div className="flex flex-col items-start text-sm">
-                  <span className="font-medium text-base text-gray-900 truncate">{chat.productName}</span>
-                  <span className="text-xs text-gray-500">{numberWithCommas(chat.productPrice)}원</span>
-                </div>
-              </div>
-            </Link>
-            {/* 판매 완료 버튼 (isSale === true일 때 비활성화) */}
-            <Button disabled={chat.isSale} onClick={() => console.log("클릭됨")}>
-              판매완료
-            </Button>
+        {/* 상품 정보 클릭 시 이동 */}
+        <div onClick={handleGoToReview} className="flex items-center gap-4 w-full h-[40px] mb-3 cursor-pointer">
+          <Image src={chat.productImg} alt="product" width={40} height={40} className="rounded" />
+          <div className="flex-1 min-w-0">
+            <div className="flex flex-col items-start text-sm">
+              <span className="font-medium text-base text-gray-900 truncate">{chat.productName}</span>
+              <span className="text-xs text-gray-500">{numberWithCommas(chat.productPrice)}원</span>
+            </div>
           </div>
-        )}
+        </div>
 
+        {/* 메시지 목록 */}
         <div className="flex flex-col gap-2">
-          {/* 메시지 목록 */}
           <div ref={scrollRef} className="overflow-auto p-5 h-[470px] bg-gray-200">
             {messages.map((msg, idx) => {
               const isMine = msg.from === myId;
@@ -127,30 +134,21 @@ export default function ChatRoomSidebar({ chat }) {
 
               return (
                 <div key={idx}>
-                  {/* 날짜 표시 */}
                   {showDate && (
                     <div className="text-center text-xs text-gray-500 my-2">{formatFullDate(msg.timestamp)}</div>
                   )}
 
-                  {/* 메시지 박스 - 나 / 상대방 구분 */}
                   <div className={`mb-2 flex ${isMine ? "justify-end" : "justify-start"}`}>
                     <div className={`${isMine ? "text-right" : "text-left"}`}>
-                      {/* 보낸 사람 이름 (상대방만 표시) */}
                       {!isMine && <div className="text-sm text-gray-500 mb-1">{msg.from}</div>}
-
-                      {/* 메시지 + 시간 묶음 */}
                       <div className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
                         <div
                           className={`p-3 rounded break-all max-w-[250px] ${isMine ? "bg-blue-300" : "bg-green-300"}`}
                         >
                           {msg.text}
                         </div>
-                        <span className="text-[11px] text-gray-600 mb-0.5 whitespace-nowrap">
-                          {formatTime(msg.timestamp)}
-                        </span>
+                        <span className="text-[11px] text-gray-600 whitespace-nowrap">{formatTime(msg.timestamp)}</span>
                       </div>
-
-                      {/* 읽음 여부 (내 메시지일 때만 표시) */}
                       {isMine && <div className="text-xs text-gray-600 mt-0.5">{msg.read ? "읽음 ✅" : "전송됨"}</div>}
                     </div>
                   </div>
@@ -159,7 +157,7 @@ export default function ChatRoomSidebar({ chat }) {
             })}
           </div>
 
-          {/* 메시지 입력창 */}
+          {/* 입력창 */}
           <form onSubmit={handleSend} className="flex flex-col gap-1">
             <textarea
               value={text}

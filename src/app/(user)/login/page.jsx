@@ -1,8 +1,7 @@
 "use client";
 
 import React, {useState, useEffect} from 'react';
-import './Login.css';
-//import mainImage from './images/main-image.png';
+import './login.css';
 
 export default function Login() {
     // 1. 상태변수 정의
@@ -36,7 +35,7 @@ export default function Login() {
     return (
         <div className="login-root">
             <div className="login-card">
-                <img src="/images/header/header-logo.png" alt="main visual" className="login-main-image" />
+                <img src="/images/common/main-logo.png" alt="main visual" className="login-main-image" />
                 <form className="login-form" onSubmit={handleSubmit}>
                     <input
                         className="login-input"
