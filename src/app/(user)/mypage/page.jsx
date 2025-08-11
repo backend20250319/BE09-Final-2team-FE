@@ -3,8 +3,7 @@
 import React, { useState } from 'react';
 import './mypage.css';
 import ProductCard from '@/components/common/ProductCard';
-import Sidebar from "@/components/common/Sidebar";
-import TradingAreaContent from '../location-management/components/TradingAreaContent';
+import TradingAreaManagement from '@/app/(user)/location-management/page';
 import WishlistSidebar from "@/components/common/WishlistSidebar";
 import { useSidebar } from "@/hooks/useSidebar";
 
@@ -277,17 +276,10 @@ const MyPage = () => {
             </div>
 
             {/* 거래지역 관리 사이드바 */}
-            <Sidebar
-                sidebarKey="location-management"
-                title="거래지역 관리"
-                trigger={<span style={{display: 'none'}}>숨김</span>}
-                onBack={true}
-            >
-                <TradingAreaContent />
-            </Sidebar>
+            <TradingAreaManagement />
 
             {/* 찜한 상품 사이드바 */}
-            <WishlistSidebar trigger="wishlist" />
+            <WishlistSidebar trigger={<span style={{display: 'none'}}>숨김</span>} />
         </div>
     );
 };
