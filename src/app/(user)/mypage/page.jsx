@@ -3,14 +3,15 @@
 import React, { useState } from 'react';
 import './mypage.css';
 import ProductCard from '@/components/common/ProductCard';
-import Sidebar from "@/components/common/Sidebar";
-import TradingAreaContent from '../location-management/components/TradingAreaContent';
+import TradingAreaManagement from '@/app/(user)/location-management/page';
+import WishlistSidebar from "@/components/common/WishlistSidebar";
 import { useSidebar } from "@/hooks/useSidebar";
 
 const MyPage = () => {
     const [activeTab, setActiveTab] = useState('');
     const [dashboardTab, setDashboardTab] = useState('purchase');
     const { open: openLocationSidebar, isOpen: isLocationSidebarOpen } = useSidebar('location-management');
+    const { open: openWishlistSidebar, isOpen: isWishlistSidebarOpen } = useSidebar('wishlist');
 
     const renderTabContent = () => {
         switch (activeTab) {
@@ -47,12 +48,7 @@ const MyPage = () => {
                     </div>
                 );
             case 'favorite-items':
-                return (
-                    <div className="tab-content">
-                        <h2>찜한 상품</h2>
-                        <p>찜한 상품 컴포넌트가 여기에 들어갑니다.</p>
-                    </div>
-                );
+                return null;
             case 'review-management':
                 return (
                     <div className="tab-content">
@@ -258,11 +254,12 @@ const MyPage = () => {
                         <h3 className="menu-title">거래 정보</h3>
                         <div className="menu-items">
                             <button
-                                className={`menu-item ${activeTab === 'favorite-items' ? 'active' : ''}`}
-                                onClick={() => setActiveTab('favorite-items')}
+                                className={`menu-item ${isWishlistSidebarOpen ? 'active' : ''}`}
+                                onClick={() => { openWishlistSidebar();}}
                             >
                                 찜한 상품
                             </button>
+
                             <button
                                 className={`menu-item ${activeTab === 'review-management' ? 'active' : ''}`}
                                 onClick={() => setActiveTab('review-management')}
@@ -279,14 +276,10 @@ const MyPage = () => {
             </div>
 
             {/* 거래지역 관리 사이드바 */}
-            <Sidebar
-                sidebarKey="location-management"
-                title="거래지역 관리"
-                trigger={<span style={{display: 'none'}}>숨김</span>}
-                onBack={true}
-            >
-                <TradingAreaContent />
-            </Sidebar>
+            <TradingAreaManagement />
+
+            {/* 찜한 상품 사이드바 */}
+            <WishlistSidebar trigger={<span style={{display: 'none'}}>숨김</span>} />
         </div>
     );
 };
