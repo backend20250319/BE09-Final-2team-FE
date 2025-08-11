@@ -7,7 +7,15 @@ import ConfirmModal, {MODAL_TYPES} from "@/components/common/ConfirmModal";
 const AVAILABLE_AREAS = ['서초동', '양재동', '신사동', '역삼동', '논현동', '강남동', '청담동', '압구정동', '도곡동', '개포동'];
 
 const TradingAreaContent = () => {
-    const [selectedAreas, setSelectedAreas] = useState([]);
+    // sessionStorage에서 초기값 불러오기 (SSR 안전 처리)
+    const [selectedAreas, setSelectedAreas] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem('selectedAreas');
+            return saved ? JSON.parse(saved) : [];
+        }
+        return [];
+    });
+
     const [isSearchMode, setIsSearchMode] = useState(false);
     const [searchKeyword, setSearchKeyword] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -20,8 +28,26 @@ const TradingAreaContent = () => {
     const searchInputRef = useRef(null);
     const dropdownItemRefs = useRef([]);
 
+    // sessionStorage에 저장하는 useEffect 추가
     useEffect(() => {
-        initialAreas.current = [...selectedAreas];
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('selectedAreas', JSON.stringify(selectedAreas));
+        }
+    }, [selectedAreas]);
+
+    useEffect(() => {
+        // sessionStorage에서 불러온 데이터를 초기값으로 설정
+        if (typeof window !== 'undefined') {
+            const saved = sessionStorage.getItem('selectedAreas');
+            if (saved) {
+                const savedAreas = JSON.parse(saved);
+                initialAreas.current = [...savedAreas];
+            } else {
+                initialAreas.current = [...selectedAreas];
+            }
+        } else {
+            initialAreas.current = [...selectedAreas];
+        }
     }, []);
 
     // 외부 클릭 감지
@@ -165,6 +191,10 @@ const TradingAreaContent = () => {
 
     const handleSave = () => {
         console.log('저장된 거래지역:', selectedAreas);
+        // sessionStorage에도 명시적으로 저장 (이미 useEffect에서 저장되지만 확실히 하기 위해)
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('selectedAreas', JSON.stringify(selectedAreas));
+        }
         initialAreas.current = [...selectedAreas];
         setIsConfirmModalOpen(true);
     };
