@@ -9,23 +9,29 @@ const reviews = [
     { title: '분양 끝났습니다~', date: '2000년 00월 00일', img: 'https://i.namu.wiki/i/oFOhcumUbZ58itrQIMmCTiRBm4OgD5AZDeOgCS6MJKLMAlK5gyZTfFcEFHH_rUNYKV648V4QvzBlzPQUh80Nug.webp', rating: 5 },
 ];
 
-const UserReviewList = ({ onClose }) => {
+const UserReviewList = ({ onClose, open }) => {
     const [isClosing, setIsClosing] = useState(false);
+
+    useEffect(() => {
+        const handleEsc = (e) => {
+            if (e.key === "Escape") handleClose();
+        };
+        document.addEventListener("keydown", handleEsc);
+        return () => document.removeEventListener("keydown", handleEsc);
+    }, []);
 
     const handleClose = () => {
         setIsClosing(true);
         setTimeout(() => {
+            setIsClosing(false);
             onClose();
         }, 300);
     };
 
-    useEffect(() => {
-        const handleEsc = (e) => {
-            if (e.key === 'Escape') handleClose();
-        };
-        document.addEventListener('keydown', handleEsc);
-        return () => document.removeEventListener('keydown', handleEsc);
-    }, []);
+    // ✅ Hook 실행 후 조건부 렌더링
+    if (!open && !isClosing) {
+        return null;
+    };
 
     return (
         <>
@@ -46,11 +52,11 @@ const UserReviewList = ({ onClose }) => {
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h2 className="review-title">OO님의 거래 리뷰 내역</h2>
+                    <h2 className="review-title">"멋진맘"님의 거래 리뷰 내역</h2>
                 </div>
 
                 <div className="average-rating-box">
-                    <p>OO님의 총 별점 평균과 총 리뷰 개수는</p>
+                    <p>"멋진맘"의 총 별점 평균과 총 리뷰 개수는</p>
                     <div className="big-stars">★★★★★</div>
                     <div className="rating-summary">5.0 / 120개</div>
                 </div>

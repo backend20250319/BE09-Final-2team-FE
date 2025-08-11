@@ -16,6 +16,12 @@ const ProductDetail = () => {
   const [product, setProduct] = useState(null);
   const [categoryPath, setCategoryPath] = useState([]);
   const productInfoRef = useRef(null);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const [currentStatus, setCurrentStatus] = useState("ON_SALE"); // 기본값: 판매중
+  const statusDropdownRef = useRef(null);
+
+  // my product 여부
+  const isMyProduct = true;
 
   // 카테고리 데이터
   const categories = [
@@ -196,6 +202,23 @@ const ProductDetail = () => {
     }
   }, [product?.content]);
 
+  // 외부 클릭 시 드롭다운 닫기
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target)) {
+        setShowStatusDropdown(false);
+      }
+    };
+
+    if (showStatusDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showStatusDropdown]);
+
   // 상품 데이터 가져오기 (실제로는 API 호출)
   useEffect(() => {
     // TODO: 실제 API 호출로 대체
@@ -211,7 +234,7 @@ const ProductDetail = () => {
           categoryId: 201, // 유아용의류 카테고리 ID
           content: `상품 정보입니다.
 
-추가 상품 정보 내용이 여기에 들어갑니다. 이 내용이 많아지면 더보기 버튼이 나타납니다.
+추가 상품 정보 내용이 여기에 들어갑니다. 이 내용이 많아지면 더보기 버튼이 나타납니다. ㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋㅋ
 
 더 많은 상품 정보를 표시하기 위한 추가 텍스트입니다.
 
@@ -613,22 +636,89 @@ const ProductDetail = () => {
             </div>
 
             <div className="product-detail-action-buttons">
-              <button
-                className={`product-detail-wishlist-button ${isWishlisted ? "product-detail-active" : ""}`}
-                onClick={() => setIsWishlisted(!isWishlisted)}
-              >
-                <img
-                  src={
-                    isWishlisted ? "/images/product/detail-wishlist-on.svg" : "/images/product/detail-wishlist-off.svg"
-                  }
-                  alt={isWishlisted ? "찜하기됨" : "찜하기"}
-                  width={36}
-                  height={36}
-                />
-              </button>
-              <ChatListSidebar
-                trigger={<button className="product-detail-chat-button">채팅하기</button>}
-              ></ChatListSidebar>
+              {isMyProduct ? (
+                // 내 상품일 때: 상품수정, 상태변경, 삭제 버튼
+                <div className="product-detail-trade-actions-container">
+                  <div className="product-detail-trade-action-item">
+                    <img src="/images/product/edit-product.svg" alt="수정" width={18} height={18} />
+                    <span>상품수정</span>
+                  </div>
+                  <span className="product-detail-trade-divider">|</span>
+                  <div className="product-detail-trade-action-item" style={{ position: "relative" }}>
+                    <div
+                      className="product-detail-trade-action-trigger"
+                      onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+                    >
+                      <img src="/images/product/update-status.svg" alt="상태변경" width={18} height={18} />
+                      <span>상태변경</span>
+                    </div>
+
+                    {/* 상태변경 드롭다운 */}
+                    {showStatusDropdown && (
+                      <div className="product-detail-status-dropdown" ref={statusDropdownRef}>
+                        {currentStatus !== "RESERVED" && (
+                          <div
+                            className="product-detail-status-option"
+                            onClick={() => {
+                              setCurrentStatus("RESERVED");
+                              setShowStatusDropdown(false);
+                            }}
+                          >
+                            예약중
+                          </div>
+                        )}
+                        {currentStatus !== "ON_SALE" && (
+                          <div
+                            className="product-detail-status-option"
+                            onClick={() => {
+                              setCurrentStatus("ON_SALE");
+                              setShowStatusDropdown(false);
+                            }}
+                          >
+                            판매중
+                          </div>
+                        )}
+                        {currentStatus !== "ON_HOLD" && (
+                          <div
+                            className="product-detail-status-option"
+                            onClick={() => {
+                              setCurrentStatus("ON_HOLD");
+                              setShowStatusDropdown(false);
+                            }}
+                          >
+                            판매보류
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <span className="product-detail-trade-divider">|</span>
+                  <div className="product-detail-trade-action-item">
+                    <img src="/images/product/delete-product.svg" alt="삭제" width={18} height={18} />
+                    <span>상품삭제</span>
+                  </div>
+                </div>
+              ) : (
+                // 다른 사람의 상품일 때: 찜하기, 채팅하기 버튼
+                <>
+                  <button
+                    className={`product-detail-wishlist-button ${isWishlisted ? "product-detail-active" : ""}`}
+                    onClick={() => setIsWishlisted(!isWishlisted)}
+                  >
+                    <img
+                      src={
+                        isWishlisted
+                          ? "/images/product/detail-wishlist-on.svg"
+                          : "/images/product/detail-wishlist-off.svg"
+                      }
+                      alt={isWishlisted ? "찜하기됨" : "찜하기"}
+                      width={36}
+                      height={36}
+                    />
+                  </button>
+                  <button className="product-detail-chat-button">채팅하기</button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -636,7 +726,7 @@ const ProductDetail = () => {
 
       {/* Product Information Section */}
       <div className="product-detail-info-section">
-        <div className="product-detail-product-info-section">
+        <div className={`product-detail-product-info-section ${isMyProduct ? "product-detail-full-width" : ""}`}>
           <div className="product-detail-section-header">
             <h2>상품 정보</h2>
           </div>
@@ -661,51 +751,53 @@ const ProductDetail = () => {
           )}
         </div>
 
-        <div className="product-detail-store-info-section">
-          <div className="product-detail-section-header">
-            <h2>가게 정보</h2>
-            <button className="product-detail-more-link">
-              <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
-                <path d="M9.75 6.5L16.25 13L9.75 19.5" stroke="black" strokeWidth="2" />
-              </svg>
-            </button>
-          </div>
+        {!isMyProduct && (
+          <div className="product-detail-store-info-section">
+            <div className="product-detail-section-header">
+              <h2>가게 정보</h2>
+              <button className="product-detail-more-link">
+                <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+                  <path d="M9.75 6.5L16.25 13L9.75 19.5" stroke="black" strokeWidth="2" />
+                </svg>
+              </button>
+            </div>
 
-          <div className="product-detail-profile-info">
-            <div className="product-detail-profile-details">
-              <span className="product-detail-username">닉넴닉크넴</span>
+            <div className="product-detail-profile-info">
+              <div className="product-detail-profile-details">
+                <span className="product-detail-username">닉넴닉크넴</span>
+              </div>
+              <div className="product-detail-profile-image">
+                <img
+                  src="https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474"
+                  alt="프로필 이미지"
+                  width={56}
+                  height={56}
+                  className="product-detail-profile-img"
+                />
+              </div>
             </div>
-            <div className="product-detail-profile-image">
-              <img
-                src="https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474"
-                alt="프로필 이미지"
-                width={56}
-                height={56}
-                className="product-detail-profile-img"
-              />
-            </div>
-          </div>
 
-          <div className="product-detail-trade-info">
-            <div className="product-detail-trade-stat">
-              <span className="product-detail-stat-label">거래 횟수</span>
-              <span className="product-detail-stat-value">44</span>
+            <div className="product-detail-trade-info">
+              <div className="product-detail-trade-stat">
+                <span className="product-detail-stat-label">거래 횟수</span>
+                <span className="product-detail-stat-value">44</span>
+              </div>
+              <span className="product-detail-divider">|</span>
+              <div className="product-detail-trade-stat">
+                <span className="product-detail-stat-label">리뷰수</span>
+                <a href="#" className="product-detail-stat-value" style={{ textDecoration: "underline" }}>
+                  44
+                </a>
+              </div>
             </div>
-            <span className="product-detail-divider">|</span>
-            <div className="product-detail-trade-stat">
-              <span className="product-detail-stat-label">리뷰수</span>
-              <a href="#" className="product-detail-stat-value" style={{ textDecoration: "underline" }}>
-                44
-              </a>
-            </div>
-          </div>
 
-          <div className="product-detail-seller-products">
-            {sellerProducts.map((product) => (
-              <ProductCard key={product.id} product={product} size="size0" />
-            ))}
+            <div className="product-detail-seller-products">
+              {sellerProducts.map((product) => (
+                <ProductCard key={product.id} product={product} size="size0" />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Related Products Section */}

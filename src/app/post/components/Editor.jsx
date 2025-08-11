@@ -4,6 +4,37 @@ import { useMemo } from "react";
 import { CKEditor } from "@ckeditor/ckeditor5-react";
 import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
 
+/* ✅ 커스텀 업로드 어댑터: 파일을 Base64 dataURL로 변환해서 본문에 바로 삽입 */
+class Base64UploadAdapter {
+  constructor(loader) {
+    this.loader = loader; // CKEditor가 넘겨주는 파일 로더
+  }
+  // 업로드 시작
+  upload() {
+    return this.loader.file.then(
+      (file) =>
+        new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            // CKEditor는 { default: 이미지URL } 형태를 기대
+            resolve({ default: reader.result });
+          };
+          reader.onerror = (err) => reject(err);
+          reader.readAsDataURL(file);
+        })
+    );
+  }
+  // 취소(옵션)
+  abort() {}
+}
+
+/* ✅ 플러그인 등록 함수 */
+function Base64UploadAdapterPlugin(editor) {
+  editor.plugins.get("FileRepository").createUploadAdapter = (loader) => {
+    return new Base64UploadAdapter(loader);
+  };
+}
+
 export default function Editor({ value, onChange }) {
   const config = useMemo(
     () => ({
@@ -19,6 +50,9 @@ export default function Editor({ value, onChange }) {
         ],
         shouldNotGroupWhenFull: true,
       },
+      /* ✅ 여기서 커스텀 어댑터 활성화 */
+      extraPlugins: [Base64UploadAdapterPlugin],
+
       heading: {
         options: [
           { model: "paragraph", title: "Paragraph", class: "ck-heading_paragraph" },
