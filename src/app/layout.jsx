@@ -1,23 +1,20 @@
-"use client";
-
-import { usePathname } from "next/navigation";
-import Header from "@/components/common/Header";
-import Footer from "@/components/common/Footer";
+// app/layout.jsx
 import "./globals.css";
+import ClientLayout from "./ClientLayout";
 
-// 헤더, 푸터 필요없는 경로 작성
-const noLayoutPaths = ["/login", "/signup", "/signup/complete"];
+// ✅ 메타데이터 추가
+export const metadata = {
+  title: "Momnect",
+  description: "육아맘을 위한 중고거래와 공동구매 커뮤니티 플랫폼",
+  keywords: ["육아", "중고거래", "공동구매", "Momnect"],
+  authors: [{ name: "Momnect" }],
+};
 
 export default function RootLayout({ children }) {
-  const pathname = usePathname();
-  const isNoLayoutPage = pathname && noLayoutPaths.includes(pathname);
-
   return (
     <html lang="ko">
       <body>
-        {!isNoLayoutPage && <Header />}
-        <main className={isNoLayoutPage ? "" : "pt-[144px] min-h-screen"}>{children}</main>
-        {!isNoLayoutPage && <Footer />}
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
