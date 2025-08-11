@@ -4,7 +4,7 @@ import Sidebar from "@/components/common/Sidebar";
 import { MessageCircleMore } from "lucide-react";
 import ChatRoomSidebar from "./ChatRoomSidebar";
 
-export default function ChatListSidebar({ trigger }) {
+export default function ChatListSidebar({ trigger, children, sidebarKey = "chatList" }) {
   // MongoDB에서 받은 채팅방 리스트 더미 (상품 ID만 포함)
   const chatRoomData = [
     {
@@ -46,22 +46,30 @@ export default function ChatListSidebar({ trigger }) {
   return (
     // ChatListSidebar.jsx
     <Sidebar
-      sidebarKey="chatList"
+      sidebarKey={sidebarKey}
       title="채팅 목록"
       trigger={
-        <button className="flex items-center gap-1 cursor-pointer">
-          <MessageCircleMore color="#000000" />
-          <span className="text-sm">채팅하기</span>
-        </button>
+        trigger ?? (
+          <button className="flex items-center gap-1 cursor-pointer">
+            <MessageCircleMore color="#000000" />
+            <span className="text-sm">채팅하기</span>
+          </button>
+        )
       }
     >
-      <ul className="[&>li]:border-b">
-        {chatRoomData.map((chat) => (
-          <li key={chat.id}>
-            <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
-          </li>
-        ))}
-      </ul>
+      {/* children이 있으면 그대로 렌더링, 없으면 기본 UI */}
+      {typeof children !== "undefined" ? (
+        children
+      ) : (
+        // 기본 UI
+        <ul>
+          {chatRoomData.map((chat) => (
+            <li key={chat.id}>
+              <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
+            </li>
+          ))}
+        </ul>
+      )}
     </Sidebar>
   );
 }
