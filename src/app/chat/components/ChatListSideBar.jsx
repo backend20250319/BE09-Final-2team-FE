@@ -4,7 +4,7 @@ import Sidebar from "@/components/common/Sidebar";
 import { MessageCircleMore } from "lucide-react";
 import ChatRoomSidebar from "./ChatRoomSidebar";
 
-export default function ChatListSidebar({ trigger }) {
+export default function ChatListSidebar({ trigger, children, sidebarKey = "chatList" }) {
   // MongoDB에서 받은 채팅방 리스트 더미 (상품 ID만 포함)
   const chatRoomData = [
     {
@@ -12,7 +12,7 @@ export default function ChatListSidebar({ trigger }) {
       opponentId: "user1",
       name: "김철수",
       avatar: "",
-      message: "안녕하세요, 상품 문의드립니다.",
+      message: "안녕하세요~ 상품은 미사용 제품이고요 네고는 많이 못해드립니다!",
       date: "7월 28일",
       productId: "p101",
     },
@@ -21,7 +21,7 @@ export default function ChatListSidebar({ trigger }) {
       opponentId: "user2",
       name: "이영희",
       avatar: "",
-      message: "구매하고 싶어요. 아직 판매 중인가요?",
+      message: "그럼요! 판매 중인 상품입니다!",
       date: "7월 29일",
       productId: "p102",
     },
@@ -36,32 +36,40 @@ export default function ChatListSidebar({ trigger }) {
       isSale: false,
     },
     p102: {
-      productImg: "/images/text2.png",
-      productName: "아디다스 백팩",
+      productImg: "/images/test.jpg",
+      productName: "장난꾸러기 유아복 복장 코튼 장난꾸러기 세트",
       productPrice: 35000,
-      isSale: true,
+      isSale: false,
     },
   };
 
   return (
     // ChatListSidebar.jsx
     <Sidebar
-      sidebarKey="chatList"
+      sidebarKey={sidebarKey}
       title="채팅 목록"
       trigger={
-        <button className="flex items-center gap-1 cursor-pointer">
-          <MessageCircleMore color="#000000" />
-          <span className="text-sm">채팅하기</span>
-        </button>
+        trigger ?? (
+          <button className="flex items-center gap-1 cursor-pointer">
+            <MessageCircleMore color="#000000" />
+            <span className="text-sm">채팅하기</span>
+          </button>
+        )
       }
     >
-      <ul className="[&>li]:border-b">
-        {chatRoomData.map((chat) => (
-          <li key={chat.id}>
-            <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
-          </li>
-        ))}
-      </ul>
+      {/* children이 있으면 그대로 렌더링, 없으면 기본 UI */}
+      {typeof children !== "undefined" ? (
+        children
+      ) : (
+        // 기본 UI
+        <ul>
+          {chatRoomData.map((chat) => (
+            <li key={chat.id}>
+              <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
+            </li>
+          ))}
+        </ul>
+      )}
     </Sidebar>
   );
 }

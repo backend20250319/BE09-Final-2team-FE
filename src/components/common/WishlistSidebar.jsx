@@ -271,7 +271,12 @@ const WishlistSidebar = ({ trigger }) => {
     );
 
     return (
-        <Sidebar title='찜한 상품' trigger={trigger}>
+        <Sidebar
+            sidebarKey="wishlist" // 마이페이지 연동을 위해 추가
+            title='찜한 상품'
+            trigger={trigger}
+            onBack={true} // 뒤로 가기 버튼 추가
+        >
             <div className='wishlist-sidebar'>{wishlistContent}</div>
         </Sidebar>
     );

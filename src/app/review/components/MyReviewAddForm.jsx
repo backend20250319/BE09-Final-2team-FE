@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState } from 'react';
@@ -50,7 +51,7 @@ const MyReviewAddForm = ({ onClose }) => {
                         },
                     });
                     setModalOpen(true);
-                }, 200);
+                }, 500);
             },
         });
         setModalOpen(true);
@@ -159,7 +160,6 @@ const MyReviewAddForm = ({ onClose }) => {
             </div>
 
             <ConfirmModal
-                style={{ 'z-index': '104 !important;'}}
                 open={modalOpen}
                 title={modalConfig.title}
                 message={modalConfig.message}
@@ -181,7 +181,7 @@ const MyReviewAddForm = ({ onClose }) => {
                             },
                         });
                         setModalOpen(true);
-                    }, 200);
+                    }, 500);
                 }}
             />
         </>
