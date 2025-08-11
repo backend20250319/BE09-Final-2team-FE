@@ -19,7 +19,7 @@ export default function ChatRoomSidebar({ chat }) {
   const [messages, setMessages] = useState([
     {
       from: myId,
-      text: "안녕하세요 구매가능할까요?",
+      text: "안녕하세요 아가옷이 너무 귀여워요~ 구매가능할까요?",
       timestamp: new Date(Date.now() - 1000 * 60 * 5).toISOString(),
       read: true,
       isSale: false,
@@ -121,7 +121,13 @@ export default function ChatRoomSidebar({ chat }) {
         <Button variant="ghost" className="flex items-center gap-4 w-full h-[86px]">
           <div className="w-[60px] h-[60px] bg-gray-200 rounded-full flex items-center justify-center">
             {chat.avatar ? (
-              <Image src={chat.avatar} alt={chat.name} width={60} height={60} className="rounded-full" />
+              <Image
+                src={chat.avatar}
+                alt={chat.name}
+                width={60}
+                height={60}
+                className="rounded-full w-[60px] h-[60px]"
+              />
             ) : (
               <span className="text-gray-500 text-xl">👤</span>
             )}
@@ -134,7 +140,7 @@ export default function ChatRoomSidebar({ chat }) {
             <p className="text-sm text-left text-gray-600 truncate">{chat.message}</p>
           </div>
           {chat.productImg ? (
-            <Image src={chat.productImg} alt="product" width={40} height={40} className="rounded" />
+            <Image src={chat.productImg} alt="product" width={40} height={40} className="rounded w-10 h-10" />
           ) : (
             <span className="text-gray-500 text-xl">👤</span>
           )}
@@ -155,7 +161,7 @@ export default function ChatRoomSidebar({ chat }) {
                 alt="product"
                 width={40}
                 height={40}
-                className="rounded"
+                className="rounded w-10 h-10"
                 onError={(e) => {
                   console.warn("이미지 로드 실패", e?.nativeEvent || e);
                 }}
@@ -217,7 +223,9 @@ export default function ChatRoomSidebar({ chat }) {
                       {!isMine && <div className="text-sm text-gray-500 mb-1">{msg.from}</div>}
                       <div className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
                         <div
-                          className={`p-3 rounded break-all max-w-[250px] ${isMine ? "bg-blue-300" : "bg-green-300"}`}
+                          className={`p-3 rounded break-all max-w-[250px] ${
+                            isMine ? "bg-blue-300 text-left" : "bg-green-300"
+                          }`}
                         >
                           {msg.text}
                           {/* 이 메시지 전송 시점에 판매완료 상태였다면 작은 뱃지 표기 */}
