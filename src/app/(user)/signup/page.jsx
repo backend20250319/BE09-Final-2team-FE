@@ -73,6 +73,30 @@ export default function Signup() {
 
         // 중복 확인 상태 초기화 (값이 변경되면)
         if (['loginId', 'email', 'nickname'].includes(field)) {
+            // 닉네임 길이 검증 추가
+            if (field === 'nickname' && value) {
+                if (value.length < 2) { // 2글자 미만 오류
+                    setValidationStates(prev => ({
+                        ...prev,
+                        [field]: {
+                            status: 'error',
+                            message: '❌ 닉네임은 2글자 이상이어야 합니다',
+                            checked: false
+                        }
+                    }));
+                    return; //(기본 메시지 안 보여줌)
+                } else if (value.length > 10) { // 10글자 초과 오류
+                    setValidationStates(prev => ({
+                        ...prev,
+                        [field]: {
+                            status: 'error',
+                            message: '❌ 닉네임은 10글자 이하여야 합니다',
+                            checked: false
+                        }
+                    }));
+                    return;
+                }
+            }
             setValidationStates(prev => ({
                 ...prev,
                 [field]: {
@@ -88,16 +112,26 @@ export default function Signup() {
             const password = field === 'password' ? value : formData.password;
             const passwordConfirm = field === 'passwordConfirm' ? value : formData.passwordConfirm;
 
-            if (passwordConfirm && password !== passwordConfirm) {
+            // 비밀번호 길이 검증
+            if (field === 'password' && value && value.length < 8) {
+                setPasswordMatch({
+                    status: 'error',
+                    message: '❌ 비밀번호는 8자 이상이어야 합니다'
+                });
+            }
+
+            else if (passwordConfirm && password !== passwordConfirm) {
                 setPasswordMatch({
                     status: 'error',
                     message: '❌ 비밀번호가 일치하지 않습니다'
                 });
             } else if (passwordConfirm && password === passwordConfirm) {
-                setPasswordMatch({
-                    status: 'success',
-                    message: '✅ 비밀번호가 일치합니다'
-                });
+                if (password.length >= 8) {
+                    setPasswordMatch({
+                        status: 'success',
+                        message: '✅ 비밀번호가 일치합니다'
+                    });
+                }
             } else {
                 setPasswordMatch({ status: 'default', message: '' });
             }
@@ -237,8 +271,15 @@ export default function Signup() {
             formData[field] === '' || validationStates[field].checked
         );
         const isPasswordValid = passwordMatch.status === 'success' || passwordMatch.status === 'default';
+        const isNicknameValid = formData.nickname.trim() !== ''; // 별도 변수로 분리
 
-        setIsFormValid(isFieldsValid && isAgreementsValid && isChecksValid && isPasswordValid && formData.nickname.trim());
+        setIsFormValid(
+            isFieldsValid &&
+            isAgreementsValid &&
+            isChecksValid &&
+            isPasswordValid &&
+            isNicknameValid
+        );
     }, [formData, agreements, validationStates, passwordMatch]);
 
     // 폼 제출 핸들러
