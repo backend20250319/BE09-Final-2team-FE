@@ -3,10 +3,13 @@
 import React, { useState } from 'react';
 import './mypage.css'; // mypage.css 파일을 임포트합니다.
 import MyReviewList from '@/app/review/components/MyReviewList'; // 리뷰 추가
+import UserReviewList from '@/app/review/components/UserReviewList'; //유저 리뷰 내역 연동
 
 const MyPage = () => {
     const [activeTab, setActiveTab] = useState('purchase');
     const [reviewOpen, setReviewOpen] = useState(false); // ✅ 사이드바 상태
+    const [userReviewOpen, setUserReviewOpen] = useState(false); //유저 사이드 바
+
     return (
         <div className="mypage-container">
             <div className="main-content">
@@ -94,7 +97,11 @@ const MyPage = () => {
                                         <span className="transaction-unit">건</span>
                                     </div>
                                     <div className="transaction-item">
-                                        <span className="transaction-label">작성 리뷰</span>
+                                        <span
+                                            className="transaction-label"
+                                            onClick={() => setUserReviewOpen(true)}
+                                            style={{ cursor: 'pointer' }} // 클릭 가능 표시
+                                        >작성 리뷰</span>
                                         <span className="transaction-value">0</span>
                                         <span className="transaction-unit">개</span>
                                     </div>
@@ -132,6 +139,10 @@ const MyPage = () => {
             <MyReviewList
                 open={reviewOpen}
                 onClose={() => setReviewOpen(false)}
+            />
+            <UserReviewList
+                onClose={() => setUserReviewOpen(false)}
+                open={userReviewOpen}
             />
         </div>
     );
