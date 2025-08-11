@@ -71,12 +71,10 @@ const MyPage = () => {
                             <span className="transaction-unit">건</span>
                         </div>
                         <div className="transaction-item">
-                            <span
-                                className="transaction-label"
-                                onClick={() => setUserReviewOpen(true)}
-                                style={{ cursor: 'pointer' }}
-                            >작성 리뷰</span>
-                            <span className="transaction-value">0</span>
+                            <span className="transaction-label" >작성 리뷰</span>
+                            <span className="transaction-value"
+                                  onClick={() => setUserReviewOpen(true)}
+                                  style={{ cursor: 'pointer' }}>3</span>
                             <span className="transaction-unit">개</span>
                         </div>
                     </div>
@@ -85,7 +83,6 @@ const MyPage = () => {
         </div>
     );
 
-    /** ✅ 대시보드 렌더링 */
     const renderDashboard = () => (
         <>
             {renderProfileSection()}
