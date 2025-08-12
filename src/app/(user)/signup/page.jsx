@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './signup.css';
 import { validatePassword, PASSWORD_CONFIG } from '@/app/(user)/components/passwordUtils';
+import { formatPhoneNumber, PHONE_CONFIG } from '@/app/(user)/components/phoneUtils';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
@@ -95,17 +96,6 @@ export default function Signup() {
 
     const closeModal = (type) => {
         setModalStates(prev => ({ ...prev, [type]: false }));
-    };
-
-    // 핸드폰 번호 자동 포맷팅 함수
-    const formatPhoneNumber = (value) => {
-        const numbers = value.replace(/\D/g, '');
-
-        if (numbers.length > 11) return value.slice(0, 13);
-
-        if (numbers.length <= 3) return numbers;
-        if (numbers.length <= 7) return `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
-        return `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7, 11)}`;
     };
 
     // 중복 확인 에러 메시지 반환
@@ -453,10 +443,10 @@ export default function Signup() {
                         <input
                             className="signup-input"
                             type="text"
-                            placeholder="휴대전화번호를 입력하세요 (01012345678)"
+                            placeholder={PHONE_CONFIG.placeholder}  {/* 🆕 변경 */}
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                            maxLength="13"
+                            maxLength={PHONE_CONFIG.maxLength}  {/* 🆕 변경 */}
                         />
                     </div>
 
