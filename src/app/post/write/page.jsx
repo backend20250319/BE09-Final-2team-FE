@@ -13,7 +13,9 @@ export default function PostWritePage() {
   const sp = useSearchParams();
   const backTab = sp.get("tab") === "groupbuy" ? "groupbuy" : "tips";
 
-  const [category, setCategory] = useState(backTab === "groupbuy" ? "공동구매" : "육아 꿀팁");
+  const [category, setCategory] = useState(
+    backTab === "groupbuy" ? "공동구매" : "육아 꿀팁"
+  );
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [people, setPeople] = useState(2);
@@ -38,7 +40,7 @@ export default function PostWritePage() {
 
     const post =
       category === "공동구매"
-        ? { ...base, status: "모집중", region: "", people }
+        ? { ...base, status: "모집중", region: "", people: Number(people) }
         : base;
 
     savePost(post);
@@ -48,8 +50,22 @@ export default function PostWritePage() {
 
   return (
     <div className="w-full max-w-5xl mx-auto p-6">
+      {/* CKEditor 입력영역 높이 고정 (전역 적용) */}
+      <style jsx global>{`
+        /* 에디터 입력영역 높이를 고정하고, 내용이 넘치면 스크롤 */
+        .ck-editor__editable {
+          min-height: 400px !important;
+          max-height: 400px !important;
+          overflow-y: auto !important;
+        }
+        /* 에디터 전체 컨테이너도 높이 튀지 않게 */
+        .ck.ck-editor {
+          width: 100%;
+        }
+      `}</style>
+
       <form onSubmit={onSubmit} className="space-y-5">
-        {/* 카테고리: 좌우정렬 */}
+        {/* 카테고리 */}
         <div className="flex items-center gap-3">
           <label className="text-gray-700 text-sm w-16">카테고리</label>
           <select
@@ -62,7 +78,7 @@ export default function PostWritePage() {
           </select>
         </div>
 
-        {/* 제목: 좌우정렬 + 공동구매 옵션 */}
+        {/* 제목 + 공동구매 옵션 */}
         <div className="flex items-center gap-3">
           <label className="text-gray-700 text-sm w-16">제목</label>
           <input
@@ -86,7 +102,9 @@ export default function PostWritePage() {
                   className="h-7 border rounded-sm px-2 text-[12px] bg-white"
                 >
                   {Array.from({ length: 9 }, (_, i) => i + 2).map((n) => (
-                    <option key={n} value={n}>{n}명</option>
+                    <option key={n} value={n}>
+                      {n}명
+                    </option>
                   ))}
                 </select>
               </div>
@@ -102,14 +120,18 @@ export default function PostWritePage() {
           )}
         </div>
 
-        {/* 에디터 */}
+        {/* 에디터 (고정 높이) */}
         <div className="border rounded-sm">
           <Editor value={content} onChange={setContent} />
         </div>
 
         {/* 하단 버튼 */}
         <div className="flex justify-center gap-6 pt-4">
-          <button type="button" onClick={onCancel} className="h-9 w-28 rounded border text-sm hover:bg-gray-50">
+          <button
+            type="button"
+            onClick={onCancel}
+            className="h-9 w-28 rounded border text-sm hover:bg-gray-50"
+          >
             취소
           </button>
           <button
