@@ -26,7 +26,6 @@ const MyPage = () => {
         { id: 2, productName: '유아 원목 블록 세트', price: '25,000원', location: '서초동', timeAgo: '2일 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'SOLD', status: 'USED' },
     ];
 
-    /** ✅ 프로필, 자녀, 거래 현황 카드 묶음 */
     const renderProfileSection = () => (
         <div className="profile-section">
             <div className="profile-card">

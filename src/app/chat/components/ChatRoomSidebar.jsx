@@ -4,16 +4,20 @@ import Sidebar from "@/components/common/Sidebar";
 import { Button } from "@/components/ui/button";
 import { useSidebar } from "@/hooks/useSidebar";
 import { formatDateToString, formatStringToDate, numberWithCommas } from "@/utils/format";
+import { Ban, Siren } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
 
 export default function ChatRoomSidebar({ chat }) {
-  const { close, closeAll } = useSidebar(`chatRoom_${chat.id}`);
-  const chatListSidebar = useSidebar("chatList"); // ✅ 렌더 단계에서 미리 꺼내두기
-  const [text, setText] = useState("");
-  const [isSale, setIsSale] = useState(!!chat.isSale); // ✅ 판매 상태 로컬 관리
-  const myId = "나";
+  // chat: 채팅방 정보를 담고 있는 객체 (id, name, message, productId, productName, productPrice, productImg, avatar, date, userId 등)
+
+  const { close, closeAll } = useSidebar(`chatRoom_${chat.id}`); // 현재 채팅방 사이드바 제어
+  const chatListSidebar = useSidebar("chatList"); // 채팅 목록 사이드바 제어
+  const [text, setText] = useState(""); // 메시지 입력 텍스트
+  const [isSale, setIsSale] = useState(!!chat.isSale); // 판매 완료 상태 (로컬 관리)
+  const [isAddBtn, setIsAddBtn] = useState(false); // 더보기 버튼 메뉴 표시 여부
+  const myId = "나"; // 현재 사용자 ID
 
   // ✅ 초기 메시지에도 isSale 포함 (일관성)
   const [messages, setMessages] = useState([
@@ -33,10 +37,10 @@ export default function ChatRoomSidebar({ chat }) {
     },
   ]);
 
-  const scrollRef = useRef(null);
-  const router = useRouter();
+  const scrollRef = useRef(null); // 메시지 영역 스크롤 제어용 ref
+  const router = useRouter(); // Next.js 라우터
 
-  // 메시지 전송 (현재 판매 상태를 메시지에 함께 기록)
+  // 메시지 전송 함수 (현재 판매 상태를 메시지에 함께 기록)
   const sendMessage = () => {
     if (!text.trim()) return;
 
@@ -57,11 +61,13 @@ export default function ChatRoomSidebar({ chat }) {
     }, 0);
   };
 
+  // 폼 제출 시 메시지 전송
   const handleSend = (e) => {
     e.preventDefault();
     sendMessage();
   };
 
+  // Enter 키 입력 시 메시지 전송 (Shift+Enter는 줄바꿈)
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -69,11 +75,13 @@ export default function ChatRoomSidebar({ chat }) {
     }
   };
 
+  // 시간 포맷팅 (HH:MM 형식)
   const formatTime = (iso) => {
     const date = new Date(iso);
     return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
   };
 
+  // 전체 날짜 포맷팅 (YYYY년 MM월 DD일 형식)
   const formatFullDate = (timestamp) => {
     const date = new Date(timestamp);
     if (isNaN(date.getTime())) return "";
@@ -81,18 +89,31 @@ export default function ChatRoomSidebar({ chat }) {
     return formatStringToDate(dateString);
   };
 
-  // 상품 클릭 시 사이드바 전부 닫고 이동
+  // 상품 클릭 시 상품 상세 페이지로 이동
   const handleGoToReview = () => {
     try {
-      closeAll();
-      router.push(`/product/${chat.productId}`);
+      closeAll(); // 모든 사이드바 닫기
+      router.push(`/product/${chat.productId}`); // 상품 상세 페이지로 이동
     } catch (err) {
       const safeErr = err instanceof Error ? err : new Error(String(err));
       console.error("페이지 이동 중 오류 발생:", safeErr);
     }
   };
 
-  // 판매완료 처리: 상태 변경 + (옵션) 시스템 메시지 남기기
+  // 유저 이름 클릭 시 해당 유저의 마이페이지로 이동
+  const handleGoToUserProfile = () => {
+    try {
+      closeAll(); // 모든 사이드바 닫기
+      // chat.userId가 있다면 해당 유저의 페이지로, 없다면 기본 마이페이지로 이동
+      const userId = chat.userId || "";
+      router.push(`/mypage/${userId}`); // 유저 마이페이지로 이동
+    } catch (err) {
+      const safeErr = err instanceof Error ? err : new Error(String(err));
+      console.error("유저 페이지 이동 중 오류 발생:", safeErr);
+    }
+  };
+
+  // 판매완료 처리: 상태 변경 + 시스템 메시지 추가
   const handleCompleteSale = () => {
     if (isSale) return;
     setIsSale(true);
@@ -115,8 +136,10 @@ export default function ChatRoomSidebar({ chat }) {
 
   return (
     <Sidebar
-      sidebarKey={`chatRoom_${chat.id}`}
-      title={chat.name}
+      sidebarKey={`chatRoom_${chat.id}`} // 채팅방별 고유 키
+      title={chat.name} // 채팅방 제목 (상대방 이름)
+      titleClickable={true} // 제목 클릭 가능하게 설정
+      onTitleClick={handleGoToUserProfile} // 제목 클릭 시 유저 프로필로 이동
       trigger={
         <Button variant="ghost" className="flex items-center gap-4 w-full h-[86px]">
           <div className="w-[60px] h-[60px] bg-gray-200 rounded-full flex items-center justify-center">
@@ -147,13 +170,29 @@ export default function ChatRoomSidebar({ chat }) {
         </Button>
       }
       onBack={() => {
-        close();
-        chatListSidebar.open(); // ✅ 훅을 미리 꺼내서 사용
+        close(); // 현재 채팅방 사이드바 닫기
+        chatListSidebar.open(); // 채팅 목록 사이드바 열기
       }}
+      add={true} // 더보기 버튼 표시
+      onAdd={() => setIsAddBtn(!isAddBtn)} // 더보기 버튼 클릭 시 메뉴 토글
+      className="gap-0" // 사이드바 내부 간격 제거
     >
       <div>
+        {/* 신고하기, 차단하기 */}
+        {isAddBtn && (
+          <div className="flex justify-center items-center gap-[40px] px-4 min-h-[70px] border-b text-[14px] text-jnGray-900">
+            <div className="cursor-pointer flex flex-col items-center">
+              <Siren size={28} />
+              <p>신고하기</p>
+            </div>
+            <div className="cursor-pointer flex flex-col items-center ">
+              <Ban size={28} />
+              <p>차단하기</p>
+            </div>
+          </div>
+        )}
         {/* 상품 정보 + 판매완료 버튼 */}
-        <div className="flex">
+        <div className="flex py-4">
           <div onClick={handleGoToReview} className="flex items-center gap-4 w-full h-[40px] mb-3 cursor-pointer">
             {chat.productImg ? (
               <Image
