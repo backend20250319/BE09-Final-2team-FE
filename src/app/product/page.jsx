@@ -17,7 +17,7 @@ export default function Page() {
         trade_status: 'SOLD', // ON_SALE(판매중), RESERVED(예약중), ON_HOLD(판매보류), SOLD(판매완료)
         status: 'USED', // NEW(새상품), USED(중고)
         hasWrittenReview: false,
-        showReviewButton: false,
+        showReviewButton: true,
     };
 
     // size 설명:
@@ -31,6 +31,7 @@ export default function Page() {
             <WishlistSidebar trigger={<Button>찜한 상품</Button>} />
 
             {/* 상품 카드 - product 예시는 위에 있음 */}
+            <ProductCard product={product} size='size1' />
             <ProductCard product={product} size='size0' />
 
             {/* Product Detail Page Link */}
