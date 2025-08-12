@@ -18,9 +18,10 @@ export default function Header() {
     const [categoryColumns, setCategoryColumns] = useState({});
     const router = useRouter();
     const [keyword, setKeyword] = useState('');
+    const [isComposing, setIsComposing] = useState(false);
 
     const handleSearch = () => {
-        if (keyword.trim()) {
+        if (keyword.trim() && !isComposing) {
             router.push(`/product/search?keyword=${encodeURIComponent(keyword.trim())}`);
         }
 
@@ -28,7 +29,17 @@ export default function Header() {
     };
 
     const handleKeyDown = (e) => {
-        if (e.key === 'Enter') handleSearch();
+        if (e.key === 'Enter' && !isComposing) {
+            handleSearch();
+        }
+    };
+
+    const handleCompositionStart = () => {
+        setIsComposing(true);
+    };
+
+    const handleCompositionEnd = () => {
+        setIsComposing(false);
     };
 
     const handleLogout = () => {
@@ -67,6 +78,8 @@ export default function Header() {
                                 value={keyword || ''}
                                 onChange={(e) => setKeyword(e.target.value)}
                                 onKeyDown={handleKeyDown}
+                                onCompositionStart={handleCompositionStart}
+                                onCompositionEnd={handleCompositionEnd}
                                 className='w-full outline-none bg-transparent'
                                 placeholder='어떤 육아 용품을 찾고 계신가요?'
                             />
