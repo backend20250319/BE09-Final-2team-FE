@@ -9,7 +9,7 @@
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5); /* 투명한 검정 배경 */
-    z-index: 104; /* 사이드바보다 낮은 z-index 설정 */
+    z-index: 50; /* 사이드바보다 낮은 z-index 설정 */
     display: flex; /* 사이드바를 중앙에 정렬하기 위해 flexbox 사용 */
     justify-content: flex-end; /* 사이드바를 오른쪽에 정렬 */
 }
@@ -21,7 +21,7 @@
     width: 599px;
     height: 100vh;
     background-color: #FFFFFF;
-    z-index: 104;
+    z-index: 50;
     overflow-y: auto;
 }
 
@@ -208,30 +208,4 @@
 .submit-button:hover {
     background-color: #85B3EB;
     color: #fff;
-}
-
-/* 스크롤바 */
-.review-add-sidebar::-webkit-scrollbar {
-    width: 6px;
-}
-
-.review-add-sidebar::-webkit-scrollbar-thumb {
-    background: #ccc;
-    border-radius: 3px;
-}
-
-.confirm-modal-backdrop {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 105 !important;
-}
-
-/* 모달 창 */
-.z-50
-{
-    z-index: 104 !important;
 }
