@@ -220,11 +220,33 @@
   cursor: pointer;
 }
 
-.search-checkbox-icon {
+.search-checkbox-input {
   width: 14px;
   height: 14px;
   margin: 0;
   cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid #000;
+  border-radius: 2px;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.search-checkbox-input:checked {
+  background-color: #85b3eb;
+  border-color: #85b3eb;
+}
+
+.search-checkbox-input:checked::after {
+  content: "✓";
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
 }
 
 .search-checkbox-text {
