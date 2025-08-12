@@ -82,7 +82,7 @@
 }
 
 .product-card-info {
-    padding: 0 10px;
+    padding: 0;
     height: 48px;
     display: flex;
     align-items: center;
@@ -103,7 +103,7 @@
 }
 
 .product-card-price-container {
-    padding: 0 10px;
+    padding: 0;
     height: 28px;
     display: flex;
     align-items: center;
@@ -118,7 +118,7 @@
 }
 
 .product-card-location-container {
-    padding: 0 10px;
+    padding: 0;
     height: 24px;
     display: flex;
     align-items: center;
@@ -134,7 +134,7 @@
 }
 
 .product-card-tags-container {
-    padding: 0 10px;
+    padding: 0;
     height: 16px;
     display: flex;
     align-items: center;
@@ -154,11 +154,12 @@
 }
 
 .product-card-review-section {
-    padding: 0 10px;
+    padding: 0;
     height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 100%;
 }
 
 .product-card-review-button {

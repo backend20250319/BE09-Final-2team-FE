@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import ProductCard from '@/components/common/ProductCard';
+import UserReviewList from '@/app/review/components/UserReviewList';
 import './detail.css';
 import ChatListSidebar from '@/app/chat/components/ChatListSideBar';
 import { MessageCircleMore } from 'lucide-react';
@@ -19,6 +20,7 @@ const ProductDetail = () => {
     const [showStatusDropdown, setShowStatusDropdown] = useState(false);
     const [currentStatus, setCurrentStatus] = useState('ON_SALE'); // 기본값: 판매중
     const statusDropdownRef = useRef(null);
+    const [reviewSidebarOpen, setReviewSidebarOpen] = useState(false);
 
     // my product 여부
     const isMyProduct = false;
@@ -747,7 +749,7 @@ const ProductDetail = () => {
                                     </button>
                                     <ChatListSidebar
                                         trigger={<button className='product-detail-chat-button'>채팅하기</button>}
-                                    ></ChatListSidebar>
+                                    />
                                 </>
                             )}
                         </div>
@@ -820,10 +822,16 @@ const ProductDetail = () => {
                             <span className='product-detail-divider'>|</span>
                             <div className='product-detail-trade-stat'>
                                 <span className='product-detail-stat-label'>리뷰수</span>
+                                {/* 리뷰 사이드바 */}
+                                <UserReviewList open={reviewSidebarOpen} onClose={() => setReviewSidebarOpen(false)} />
                                 <a
                                     href='#'
                                     className='product-detail-stat-value'
-                                    style={{ textDecoration: 'underline' }}
+                                    style={{ textDecoration: 'underline', cursor: 'pointer' }}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        setReviewSidebarOpen(true);
+                                    }}
                                 >
                                     44
                                 </a>

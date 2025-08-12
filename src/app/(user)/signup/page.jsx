@@ -286,8 +286,7 @@ export default function Signup() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log('회원가입 데이터:', { formData, agreements });
-            router.push('/signup/complete');
+            router.push(`/signup/complete?nickname=${encodeURIComponent(formData.nickname)}`);
         }
     };
 

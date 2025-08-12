@@ -1,10 +1,13 @@
 "use client";
 
 import React, {useState, useEffect} from 'react';
+import { useRouter } from 'next/navigation'; //라우터 추가
 import Link from 'next/link';
 import './login.css';
 
 export default function Login() {
+    const router = useRouter(); //라우터 선언
+
     // 1. 상태변수 정의
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
@@ -26,11 +29,22 @@ export default function Login() {
 
         if (isButtonDisabled) {
             // button 의 disabled 때문에 실행되지 않지만 만약에 대비해 유효성 검사 메세지 띄우기
-             alert("아이디와 비밀번호를 모두 입력해주세요");
-             return;
+            alert("아이디와 비밀번호를 모두 입력해주세요");
+            return;
         }
         // todo : 여기서 로그인 api를 호출하는 로직 작성
         console.log("로그인 시도:", {userId, password});
+
+        // 일반 로그인 성공 시 메인 페이지로 이동
+        // 실제로는 API 호출 후 성공하면 이동
+        // router.push('/');
+    };
+
+    // 카카오 로그인 핸들러 추가
+    const handleKakaoLogin = () => {
+        // 현재는 API 연동 없이 바로 추가정보 입력 페이지로 이동
+        // 실제 카카오 로그인 API는 백엔드 연동 후 구현 예정
+        router.push('/additional-info');
     };
 
     return (
@@ -61,7 +75,14 @@ export default function Login() {
                         로그인
                     </button>
                     <div className="login-sns">
-                        <button className="sns-btn kakao">카카오 아이디로 로그인</button>
+                        {/* 카카오 버튼에 onClick 핸들러 추가 */}
+                        <button
+                            className="sns-btn kakao"
+                            type="button"
+                            onClick={handleKakaoLogin}
+                        >
+                            카카오 아이디로 로그인
+                        </button>
                     </div>
                 </form>
                 <div className="login-links">

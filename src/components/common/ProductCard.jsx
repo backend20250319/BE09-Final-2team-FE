@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import '@/common-css/ProductCard.css';
+import MyReviewAddForm from '@/app/review/components/MyReviewAddForm.jsx';
 
 const CARD_SIZES = {
     size0: 132,
@@ -25,6 +26,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
         showReviewButton,
     } = product;
     const [isWishlisted, setIsWishlisted] = useState(false);
+    const [showReviewForm, setShowReviewForm] = useState(false);
     const cardWidth = CARD_SIZES[size] || CARD_SIZES.size1;
     const router = useRouter();
 
@@ -71,6 +73,12 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     };
 
     const handleProductClick = () => {
+        console.log('handleProductClick');
+        // 리뷰 폼이 열려있으면 상품 클릭 무시
+        if (showReviewForm) {
+            return;
+        }
+
         if (onProductClick) {
             onProductClick(product);
         } else {
@@ -82,7 +90,14 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     const handleReviewClick = () => {
         if (onReviewClick) {
             onReviewClick();
+        } else {
+            // 리뷰 폼 표시
+            setShowReviewForm(true);
         }
+    };
+
+    const handleReviewFormClose = () => {
+        setShowReviewForm(false);
     };
 
     // wishlist 모드일 때의 렌더링
@@ -198,12 +213,31 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                 </div>
 
                 {showReviewButton && (
-                    <div className='product-card-review-section'>
+                    <div
+                        className='product-card-review-section'
+                        onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                        }}
+                        onMouseDown={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            e.nativeEvent.stopImmediatePropagation();
+                        }}
+                    >
                         <button
                             className='product-card-review-button'
                             onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
                                 handleReviewClick();
+                            }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                e.nativeEvent.stopImmediatePropagation();
                             }}
                             disabled={hasWrittenReview}
                         >
@@ -211,6 +245,9 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                         </button>
                     </div>
                 )}
+
+                {/* 리뷰 폼이 표시될 때만 렌더링 */}
+                {showReviewForm && <MyReviewAddForm onClose={handleReviewFormClose} />}
             </div>
         </div>
     );
