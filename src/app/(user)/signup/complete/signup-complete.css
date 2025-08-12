@@ -78,7 +78,7 @@
 .welcome-message p:first-child {
     font-size: 28px;
     font-weight: 600;
-    margin-bottom: 15px;
+    margin-bottom: 30px;
     color: #000000;
 }
 
@@ -144,37 +144,6 @@
     text-decoration-color: #000000;
 }
 
-/* 서비스 시작하기 버튼 */
-.service-start {
-    background-color: #85B3EB !important;
-}
-
-.service-start:hover {
-    background-color: #6B9CD8 !important;
-}
-
-.service-start:active {
-    background-color: #5A8BC7 !important;
-}
-
-/* 카카오 사용자 추가 정보 박스 */
-.kakao-info {
-    position: absolute;
-    top: 530px; /* 로그인 버튼 아래 */
-    left: 50%;
-    transform: translateX(-50%);
-    width: 350px;
-    padding: 12px 16px;
-    background-color: #F8FAFC;
-    border-radius: 8px;
-    border-left: 4px solid #85B3EB;
-    font-size: 14px;
-    color: #64748B;
-    text-align: center;
-    line-height: 1.4;
-    font-family: 'Pretendard Variable', sans-serif;
-}
-
 /* 반응형 디자인 */
 @media (max-width: 768px) {
     .signup-complete-card {
@@ -226,15 +195,5 @@
         top: 0;
         left: 0;
         transform: none;
-    }
-
-    .kakao-info {
-        position: relative;
-        top: 0;
-        left: 0;
-        transform: none;
-        width: 90%;
-        margin: 20px auto 0 auto;
-        font-size: 13px;
     }
 }

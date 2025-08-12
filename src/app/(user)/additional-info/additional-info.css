@@ -75,23 +75,34 @@
     justify-content: center;
 }
 
-/* 환영 메시지 */
-.welcome-message {
+/* 환영 메시지 컨테이너 */
+.welcome-message-container {
     position: absolute;
     top: 335px;
     left: 50%;
     transform: translateX(-50%);
     width: 300px;
-    height: 19px;
+    height: auto;
     font-family: 'Pretendard Variable', sans-serif;
     font-weight: 500;
-    font-size: 16px;
-    line-height: 1.193;
     text-align: center;
     color: #000000;
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    line-height: 1.5;
+}
+
+.welcome-nickname {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.welcome-subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #4a5568;
 }
 
 /* 폼 컨테이너 */
@@ -149,6 +160,22 @@
 
 .input-field.loading {
     border-color: #85B3EB;
+}
+
+.input-help {
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    text-align: left;
+    color: #666;
+}
+
+.input-help.error {
+    color: #ef4444;
+}
+
+.input-help.success {
+    color: #22c55e;
 }
 
 /* 중복 확인 버튼 */
@@ -402,7 +429,7 @@
         margin-bottom: 20px;
     }
 
-    .welcome-message {
+    .welcome-message-container {
         position: relative;
         top: 0;
         left: 0;
