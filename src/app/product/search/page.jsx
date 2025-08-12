@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useSearchParams, useRouter, usePathname } from "next/navigation";
 import ProductCard from "../../../components/common/ProductCard";
 import "./search.css";
 
@@ -11,6 +12,10 @@ export default function Page() {
   const [selectedOptions, setSelectedOptions] = useState(["판매완료 상품 제외", "새상품", "중고"]);
   const [sortBy, setSortBy] = useState("추천순");
   const [isFromCategory, setIsFromCategory] = useState(true);
+
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
 
   // 카테고리 관련 상태
   const [categoryPath, setCategoryPath] = useState(["전체"]);
@@ -37,9 +42,8 @@ export default function Page() {
 
   // URL 파라미터 확인
   useEffect(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const category = urlParams.get("category");
-    const keyword = urlParams.get("keyword");
+    const category = searchParams.get("category");
+    const keyword = searchParams.get("keyword");
 
     if (category) {
       // 카테고리로 들어온 경우: /search?category=3
@@ -52,6 +56,10 @@ export default function Page() {
         setCategoryPath(["전체", ...categoryPath]);
         setSelectedCategory(categoryPath[categoryPath.length - 1]);
         setSearchQuery(categoryPath[categoryPath.length - 1]);
+      } else {
+        // category 파라미터가 사라진 경우 초기화
+        setCategoryPath(["전체"]);
+        setSelectedCategory(null);
       }
     }
 
@@ -59,8 +67,11 @@ export default function Page() {
       // 검색어로 들어온 경우: /search?keyword=유모차
       setIsFromCategory(false);
       setSearchQuery(decodeURIComponent(keyword));
+    } else {
+      // keyword 파라미터가 사라지면 빈값
+      setSearchQuery("");
     }
-  }, []);
+  }, [searchParams]);
 
   // 카테고리 확장/축소 토글 함수
   const toggleCategoryExpansion = () => {
@@ -170,7 +181,7 @@ export default function Page() {
 
   // 현재 표시할 카테고리 찾기
   const getCurrentCategory = () => {
-    if (categoryPath.length === 1) return null; // 메인 카테고리 뷰
+    if (categoryPath.length === 1) return null; // 전체만 있는 경우
 
     // 동적으로 경로를 따라가면서 현재 카테고리 찾기
     let currentCategory = babyCategoryTree.find((cat) => cat.name === categoryPath[1]);
@@ -186,7 +197,7 @@ export default function Page() {
     return currentCategory;
   };
 
-  // 카테고리 클릭 핸들러
+  // 카테고리 클릭 시 경로/URL 업데이트
   const handleCategoryClick = (categoryName) => {
     let clickedCategory;
 
@@ -206,24 +217,22 @@ export default function Page() {
 
     // URL 업데이트 - 현재 검색어 유지하면서 카테고리 추가
     if (clickedCategory) {
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.set("category", clickedCategory.id.toString());
-      const newUrl = `/product/search?${urlParams.toString()}`;
-      window.history.pushState({}, "", newUrl);
+      const params = new URLSearchParams(searchParams);
+      params.set("category", clickedCategory.id.toString());
+      router.push(`${pathname}?${params.toString()}`);
     }
   };
 
-  // 브레드크럼 클릭 핸들러
+  // 브레드크럼 클릭 시 경로/URL 업데이트
   const handleBreadcrumbClick = (index) => {
     if (index === 0) {
       // "전체" 클릭 시 메인으로 돌아가기
       setCategoryPath(["전체"]);
       setSelectedCategory(null);
       // URL에서 카테고리 파라미터 제거
-      const urlParams = new URLSearchParams(window.location.search);
-      urlParams.delete("category");
-      const newUrl = `/product/search?${urlParams.toString()}`;
-      window.history.pushState({}, "", newUrl);
+      const params = new URLSearchParams(searchParams);
+      params.delete("category");
+      router.push(`${pathname}?${params.toString()}`);
     } else {
       // 해당 인덱스까지만 경로 유지
       const newPath = categoryPath.slice(0, index + 1);
@@ -254,10 +263,9 @@ export default function Page() {
       }
 
       if (targetCategory) {
-        const urlParams = new URLSearchParams(window.location.search);
-        urlParams.set("category", targetCategory.id.toString());
-        const newUrl = `/product/search?${urlParams.toString()}`;
-        window.history.pushState({}, "", newUrl);
+        const params = new URLSearchParams(searchParams);
+        params.set("category", targetCategory.id.toString());
+        router.push(`${pathname}?${params.toString()}`);
       }
     }
   };
@@ -277,6 +285,7 @@ export default function Page() {
     showReviewButton: false,
   }));
 
+  // 필터 토글 핸들러
   const toggleAgeGroup = (age) => {
     setSelectedAgeGroups((prev) => (prev.includes(age) ? prev.filter((a) => a !== age) : [...prev, age]));
   };
