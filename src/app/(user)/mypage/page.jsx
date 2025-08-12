@@ -18,8 +18,8 @@ const MyPage = () => {
     const [userReviewOpen, setUserReviewOpen] = useState(false);
 
     const dummyPurchases = [
-        { id: 1, productName: '아기 옷 세트', price: '15,000원', location: '양재동', timeAgo: '1주 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'ON_SALE', status: 'NEW' },
-        { id: 2, productName: '아기 옷 세트', price: '15,000원', location: '양재동', timeAgo: '1주 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'ON_SALE', status: 'NEW' },
+        { id: 1, productName: '아기 옷 세트', price: '15,000원', location: '양재동', timeAgo: '1주 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'ON_SALE', status: 'NEW' , showReviewButton: true,},
+        { id: 2, productName: '아기 옷 세트', price: '15,000원', location: '양재동', timeAgo: '1주 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'ON_SALE', status: 'NEW' , showReviewButton: true,},
     ];
     const dummySales = [
         { id: 1, productName: '유아 원목 블록 세트', price: '25,000원', location: '서초동', timeAgo: '2일 전', imageUrl: 'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg', trade_status: 'SOLD', status: 'USED' },
