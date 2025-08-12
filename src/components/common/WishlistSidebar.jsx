@@ -211,8 +211,8 @@ const WishlistSidebar = ({ trigger }) => {
         <div className='wishlist-container'>
             {/* 검색 섹션 - 상단에 독립적으로 배치 */}
             <div className='wishlist-search-section'>
-                <div className={`search-container ${isFocused ? 'focused' : ''}`}>
-                    <div className='search-icon'>
+                <div className={`wishlist-search-container ${isFocused ? 'focused' : ''}`}>
+                    <div className='wishlist-search-icon'>
                         <svg viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'>
                             <circle cx='9' cy='9' r='6' />
                             <path d='M14 14L17 17' />
@@ -221,7 +221,7 @@ const WishlistSidebar = ({ trigger }) => {
 
                     <input
                         type='text'
-                        className='search-input'
+                        className='wishlist-search-input'
                         placeholder='찜한 상품 검색'
                         value={searchTerm}
                         onChange={handleInputChange}
@@ -272,7 +272,7 @@ const WishlistSidebar = ({ trigger }) => {
 
     return (
         <Sidebar
-            sidebarKey="wishlist" // 마이페이지 연동을 위해 추가
+            sidebarKey='wishlist' // 마이페이지 연동을 위해 추가
             title='찜한 상품'
             trigger={trigger}
             onBack={true} // 뒤로 가기 버튼 추가
