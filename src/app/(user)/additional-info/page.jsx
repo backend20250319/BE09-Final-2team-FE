@@ -188,12 +188,11 @@ export default function AdditionalInfo() {
         setIsFormValid(isFieldsValid && isNicknameValid && isAgreementValid);
     }, [formData, validationStates]);
 
-    // 폼 제출 핸들러
+    // 폼 제출 핸들러 - URL 파라미터 추가
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isFormValid) {
-            console.log('카카오 추가정보 입력 완료:', formData);
-            router.push('/signup/complete');
+            router.push(`/signup/complete?from=kakao&nickname=${encodeURIComponent(formData.nickname)}`); // 카카오 플로우 닉네임을 URL 파라미터로 전달
         }
     };
 

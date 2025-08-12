@@ -252,8 +252,8 @@
 
 /* 커스텀 체크박스 */
 .checkbox-custom {
-    width: 24px;
-    height: 24px;
+    width: 16px;
+    height: 16px;
     border: 2px solid #CBD5E1;
     border-radius: 4px;
     background-color: #FFFFFF;
@@ -286,8 +286,8 @@
 
 /* 제출 버튼 */
 .submit-button {
-    width: 280px;
-    height: 45px;
+    width: 376px;
+    height: 48px;
     background-color: #CBD5E1;
     border: none;
     border-radius: 10px;
