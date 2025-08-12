@@ -716,7 +716,7 @@ const ProductDetail = () => {
                       height={36}
                     />
                   </button>
-                  <button className="product-detail-chat-button">채팅하기</button>
+                  <ChatListSidebar trigger={<button className="product-detail-chat-button">채팅하기</button>} />
                 </>
               )}
             </div>
