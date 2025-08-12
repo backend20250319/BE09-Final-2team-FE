@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import ProductCard from '../../../components/common/ProductCard';
+import AddressSearch from '../components/AddressSearch';
 import './search.css';
 
 export default function Page() {
@@ -453,7 +454,9 @@ export default function Page() {
                     <div className='search-filter-header'>
                         <h3>지역</h3>
                     </div>
-                    <div className='search-filter-content'></div>
+                    <div className='search-filter-content'>
+                        <AddressSearch />
+                    </div>
                 </div>
 
                 {/* 옵션 필터 */}

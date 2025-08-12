@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import './form.css';
+import AddressSearch from '../components/AddressSearch';
 
 const ProductForm = () => {
     const searchParams = useSearchParams();
@@ -25,10 +26,10 @@ const ProductForm = () => {
     const [imageCount, setImageCount] = useState(0);
     const [hashtagInput, setHashtagInput] = useState('');
     const [locationInput, setLocationInput] = useState('');
-    const [agreeToTerms, setAgreeToTerms] = useState(false);
     const [isDragOver, setIsDragOver] = useState(false);
     const [selectedMainCategory, setSelectedMainCategory] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
+    const [showHashtagWarning, setShowHashtagWarning] = useState(false);
 
     // 수정 모드일 때 기존 데이터 로드
     useEffect(() => {
@@ -114,7 +115,12 @@ const ProductForm = () => {
     };
 
     const addHashtag = () => {
-        if (hashtagInput.trim() && formData.hashtags.length < 10 && !hashtagInput.startsWith('#')) {
+        if (hashtagInput.trim() && !hashtagInput.startsWith('#')) {
+            if (formData.hashtags.length >= 10) {
+                setShowHashtagWarning(true);
+                setTimeout(() => setShowHashtagWarning(false), 3000);
+                return;
+            }
             setFormData((prev) => ({
                 ...prev,
                 hashtags: [...prev.hashtags, `#${hashtagInput.trim()}`],
@@ -161,10 +167,6 @@ const ProductForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        if (!agreeToTerms) {
-            alert('약관에 동의해주세요.');
-            return;
-        }
 
         // 가격 데이터에서 천 단위 구분자 제거하고 숫자로 변환
         const submitData = {
@@ -512,6 +514,7 @@ const ProductForm = () => {
                 {/* 거래지역 */}
                 <div className='form-field'>
                     <h3 className='field-title'>거래지역</h3>
+                    <AddressSearch />
                 </div>
 
                 <div className='divider'></div>
@@ -529,9 +532,12 @@ const ProductForm = () => {
                             onKeyPress={(e) => e.key === 'Enter' && addHashtag()}
                         />
                     </div>
-                    <div className='hashtag-info'>
-                        <span>최대 10개까지 설정 가능합니다.</span>
-                    </div>
+
+                    {showHashtagWarning && (
+                        <div className='product-hashtag-warning'>
+                            <span>최대 10개까지 설정 가능합니다.</span>
+                        </div>
+                    )}
 
                     {/* 선택된 해시태그들 */}
                     <div className='selected-hashtags'>
@@ -571,7 +577,7 @@ const ProductForm = () => {
                 </div>
 
                 {/* 제출 버튼 */}
-                <button type='submit' onClick={handleSubmit} className='submit-button' disabled={!agreeToTerms}>
+                <button type='submit' onClick={handleSubmit} className='submit-button'>
                     {isModifyMode ? '수정하기' : '판매하기'}
                 </button>
             </div>

@@ -127,8 +127,12 @@ const AddressSearch = () => {
                 e.preventDefault();
                 if (highlightedIndex >= 0 && highlightedIndex < filteredAddresses.length) {
                     handleAddressSelect(filteredAddresses[highlightedIndex]);
+                    setIsDropdownOpen(false);
+                    setHighlightedIndex(-1);
                 } else if (filteredAddresses.length > 0) {
                     handleAddressSelect(filteredAddresses[0]);
+                    setIsDropdownOpen(false);
+                    setHighlightedIndex(-1);
                 }
                 break;
             case 'Escape':
