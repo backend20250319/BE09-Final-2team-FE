@@ -40,7 +40,7 @@ const dummyTips = Array.from({ length: 20 }, (_, i) => ({
   date: "2025.07.31",
   views: viewsByIndex(i),
   comments: commentsByIndexTips(i),
-  content: "", // 검색/마크 안정성용
+  content: "",
 }));
 
 const dummyGroup = Array.from({ length: 20 }, (_, i) => ({
@@ -75,10 +75,30 @@ export default function PostBoardPage() {
     setCurrentPage(1);
   }, [sp]);
 
-  // 최초 로드 시 localStorage 글 불러오기
+  // 로컬 데이터 로드 함수 (목록 새로고침 공통)
+  const reload = () => {
+    const tips = loadPosts("tips") || [];
+    const group = loadPosts("groupbuy") || [];
+    setUserTips(tips);
+    setUserGroup(group);
+  };
+
+  // 최초 로드 + 상세에서 알림 받을 때 갱신
   useEffect(() => {
-    setUserTips(loadPosts("tips"));
-    setUserGroup(loadPosts("groupbuy"));
+    reload();
+
+    const onChanged = () => reload();
+    const onFocusOrVisible = () => reload();
+
+    window.addEventListener("posts:changed", onChanged);
+    window.addEventListener("focus", onFocusOrVisible);
+    document.addEventListener("visibilitychange", onFocusOrVisible);
+
+    return () => {
+      window.removeEventListener("posts:changed", onChanged);
+      window.removeEventListener("focus", onFocusOrVisible);
+      document.removeEventListener("visibilitychange", onFocusOrVisible);
+    };
   }, []);
 
   const postsPerPage = 10;
@@ -267,23 +287,35 @@ function TipsTable({ posts }) {
         </tr>
       </thead>
       <tbody>
-        {posts.map((p, idx) => (
-          <tr key={p.id} className="border-b hover:bg-gray-50">
-            <td className="py-2">{idx + 1}</td>
-            <td className="py-2 text-left pl-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {hasImage(p.content) && <PhotoIcon />}
-                <span className="truncate">{p.title}</span>
-                {p.comments > 0 && (
-                  <span className="text-blue-500 ml-1 flex-none">💬{p.comments}</span>
-                )}
-              </div>
-            </td>
-            <td className="py-2">{p.writer}</td>
-            <td className="py-2">{p.date}</td>
-            <td className="py-2">{p.views ?? 0}</td>
-          </tr>
-        ))}
+        {posts.map((p, idx) => {
+          const commentCount = Array.isArray(p.comments)
+            ? p.comments.length
+            : Number(p.comments) || 0;
+          return (
+            <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
+              <td className="py-2">{idx + 1}</td>
+              <td className="py-2 text-left pl-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {hasImage(p.content) && <PhotoIcon />}
+                  {/* 상세 링크: id가 없으면 제목으로 대체, 탭 힌트 추가 */}
+                  <Link
+                    href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`}
+                    className="truncate hover:underline"
+                    title={p.title}
+                  >
+                    {p.title}
+                  </Link>
+                  {commentCount > 0 && (
+                    <span className="text-blue-500 ml-1 flex-none">💬{commentCount}</span>
+                  )}
+                </div>
+              </td>
+              <td className="py-2">{p.writer}</td>
+              <td className="py-2">{p.date}</td>
+              <td className="py-2">{p.views ?? 0}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -304,25 +336,37 @@ function GroupBuyTable({ posts }) {
         </tr>
       </thead>
       <tbody>
-        {posts.map((p, idx) => (
-          <tr key={p.id} className="border-b hover:bg-gray-50">
-            <td className="py-2">{idx + 1}</td>
-            <td className="py-2">{p.status || "모집중"}</td>
-            <td className="py-2 text-left pl-2">
-              <div className="flex items-center gap-2 min-w-0">
-                {hasImage(p.content) && <PhotoIcon />}
-                <span className="truncate">{p.title}</span>
-                {p.comments > 0 && (
-                  <span className="text-blue-500 ml-1 flex-none">💬{p.comments}</span>
-                )}
-              </div>
-            </td>
-            <td className="py-2">{p.region || ""}</td>
-            <td className="py-2">{p.writer}</td>
-            <td className="py-2">{p.date}</td>
-            <td className="py-2">{p.views ?? 0}</td>
-          </tr>
-        ))}
+        {posts.map((p, idx) => {
+          const commentCount = Array.isArray(p.comments)
+            ? p.comments.length
+            : Number(p.comments) || 0;
+          return (
+            <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
+              <td className="py-2">{idx + 1}</td>
+              <td className="py-2">{p.status || "모집중"}</td>
+              <td className="py-2 text-left pl-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  {hasImage(p.content) && <PhotoIcon />}
+                  {/* 상세 링크: id가 없으면 제목으로 대체, 탭 힌트 추가 */}
+                  <Link
+                    href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=groupbuy`}
+                    className="truncate hover:underline"
+                    title={p.title}
+                  >
+                    {p.title}
+                  </Link>
+                  {commentCount > 0 && (
+                    <span className="text-blue-500 ml-1 flex-none">💬{commentCount}</span>
+                  )}
+                </div>
+              </td>
+              <td className="py-2">{p.region || ""}</td>
+              <td className="py-2">{p.writer}</td>
+              <td className="py-2">{p.date}</td>
+              <td className="py-2">{p.views ?? 0}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
