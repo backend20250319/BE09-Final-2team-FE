@@ -6,6 +6,7 @@ import Link from 'next/link';
 import './signup.css';
 import { validatePassword, PASSWORD_CONFIG } from '@/app/(user)/components/passwordUtils';
 import { formatPhoneNumber, PHONE_CONFIG } from '@/app/(user)/components/phoneUtils';
+import { createValidationSetter, createDuplicateCheckHandler, handleNicknameValidation } from '@/app/(user)/components/duplicateUtils';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
@@ -52,9 +53,15 @@ export default function Signup() {
         nickname: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false }
     });
 
+    // 검증 메시지 설정 함수 생성
+    const setValidationMessage = createValidationSetter(setValidationStates);
+
     // 기타 검증 상태
     const [passwordMatch, setPasswordMatch] = useState({ status: 'default', message: '' });
     const [isFormValid, setIsFormValid] = useState(false);
+
+    // 중복 확인 핸들러 생성
+    const handleDuplicateCheck = createDuplicateCheckHandler(formData, setValidationMessage);
 
     // 스토어 상태 변경 시 로컬 상태 동기화
     useEffect(() => {
@@ -98,24 +105,6 @@ export default function Signup() {
         setModalStates(prev => ({ ...prev, [type]: false }));
     };
 
-    // 중복 확인 에러 메시지 반환
-    const getValidationErrorMessage = (type) => {
-        const messages = {
-            loginId: '❌ 아이디를 입력해주세요',
-            email: '❌ 이메일을 입력해주세요',
-            nickname: '✅ 아이디가 닉네임이 됩니다'
-        };
-        return messages[type] || '❌ 입력값을 확인해주세요';
-    };
-
-    // 공통 검증 메시지 설정 함수
-    const setValidationMessage = (field, status, message, checked = false) => {
-        setValidationStates(prev => ({
-            ...prev,
-            [field]: { status, message, checked }
-        }));
-    };
-
     // 입력값 변경 핸들러
     const handleInputChange = (field, value) => {
         if (field === 'phone') {
@@ -124,23 +113,18 @@ export default function Signup() {
 
         setFormData(prev => ({ ...prev, [field]: value }));
 
-        if (field !== 'passwordConfirm') {
+        if (field !== 'passwordConfirm' && field !== 'nickname') {
             updateField(field, value);
         }
 
         // 중복 확인 상태 초기화
         if (['loginId', 'email', 'nickname'].includes(field)) {
             if (field === 'nickname') {
-                if (value.trim() === '') {
-                    setValidationMessage('nickname', 'success', '✅ 아이디가 닉네임이 됩니다', true);
-                    return;
-                } else if (value.length < 2 || value.length > 10) {
-                    const message = `❌ 닉네임은 ${value.length < 2 ? '2글자 이상' : '10글자 이하'}이어야 합니다`;
-                    setValidationMessage(field, 'error', message);
-                    return;
-                }
+                const shouldContinue = handleNicknameValidation(value, setValidationMessage);
+                if (!shouldContinue) return;
             }
 
+            // 일반 필드들 (loginId, email, nickname 길이 체크 통과한 경우)
             setValidationMessage(field, 'default', '💡 중복 확인을 눌러주세요');
         }
 
@@ -174,66 +158,6 @@ export default function Signup() {
         };
         setAgreements(newAgreements);
         updateAgreements(newAgreements);
-    };
-
-    // 중복 확인 API 호출 (임시)
-    const checkDuplicate = async (type, value) => {
-        return new Promise(resolve => {
-            setTimeout(() => {
-                const duplicates = {
-                    loginId: ['admin', 'test', 'user'],
-                    email: ['test@test.com', 'admin@admin.com'],
-                    nickname: ['관리자', '테스트']
-                };
-
-                const isDuplicate = duplicates[type]?.includes(value);
-                resolve({
-                    available: !isDuplicate,
-                    message: isDuplicate ? '이미 사용 중입니다' : '사용 가능합니다'
-                });
-            }, 1000);
-        });
-    };
-
-    // 중복 확인 핸들러
-    const handleDuplicateCheck = async (type) => {
-        const value = formData[type];
-
-        if (!value.trim()) {
-            if (type === 'nickname') {
-                setValidationMessage(type, 'success', '✅ 아이디가 닉네임이 됩니다', true);
-                return;
-            }
-            setValidationMessage(type, 'error', getValidationErrorMessage(type));
-            return;
-        }
-
-        if (type === 'nickname' && (value.length < 2 || value.length > 10)) {
-            return;
-        }
-
-        setValidationMessage(type, 'loading', '🔄 확인 중...');
-
-        try {
-            const result = await checkDuplicate(type, value);
-            const message = result.available
-                ? `✅ 사용 가능한 ${getFieldName(type)}입니다`
-                : `❌ ${result.message}`;
-            const status = result.available ? 'success' : 'error';
-            setValidationMessage(type, status, message, result.available);
-        } catch (error) {
-            setValidationMessage(type, 'error', '❌ 확인 중 오류가 발생했습니다');
-        }
-    };
-
-    // 필드명 매핑
-    const getFieldName = (type) => {
-        const names = {
-            loginId: '아이디',
-            email: '이메일',
-            nickname: '닉네임'
-        };
-        return names[type] || type;
     };
 
     // 주소 검색 완료 핸들러
@@ -443,10 +367,10 @@ export default function Signup() {
                         <input
                             className="signup-input"
                             type="text"
-                            placeholder={PHONE_CONFIG.placeholder}  {/* 🆕 변경 */}
+                            placeholder={PHONE_CONFIG.placeholder}
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
-                            maxLength={PHONE_CONFIG.maxLength}  {/* 🆕 변경 */}
+                            maxLength={PHONE_CONFIG.maxLength}
                         />
                     </div>
 
