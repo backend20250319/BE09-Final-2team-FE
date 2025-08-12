@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './signup.css';
+import { validatePassword, PASSWORD_CONFIG } from '@/app/(user)/components/passwordUtils';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
@@ -125,20 +126,6 @@ export default function Signup() {
         }));
     };
 
-    // 비밀번호 검증 함수 분리
-    const validatePassword = (password, passwordConfirm) => {
-        if (password && password.length < 8) {
-            return { status: 'error', message: '❌ 비밀번호는 8자 이상이어야 합니다' };
-        }
-        if (passwordConfirm && password !== passwordConfirm) {
-            return { status: 'error', message: '❌ 비밀번호가 일치하지 않습니다' };
-        }
-        if (passwordConfirm && password === passwordConfirm && password.length >= 8) {
-            return { status: 'success', message: '✅ 비밀번호가 일치합니다' };
-        }
-        return { status: 'default', message: '' };
-    };
-
     // 입력값 변경 핸들러
     const handleInputChange = (field, value) => {
         if (field === 'phone') {
@@ -171,7 +158,8 @@ export default function Signup() {
         if (field === 'passwordConfirm' || field === 'password') {
             const password = field === 'password' ? value : formData.password;
             const passwordConfirm = field === 'passwordConfirm' ? value : formData.passwordConfirm;
-            setPasswordMatch(validatePassword(password, passwordConfirm));
+            const result = validatePassword(password, passwordConfirm);
+            setPasswordMatch(result);
         }
     };
 
@@ -389,9 +377,10 @@ export default function Signup() {
                         <input
                             className="signup-input"
                             type="password"
-                            placeholder="비밀번호를 입력하세요(8자 이상)"
+                            placeholder={PASSWORD_CONFIG.placeholder}
                             value={formData.password}
                             onChange={(e) => handleInputChange('password', e.target.value)}
+                            maxLength={PASSWORD_CONFIG.maxLength}
                         />
                     </div>
 
