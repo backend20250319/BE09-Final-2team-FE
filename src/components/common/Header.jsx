@@ -34,6 +34,7 @@ export default function Header() {
   const handleLogout = () => {
     // 실제 로그아웃 로직 추가 필요
     setIsLoggedIn(false);
+    alert("로그아웃 됨");
   };
 
   useEffect(() => {
@@ -196,7 +197,7 @@ export default function Header() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="center" className="w-25">
                         <DropdownMenuItem asChild className="text-xs w-full justify-center">
-                          <Link href="/src/app/(user)/mypage">마이페이지</Link>
+                          <Link href="/mypage">마이페이지</Link>
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={handleLogout} className="text-xs w-full justify-center">
                           로그아웃
@@ -206,10 +207,7 @@ export default function Header() {
                   </li>
                 ) : (
                   <li>
-                    <button
-                      onClick={() => router.push("/user/login")}
-                      className="flex items-center gap-1 cursor-pointer"
-                    >
+                    <button onClick={() => router.push("/login")} className="flex items-center gap-1 cursor-pointer">
                       <User color="#000000" />
                       <span className="text-sm">마이</span>
                     </button>
