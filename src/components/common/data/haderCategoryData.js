@@ -1,58 +1,76 @@
+// 카테고리 데이터 (트리 구조)
 export const mockCategoryData = [
-  // 상위 카테고리 (column 정보 포함)
-  { id: 1, group_id: 5, parent_id: null, code_value: "출산/육아용품", sort_order: 1, column: 1, href: "#" },
-  { id: 2, group_id: 5, parent_id: null, code_value: "유아동안전/실내용품", sort_order: 2, column: 1, href: "#" },
-  { id: 3, group_id: 5, parent_id: null, code_value: "유아동의류", sort_order: 3, column: 2, href: "#" },
-  { id: 4, group_id: 5, parent_id: null, code_value: "유아동잡화", sort_order: 4, column: 2, href: "#" },
-  { id: 5, group_id: 5, parent_id: null, code_value: "유아동가구", sort_order: 5, column: 2, href: "#" },
-  { id: 6, group_id: 5, parent_id: null, code_value: "유아동교구/완구", sort_order: 6, column: 3, href: "#" },
-  { id: 7, group_id: 5, parent_id: null, code_value: "기타 유아동용품", sort_order: 7, column: 3, href: "#" },
-
-  // 하위 카테고리 (각 상위 카테고리의 parent_id 참조)
-  // 출산/육아용품
-  { id: 101, group_id: 5, parent_id: 1, code_value: "모유수유용품", sort_order: 1, href: "#" },
-  { id: 102, group_id: 5, parent_id: 1, code_value: "분유수유용품", sort_order: 2, href: "#" },
-  { id: 103, group_id: 5, parent_id: 1, code_value: "튼살크림/스킨케어", sort_order: 3, href: "#" },
-  { id: 104, group_id: 5, parent_id: 1, code_value: "임부복/수유복/언더웨어", sort_order: 4, href: "#" },
-  { id: 105, group_id: 5, parent_id: 1, code_value: "물티슈/기저귀", sort_order: 5, href: "#" },
-  { id: 106, group_id: 5, parent_id: 1, code_value: "분유/이유식", sort_order: 6, href: "#" },
-  { id: 107, group_id: 5, parent_id: 1, code_value: "아기띠/기저귀가방", sort_order: 7, href: "#" },
-  { id: 108, group_id: 5, parent_id: 1, code_value: "신생아/영유아의류", sort_order: 8, href: "#" },
-  { id: 109, group_id: 5, parent_id: 1, code_value: "유아로션/목욕용품", sort_order: 9, href: "#" },
-  { id: 110, group_id: 5, parent_id: 1, code_value: "유아건강/위생용품", sort_order: 10, href: "#" },
-  { id: 111, group_id: 5, parent_id: 1, code_value: "유모차/웨건", sort_order: 11, href: "#" },
-
-  // 유아동안전/실내용품
-  { id: 121, group_id: 5, parent_id: 2, code_value: "카시트", sort_order: 1, href: "#" },
-  { id: 122, group_id: 5, parent_id: 2, code_value: "놀이매트", sort_order: 2, href: "#" },
-  { id: 123, group_id: 5, parent_id: 2, code_value: "보행기/쏘서/바운서/부스터", sort_order: 3, href: "#" },
-
-  // 유아동의류
-  { id: 131, group_id: 5, parent_id: 3, code_value: "유아용의류", sort_order: 1, href: "#" },
-  { id: 132, group_id: 5, parent_id: 3, code_value: "아동용의류", sort_order: 2, href: "#" },
-  { id: 133, group_id: 5, parent_id: 3, code_value: "내의/잠옷/속옷", sort_order: 3, href: "#" },
-  { id: 134, group_id: 5, parent_id: 3, code_value: "패딩/자켓", sort_order: 4, href: "#" },
-  { id: 135, group_id: 5, parent_id: 3, code_value: "한복/소품", sort_order: 5, href: "#" },
-
-  // 유아동잡화
-  { id: 141, group_id: 5, parent_id: 4, code_value: "구두/운동화/샌들/부츠", sort_order: 1, href: "#" },
-  { id: 142, group_id: 5, parent_id: 4, code_value: "장화/우비/우산", sort_order: 2, href: "#" },
-  { id: 143, group_id: 5, parent_id: 4, code_value: "모자/장갑", sort_order: 3, href: "#" },
-  { id: 144, group_id: 5, parent_id: 4, code_value: "책가방/여행가방", sort_order: 4, href: "#" },
-
-  // 유아동가구
-  { id: 151, group_id: 5, parent_id: 5, code_value: "침대/매트리스", sort_order: 1, href: "#" },
-  { id: 152, group_id: 5, parent_id: 5, code_value: "옷장/서랍장", sort_order: 2, href: "#" },
-  { id: 153, group_id: 5, parent_id: 5, code_value: "책상/공부상/책장", sort_order: 3, href: "#" },
-  { id: 154, group_id: 5, parent_id: 5, code_value: "의자/소파/빈백", sort_order: 4, href: "#" },
-
-  // 유아동교구/완구
-  { id: 161, group_id: 5, parent_id: 6, code_value: "신생아완구", sort_order: 1, href: "#" },
-  { id: 162, group_id: 5, parent_id: 6, code_value: "원목교구", sort_order: 2, href: "#" },
-  { id: 163, group_id: 5, parent_id: 6, code_value: "음악놀이/자석교구", sort_order: 3, href: "#" },
-  { id: 164, group_id: 5, parent_id: 6, code_value: "전동차/핫휠", sort_order: 4, href: "#" },
-  { id: 165, group_id: 5, parent_id: 6, code_value: "로봇", sort_order: 5, href: "#" },
-  { id: 166, group_id: 5, parent_id: 6, code_value: "인형/디즈니의상", sort_order: 6, href: "#" },
-  { id: 167, group_id: 5, parent_id: 6, code_value: "블록/레고", sort_order: 7, href: "#" },
-  { id: 168, group_id: 5, parent_id: 6, code_value: "대형 완구용품", sort_order: 8, href: "#" },
+    {
+        id: 1,
+        name: '출산/육아용품',
+        parentId: null,
+        children: [
+            { id: 102, name: '분유수유용품', parentId: 1, children: [] },
+            { id: 103, name: '튼살크림/스킨케어', parentId: 1, children: [] },
+            { id: 104, name: '임부복/수유복/언더웨어', parentId: 1, children: [] },
+            { id: 105, name: '물티슈/기저귀', parentId: 1, children: [] },
+            { id: 106, name: '분유/이유식', parentId: 1, children: [] },
+            { id: 107, name: '아기띠/기저귀가방', parentId: 1, children: [] },
+            { id: 108, name: '신생아/영유아의류', parentId: 1, children: [] },
+            { id: 109, name: '유아로션/목욕용품', parentId: 1, children: [] },
+            { id: 110, name: '유아건강/위생용품', parentId: 1, children: [] },
+            { id: 111, name: '유모차/웨건', parentId: 1, children: [] },
+        ],
+    },
+    {
+        id: 2,
+        name: '유아동의류',
+        parentId: null,
+        children: [
+            { id: 201, name: '유아용의류', parentId: 2, children: [] },
+            { id: 202, name: '아동용의류', parentId: 2, children: [] },
+            { id: 203, name: '내의/잠옷/속옷', parentId: 2, children: [] },
+            { id: 204, name: '패딩/자켓', parentId: 2, children: [] },
+            { id: 205, name: '한복/소품', parentId: 2, children: [] },
+        ],
+    },
+    {
+        id: 3,
+        name: '유아동잡화',
+        parentId: null,
+        children: [
+            { id: 301, name: '구두/운동화/샌들/부츠', parentId: 3, children: [] },
+            { id: 302, name: '장화/우비/우산', parentId: 3, children: [] },
+            { id: 303, name: '모자/장갑', parentId: 3, children: [] },
+            { id: 304, name: '책가방/여행가방', parentId: 3, children: [] },
+        ],
+    },
+    {
+        id: 4,
+        name: '유아동교구/완구',
+        parentId: null,
+        children: [
+            { id: 401, name: '신생아완구', parentId: 4, children: [] },
+            { id: 402, name: '원목교구', parentId: 4, children: [] },
+            { id: 403, name: '음악놀이/자석교구', parentId: 4, children: [] },
+            { id: 404, name: '전동차/핫휠', parentId: 4, children: [] },
+            { id: 405, name: '로봇', parentId: 4, children: [] },
+            { id: 406, name: '인형/디즈니의상', parentId: 4, children: [] },
+            { id: 407, name: '블록/레고', parentId: 4, children: [] },
+            { id: 408, name: '대형 완구용품', parentId: 4, children: [] },
+        ],
+    },
+    {
+        id: 5,
+        name: '유아동안전/실내용품',
+        parentId: null,
+        children: [{ id: 501, name: '카시트', parentId: 5, children: [] }],
+    },
+    {
+        id: 6,
+        name: '유아동가구',
+        parentId: null,
+        children: [{ id: 601, name: '침대/매트리스', parentId: 6, children: [] }],
+    },
+    {
+        id: 7,
+        name: '기타 유아동용품',
+        parentId: null,
+        children: [],
+    },
 ];

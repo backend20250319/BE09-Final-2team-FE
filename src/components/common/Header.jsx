@@ -97,47 +97,55 @@ export default function Header() {
                                                     <div className=''>
                                                         {/* 3열 그리드 구성 */}
                                                         <div className='grid grid-cols-3'>
-                                                            {/* 1열, 2열, 3열 순회 */}
-                                                            {[1, 2, 3].map((colNum) => (
-                                                                <div
-                                                                    key={colNum}
-                                                                    className={`space-y-6 py-6 ${
-                                                                        colNum % 2 === 1 ? 'bg-gray-200' : ''
-                                                                    }`}
-                                                                >
-                                                                    {/* 해당 열에 포함된 그룹들을 렌더링 */}
-                                                                    {(categoryColumns[colNum] || []).map(
-                                                                        (group, idx) => (
-                                                                            <div key={idx}>
-                                                                                <Link href='#'>
+                                                            {[0, 1, 2].map((colIndex) => {
+                                                                const startIndex = Math.floor(
+                                                                    (mockCategoryData.length * colIndex) / 3
+                                                                );
+                                                                const endIndex = Math.floor(
+                                                                    (mockCategoryData.length * (colIndex + 1)) / 3
+                                                                );
+                                                                const columnCategories = mockCategoryData.slice(
+                                                                    startIndex,
+                                                                    endIndex
+                                                                );
+
+                                                                return (
+                                                                    <div
+                                                                        key={colIndex}
+                                                                        className={`space-y-6 py-6 ${
+                                                                            colIndex % 2 === 0 ? 'bg-[#F4F4F4]' : ''
+                                                                        }`}
+                                                                    >
+                                                                        {columnCategories.map((category) => (
+                                                                            <div key={category.id}>
+                                                                                <Link
+                                                                                    href={`/product/search?category=${category.id}`}
+                                                                                >
                                                                                     <h3 className='block text-body text-sm py-1.5 text-heading font-semibold px-5 xl:px-8 2xl:px-10 hover:text-heading hover:bg-gray-300'>
-                                                                                        {group.title}
+                                                                                        {category.name}
                                                                                     </h3>
                                                                                 </Link>
-                                                                                {group.items &&
-                                                                                    group.items.length > 0 && (
-                                                                                        <ul>
-                                                                                            {group.items.map(
-                                                                                                (item, i) => (
-                                                                                                    <li key={i}>
-                                                                                                        <Link
-                                                                                                            href={
-                                                                                                                item.href
-                                                                                                            }
-                                                                                                            className='text-[#5a5a5a] text-sm block py-1.5 px-5 xl:px-8 2xl:px-10 hover:text-black hover:bg-gray-300'
-                                                                                                        >
-                                                                                                            {item.name}
-                                                                                                        </Link>
-                                                                                                    </li>
-                                                                                                )
-                                                                                            )}
-                                                                                        </ul>
-                                                                                    )}
+                                                                                {category.children.length > 0 && (
+                                                                                    <ul>
+                                                                                        {category.children.map(
+                                                                                            (child) => (
+                                                                                                <li key={child.id}>
+                                                                                                    <Link
+                                                                                                        href={`/product/search?category=${child.id}`}
+                                                                                                        className='text-[#5a5a5a] text-sm block py-1.5 px-5 xl:px-8 2xl:px-10 hover:text-black hover:bg-gray-300'
+                                                                                                    >
+                                                                                                        {child.name}
+                                                                                                    </Link>
+                                                                                                </li>
+                                                                                            )
+                                                                                        )}
+                                                                                    </ul>
+                                                                                )}
                                                                             </div>
-                                                                        )
-                                                                    )}
-                                                                </div>
-                                                            ))}
+                                                                        ))}
+                                                                    </div>
+                                                                );
+                                                            })}
                                                         </div>
                                                     </div>
                                                 </div>
