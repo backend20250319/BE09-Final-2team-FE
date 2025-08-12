@@ -7,6 +7,13 @@ import { CustomStyle } from "./sidebarComponents/CustomStyle";
 import { FormInput } from "./sidebarComponents/FormInput";
 import { CommerceManagement } from "./sidebarComponents/CommerceManagement";
 import { NestedSidebar } from "./sidebarComponents/NestedSidebar";
+import BasicSidebarExample from "./sidebarComponents/BasicSidebarExample";
+import BackButtonSidebarExample from "./sidebarComponents/BackButtonSidebarExample";
+import CloseButtonSidebarExample from "./sidebarComponents/CloseButtonSidebarExample";
+import MoreMenuSidebarExample from "./sidebarComponents/MoreMenuSidebarExample";
+import ClickableTitleSidebarExample from "./sidebarComponents/ClickableTitleSidebarExample";
+import FooterSidebarExample from "./sidebarComponents/FooterSidebarExample";
+import ComplexSidebarExample from "./sidebarComponents/ComplexSidebarExample";
 
 // 탭 네비게이션 컴포넌트
 function TabNavigation({ tabs, activeTab, setActiveTab }) {
@@ -35,6 +42,7 @@ export default function SidebarExample() {
   const [activeTab, setActiveTab] = useState("basic");
 
   const tabs = [
+    { id: "examples", label: "사이드바 예시", badge: "새로 추가" },
     { id: "basic", label: "기본 사용법", badge: "필수" },
     { id: "custom", label: "커스텀 스타일", badge: "고급" },
     { id: "forms", label: "폼 입력", badge: "실용" },
@@ -58,6 +66,24 @@ export default function SidebarExample() {
       <TabNavigation tabs={tabs} activeTab={activeTab} setActiveTab={setActiveTab} />
 
       {/* 탭 내용 */}
+      {activeTab === "examples" && (
+        <div className="space-y-8">
+          <div className="text-center mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Sidebar 컴포넌트 다양한 사용 예시</h2>
+            <p className="text-gray-600">Sidebar 컴포넌트의 다양한 props와 기능들을 실제 사용 예시로 확인해보세요</p>
+          </div>
+
+          <div className="grid gap-8">
+            <BasicSidebarExample />
+            <BackButtonSidebarExample />
+            <CloseButtonSidebarExample />
+            <MoreMenuSidebarExample />
+            <ClickableTitleSidebarExample />
+            <FooterSidebarExample />
+            <ComplexSidebarExample />
+          </div>
+        </div>
+      )}
       {activeTab === "basic" && <BasicUsage onBack={true} />}
       {activeTab === "custom" && <CustomStyle />}
       {activeTab === "forms" && <FormInput />}

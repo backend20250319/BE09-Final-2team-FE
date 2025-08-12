@@ -19,7 +19,7 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
     {
       id: 102,
       opponentId: "user2",
-      name: "이영희",
+      name: "유오동",
       avatar: "",
       message: "그럼요! 판매 중인 상품입니다!",
       date: "7월 29일",
