@@ -65,7 +65,7 @@
 }
 
 /* 검색 컨테이너 */
-.wishlist-sidebar .search-container {
+.wishlist-sidebar .wishlist-search-container {
     position: relative;
     background-color: #f1f4f6;
     border-radius: 6px;
@@ -77,13 +77,13 @@
     width: 100%;
 }
 
-.wishlist-sidebar .search-container.focused {
+.wishlist-sidebar .wishlist-search-container.focused {
     background-color: #ffffff;
     box-shadow: 0 0 0 2px rgba(101, 162, 238, 0.2);
 }
 
 /* 검색 아이콘 */
-.wishlist-sidebar .search-icon {
+.wishlist-sidebar .wishlist-search-icon {
     position: absolute;
     left: 10px;
     top: 50%;
@@ -95,29 +95,29 @@
     pointer-events: none;
 }
 
-.wishlist-sidebar .search-icon svg {
+.wishlist-sidebar .wishlist-search-icon svg {
     width: 20px;
     height: 20px;
     transition: stroke 0.2s ease;
 }
 
-.wishlist-sidebar .search-icon svg circle {
+.wishlist-sidebar .wishlist-search-icon svg circle {
     stroke: #5a5a5a;
     stroke-width: 1.4;
 }
 
-.wishlist-sidebar .search-icon svg path {
+.wishlist-sidebar .wishlist-search-icon svg path {
     stroke: #5a5a5a;
     stroke-width: 1.4;
     stroke-linecap: round;
 }
 
-.wishlist-sidebar .search-container.focused .search-icon svg {
+.wishlist-sidebar .wishlist-search-container.focused .wishlist-search-icon svg {
     stroke: #65a2ee;
 }
 
 /* 검색 입력 필드 */
-.wishlist-sidebar .search-input {
+.wishlist-sidebar .wishlist-search-input {
     flex: 1;
     border: none;
     background: none;
@@ -132,12 +132,12 @@
     transition: color 0.2s ease;
 }
 
-.wishlist-sidebar .search-input::placeholder {
+.wishlist-sidebar .wishlist-search-input::placeholder {
     color: #999999;
     transition: color 0.2s ease;
 }
 
-.wishlist-sidebar .search-input:focus::placeholder {
+.wishlist-sidebar .wishlist-search-input:focus::placeholder {
     color: #cccccc;
 }
 
@@ -234,7 +234,7 @@
 }
 
 /* SVG 기본 속성 설정 */
-.wishlist-sidebar .search-icon svg {
+.wishlist-sidebar .wishlist-search-icon svg {
     width: 20px;
     height: 20px;
     transition: stroke 0.2s ease;
