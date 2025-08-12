@@ -6,7 +6,7 @@ import Link from "next/link";
 import { loadPosts, removePost } from "../lib/postStorage";
 
 /* -----------------------------
-   Storage 보조 헬퍼
+   Storage helpers
 ----------------------------- */
 const TYPE_FROM_CATEGORY = (category) => (category === "공동구매" ? "groupbuy" : "tips");
 const KEY_FROM_TYPE = (type) => (type === "groupbuy" ? "posts:groupbuy" : "posts:tips");
@@ -30,22 +30,30 @@ function updatePostLocal(nextPost) {
 }
 
 /* -----------------------------
-   날짜 유틸
+   Device ID (owner 흉내)
 ----------------------------- */
-// 문자열/숫자/Date 다 받아서 Date로
+function getOrCreateDeviceId() {
+  if (typeof window === "undefined") return "ssr";
+  const KEY = "device_id";
+  let id = localStorage.getItem(KEY);
+  if (!id) {
+    id = "dev-" + Math.random().toString(36).slice(2, 8) + "-" + Date.now().toString(36).slice(-6);
+    localStorage.setItem(KEY, id);
+  }
+  return id;
+}
+
+/* -----------------------------
+   Date utils (YYYY.MM.DD HH:mm)
+----------------------------- */
 function parseDateAny(v) {
   if (!v) return null;
   const d1 = new Date(v);
   if (!Number.isNaN(d1.getTime())) return d1;
   if (typeof v === "string" && v.includes(".")) {
-    // "2025.07.31" 형식 대응
-    const clean = v.replace(/\s/g, "");
-    const m = clean.match(/^(\d{4})\.(\d{2})\.(\d{2})/);
+    const m = v.replace(/\s/g, "").match(/^(\d{4})\.(\d{2})\.(\d{2})/);
     if (m) {
-      const y = Number(m[1]);
-      const mo = Number(m[2]) - 1;
-      const da = Number(m[3]);
-      const d2 = new Date(y, mo, da);
+      const d2 = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
       if (!Number.isNaN(d2.getTime())) return d2;
     }
   }
@@ -60,7 +68,7 @@ function formatDateTime(d) {
 }
 
 /* -----------------------------
-   간단 sanitizer
+   HTML sanitizer
 ----------------------------- */
 function sanitize(html = "") {
   if (!html) return "";
@@ -78,12 +86,34 @@ function sanitize(html = "") {
   }
 }
 
+/* 다양한 키명 → maxParticipants 통일 */
+function extractMaxParticipants(p) {
+  const candidates = [
+    p?.maxParticipants,
+    p?.max,
+    p?.people,
+    p?.capacity,
+    p?.limit,
+    p?.headcount,
+    p?.count,
+    p?.quota,
+  ];
+  for (const v of candidates) {
+    const n = Number(v);
+    if (Number.isFinite(n) && n > 0) return n;
+  }
+  return 5;
+}
+
 export default function PostDetailPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = useMemo(() => (params?.id ? String(params.id) : null), [params]);
 
+  const deviceId = useMemo(() => getOrCreateDeviceId(), []);
+
+  // state
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -91,8 +121,30 @@ export default function PostDetailPage() {
   const [likes, setLikes] = useState(0);
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
+  const [joinedHere, setJoinedHere] = useState(false);
+  const [lastJoinedName, setLastJoinedName] = useState("");
 
-  // 최초 진입 1회 조회수 증가
+  // 모달
+  const [showCloseModal, setShowCloseModal] = useState(false);
+  const [showListModal, setShowListModal] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // derived
+  const backTab =
+    searchParams.get("tab") ||
+    (post?.category === "공동구매" ? "groupbuy" : "tips") ||
+    "tips";
+  const isGroupbuy = post?.category === "공동구매";
+  const statusText = post?.status || "모집중";
+  const participants = Array.isArray(post?.participants) ? post.participants : [];
+  const maxParticipants = extractMaxParticipants(post || {});
+  const isFull = participants.length >= maxParticipants;
+  const isClosed = Boolean(post?.closed) || (post?.status && post.status !== "모집중");
+  const isOwner = post?.ownerDeviceId === deviceId;
+
+  /* ---------------------------------
+     hooks (항상 같은 순서)
+  ----------------------------------*/
   const bumpViewOnce = useCallback((p) => {
     if (!p) return;
     try {
@@ -116,6 +168,28 @@ export default function PostDetailPage() {
         setError("게시글을 찾을 수 없습니다.");
         setPost(null);
       } else {
+        let dirty = false;
+
+        if (found.category === "공동구매") {
+          const writer = found.author || found.writer || "익명";
+          const arr = Array.isArray(found.participants) ? [...found.participants] : [];
+          if (!arr.includes(writer)) {
+            found.participants = [writer, ...arr];
+            dirty = true;
+          }
+          const max = extractMaxParticipants(found);
+          if (Number(found.maxParticipants) !== max) {
+            found.maxParticipants = max;
+            dirty = true;
+          }
+          if (!found.ownerDeviceId) {
+            found.ownerDeviceId = deviceId;
+            dirty = true;
+          }
+        }
+
+        if (dirty) updatePostLocal(found);
+
         setPost(found);
         setLikes(found.likes || 0);
         setComments(Array.isArray(found.comments) ? found.comments : []);
@@ -127,12 +201,7 @@ export default function PostDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [id, bumpViewOnce]);
-
-  const backTab =
-    searchParams.get("tab") ||
-    (post?.category === "공동구매" ? "groupbuy" : "tips") ||
-    "tips";
+  }, [id, bumpViewOnce, deviceId]);
 
   const onDelete = useCallback(() => {
     if (!post) return;
@@ -159,7 +228,10 @@ export default function PostDetailPage() {
   const onCopyUrl = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
-    } catch {}
+      alert("URL이 복사되었습니다.");
+    } catch {
+      alert("URL 복사에 실패했어요.");
+    }
   }, []);
 
   const onToggleLike = useCallback(() => {
@@ -179,7 +251,7 @@ export default function PostDetailPage() {
       id: Date.now(),
       author: "익명맘",
       content: text,
-      createdAt: new Date().toISOString(), // 저장 시점의 실제 작성시간
+      createdAt: new Date().toISOString(),
     };
     const nextComments = [...comments, newC];
     setComments(nextComments);
@@ -194,6 +266,92 @@ export default function PostDetailPage() {
     } catch {}
   }, [commentInput, comments, post]);
 
+  // 참여
+  const onJoin = useCallback(() => {
+    if (!post || isFull || isClosed) return;
+    const name = prompt("참여자 이름을 입력하세요:");
+    if (!name) return;
+
+    const names = participants.map((x) => (typeof x === "string" ? x : x?.name || ""));
+    if (names.includes(name)) {
+      alert("이미 참여한 이름입니다.");
+      return;
+    }
+
+    const addValue =
+      participants.length && typeof participants[0] === "string"
+        ? name
+        : { name, joinedAt: new Date().toISOString() };
+
+    const next = { ...post, participants: [...participants, addValue] };
+    setPost(next);
+    setJoinedHere(true);
+    setLastJoinedName(name);
+    updatePostLocal(next);
+    try {
+      window.dispatchEvent(
+        new CustomEvent("posts:changed", { detail: { id: post.id, action: "join" } })
+      );
+    } catch {}
+  }, [post, participants, isFull, isClosed]);
+
+  // 참여자 명단 보기 → 모달 오픈
+  const onShowParticipants = useCallback(() => {
+    setShowListModal(true);
+  }, []);
+
+  // 참여 취소 (확인 모달에서 최종 수행)
+  const onCancelJoin = useCallback(() => {
+    if (!post || !joinedHere || isOwner) return;
+    const names = participants.map((x) => (typeof x === "string" ? x : x?.name || ""));
+    if (!lastJoinedName || !names.includes(lastJoinedName)) return;
+
+    const filtered = participants.filter((x) =>
+      typeof x === "string" ? x !== lastJoinedName : x?.name !== lastJoinedName
+    );
+    const next = { ...post, participants: filtered };
+    setPost(next);
+    setJoinedHere(false);
+    updatePostLocal(next);
+    setShowCancelConfirm(false);
+    setShowListModal(false);
+    try {
+      window.dispatchEvent(
+        new CustomEvent("posts:changed", { detail: { id: post.id, action: "leave" } })
+      );
+    } catch {}
+  }, [post, joinedHere, isOwner, lastJoinedName, participants]);
+
+  // 실제 마감 처리
+  const doCloseRecruitment = useCallback(() => {
+    if (!post) return;
+    const next = {
+      ...post,
+      closed: true,
+      status: "모집완료",
+      closedAt: new Date().toISOString(),
+    };
+    setPost(next);
+    updatePostLocal(next);
+    try {
+      window.dispatchEvent(
+        new CustomEvent("posts:changed", { detail: { id: post.id, action: "close" } })
+      );
+    } catch {}
+  }, [post]);
+
+  // 마감 버튼 클릭 → 모달 오픈
+  const onCloseRecruitmentClick = useCallback(() => {
+    if (!post) return;
+    if (!isOwner) {
+      alert("작성자(이 글의 소유 기기)만 마감할 수 있어요.");
+      return;
+    }
+    if (isClosed || participants.length < maxParticipants) return;
+    setShowCloseModal(true);
+  }, [post, isOwner, isClosed, participants.length, maxParticipants]);
+
+  /* ----- early returns AFTER hooks ----- */
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
@@ -224,12 +382,21 @@ export default function PostDetailPage() {
     );
   }
 
-  // 게시글 작성 시각: 저장된 값만 사용 (현재시간 폴백 없음)
-  const createdAt =
-    parseDateAny(post?.createdAt) ||
-    parseDateAny(post?.date) ||
-    null;
+  const createdAt = parseDateAny(post?.createdAt) || parseDateAny(post?.date) || null;
   const writtenDateTime = createdAt ? formatDateTime(createdAt) : "";
+
+  // 버튼 색
+  const joinBtnColor = isClosed || isFull ? "#999999" : joinedHere ? "#65A2EE" : "#85B3EB";
+  const closeBtnColor =
+    participants.length < maxParticipants ? "#999999" : isClosed ? "#65A2EE" : "#85B3EB";
+
+  // 참가자 이름/시간 정규화
+  const normalized = (Array.isArray(participants) ? participants : []).map((x) => {
+    if (typeof x === "string") {
+      return { name: x, joinedAt: post?.createdAt || null };
+    }
+    return { name: x?.name || "", joinedAt: x?.joinedAt || post?.createdAt || null };
+  });
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-8">
@@ -244,20 +411,23 @@ export default function PostDetailPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button onClick={onEdit} className="text-gray-400 hover:text-gray-600" type="button">
+          <button onClick={onEdit} className="text-gray-400 hover:text-gray-600 cursor-pointer" type="button">
             수정
           </button>
           <span className="text-gray-300">|</span>
-          <button onClick={onDelete} className="text-gray-400 hover:text-red-500" type="button">
+          <button onClick={onDelete} className="text-gray-400 hover:text-red-500 cursor-pointer" type="button">
             삭제
           </button>
           <span className="text-gray-300">|</span>
-          <a href="#comments" className="inline-flex items-center gap-1 hover:underline text-gray-700">
+          <a href="#comments" className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer">
             <span className="inline-block w-5 h-5 text-[16px] leading-5">💬</span>
             <span className="text-[14px]">댓글 {comments.length}</span>
           </a>
           <span className="text-gray-300">|</span>
-          <button onClick={onCopyUrl} className="inline-flex items-center gap-1 hover:underline text-gray-700">
+          <button
+            onClick={onCopyUrl}
+            className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer"
+          >
             <span className="inline-block w-5 h-5 text-[16px] leading-5">🔗</span>
             <span className="text-[14px]">url 복사</span>
           </button>
@@ -266,8 +436,13 @@ export default function PostDetailPage() {
 
       {/* 제목/메타 */}
       <div className="pb-4 border-b">
-        <h1 className="mb-1 text-[22px] font-semibold tracking-tight">
-          {post?.title || "(제목 없음)"}
+        <h1 className="mb-1 text-[22px] font-semibold tracking-tight flex items-center gap-2">
+          {isGroupbuy && (
+            <span className={statusText === "모집중" ? "text-red-500" : "text-gray-400"}>
+              {statusText}
+            </span>
+          )}
+          <span>{post?.title || "(제목 없음)"}</span>
         </h1>
         <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
           <span>{post?.author || post?.writer || "익명"}</span>
@@ -296,14 +471,76 @@ export default function PostDetailPage() {
         )}
       </article>
 
-      {/* 좋아요/댓글 */}
+      {/* 공동구매 전용: 참여/마감/명단 (작성자/비작성자에 따라 한 개만 노출) */}
+      {isGroupbuy && (
+        <div className="mb-8">
+          {isOwner ? (
+            /* 작성자: '참여 마감'만 */
+            <div className="flex justify-center">
+              <button
+                onClick={onCloseRecruitmentClick}
+                disabled={isClosed || participants.length < maxParticipants}
+                className={`px-8 py-3 rounded-md text-white font-medium ${
+                  isClosed || participants.length < maxParticipants
+                    ? "cursor-not-allowed"
+                    : "cursor-pointer hover:brightness-95"
+                }`}
+                style={{ backgroundColor: closeBtnColor }}
+                title={
+                  participants.length < maxParticipants
+                    ? "정원 충족 시 마감할 수 있어요"
+                    : isClosed
+                    ? "이미 마감됨"
+                    : ""
+                }
+              >
+                참여 마감
+                <div className="text-xs opacity-90 mt-1">
+                  {participants.length} / {maxParticipants}
+                </div>
+              </button>
+            </div>
+          ) : (
+            /* 작성자 아님: '참여하기'만 */
+            <div className="flex justify-center">
+              <button
+                onClick={onJoin}
+                disabled={isClosed || isFull}
+                className={`px-8 py-3 rounded-md text-white font-medium ${
+                  isClosed || isFull ? "cursor-not-allowed" : "cursor-pointer hover:brightness-95"
+                }`}
+                style={{ backgroundColor: joinBtnColor }}
+                title={isClosed ? "마감된 모집입니다" : isFull ? "정원이 가득 찼습니다" : ""}
+              >
+                참여하기
+                <div className="text-xs opacity-90 mt-1">
+                  {participants.length} / {maxParticipants}
+                </div>
+              </button>
+            </div>
+          )}
+
+          {/* 참여자 명단 (모두에게 노출) */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={onShowParticipants}
+              className="text-xs text-gray-500 hover:underline cursor-pointer"
+              type="button"
+            >
+              참여자 명단
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* 좋아요/댓글 바 */}
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-6 text-sm text-gray-700">
-          <button onClick={onToggleLike} className="group inline-flex items-center gap-1">
+          <button onClick={onToggleLike} className="group inline-flex items-center gap-1 cursor-pointer">
             <span>❤️</span>
             <span>좋아요 {likes}</span>
           </button>
-          <a href="#comments" className="inline-flex items-center gap-1">
+        <a href="#comments" className="inline-flex items-center gap-1 cursor-pointer">
             <span>💬</span>
             <span>댓글 {comments.length}</span>
           </a>
@@ -318,14 +555,13 @@ export default function PostDetailPage() {
 
       <div className="h-px w-full bg-gray-200" />
 
-      {/* 댓글 */}
+      {/* 댓글 리스트 */}
       <section id="comments" className="mt-6">
         {comments.length > 0 ? (
           <ul className="space-y-6">
             {comments.map((c) => {
-              // 저장된 createdAt만 사용 (현재시간 폴백 제거)
               const d = parseDateAny(c.createdAt);
-              const when = d ? formatDateTime(d) : ""; // 없으면 빈값 표시
+              const when = d ? formatDateTime(d) : "";
               return (
                 <li key={c.id} className="flex gap-3">
                   <div className="mt-1 h-8 w-8 flex-none rounded-full bg-gray-200 text-center leading-8 text-gray-600">
@@ -366,12 +602,119 @@ export default function PostDetailPage() {
           />
           <button
             onClick={onAddComment}
-            className="h-10 shrink-0 rounded-xl bg-black px-4 text-sm font-medium text-white hover:opacity-90"
+            className="h-10 shrink-0 rounded-xl bg-black px-4 text-sm font-medium text-white hover:opacity-90 cursor-pointer"
           >
             등록
           </button>
         </div>
       </div>
+
+      {/* ===== 참여 마감 확인 모달 ===== */}
+      {showCloseModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-[460px] rounded-3xl bg-white p-8 shadow-xl">
+            <h3 className="text-center text-2xl font-bold mb-4">메시지</h3>
+            <p className="text-center mb-6">
+              공동구매 인원모집을<br />마감 하시겠습니까?
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowCloseModal(false)}
+                className="h-12 w-36 rounded-xl border border-gray-300 bg-white text-gray-400 cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                onClick={() => { setShowCloseModal(false); doCloseRecruitment(); }}
+                className="h-12 w-36 rounded-xl text-white hover:brightness-95 cursor-pointer"
+                style={{ backgroundColor: "#85B3EB" }}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ===== 참여자 명단 모달 (크기 고정) ===== */}
+      {showListModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-[460px] h-[520px] max-w-[90vw] rounded-3xl bg-white p-6 shadow-xl flex flex-col">
+            {/* 헤더 */}
+            <div className="mb-2 flex items-start justify-between">
+              <div className="w-full text-center">
+                <div className="text-[18px] font-semibold leading-tight">공동 구매</div>
+                <div className="text-[18px] font-semibold leading-tight">참여자 명단</div>
+              </div>
+              <button
+                onClick={() => setShowListModal(false)}
+                className="ml-2 text-xl leading-none text-gray-500 hover:text-gray-700 cursor-pointer"
+                aria-label="close"
+              >
+                ×
+              </button>
+            </div>
+
+            {/* 리스트 (스크롤) */}
+            <ul className="mt-4 mb-6 space-y-3 overflow-y-auto">
+              {normalized.map((p, idx) => {
+                const when = p.joinedAt ? formatDateTime(parseDateAny(p.joinedAt) || new Date()) : "";
+                const isCrowned = idx === 0;
+                return (
+                  <li key={`${p.name}-${idx}`} className="flex items-center justify-between px-1">
+                    <div className="flex items-center gap-2">
+                      {isCrowned && <span className="text-sm">👑</span>}
+                      <span className="text-[15px]">{p.name}</span>
+                    </div>
+                    <div className="text-[13px] text-gray-500 tabular-nums">{when}</div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* 하단 버튼: 작성자 제외 & 내가 참여했을 때만 */}
+            {!isOwner && joinedHere && (
+              <div className="mt-auto flex justify-center">
+                <button
+                  onClick={() => setShowCancelConfirm(true)}
+                  className="h-12 w-36 rounded-xl text-white hover:brightness-95 cursor-pointer"
+                  style={{ backgroundColor: "#85B3EB" }}
+                >
+                  참여 취소
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ===== 참여 취소 확인 모달 ===== */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="w-[460px] rounded-3xl bg-white p-8 shadow-xl">
+            <h3 className="text-center text-2xl font-bold mb-4">메시지</h3>
+            <div className="text-center text-[14px] leading-6 text-gray-700 mb-6">
+              공동 구매 참여를 취소 하시겠습니까 ?<br />
+              공동구매 참여를 취소 할 시 같은 공동구매를 재참여 할 수 없습니다.
+            </div>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="h-12 w-36 rounded-xl border border-gray-300 bg-white text-gray-400 cursor-pointer"
+              >
+                취소
+              </button>
+              <button
+                onClick={onCancelJoin}
+                className="h-12 w-36 rounded-xl text-white hover:brightness-95 cursor-pointer"
+                style={{ backgroundColor: "#85B3EB" }}
+              >
+                확인
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
