@@ -1,6 +1,6 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import './MyReviewEditForm.css';
+import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 
 const MyReviewEditForm = ({ onClose }) => {
