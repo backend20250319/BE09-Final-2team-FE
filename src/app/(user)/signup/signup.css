@@ -80,6 +80,10 @@
     border-color: #85B3EB;
 }
 
+.signup-input.has-address {
+    padding-right: 16px;
+}
+
 .signup-check-btn {
     position: absolute;
     right: 8px;
@@ -193,8 +197,8 @@
 /* 검증 메시지 스타일 */
 .validation-message {
     font-size: 12px;
-    margin-top: 4px;
-    margin-bottom: 6px;
+    margin-top: 3px;
+    margin-bottom: 3px;
     padding-left: 8px;
     transition: color 0.3s ease;
 }
@@ -214,6 +218,7 @@
 .validation-message.loading {
     color: #85B3EB;
 }
+
 /* 우편번호 검색 모달 오버레이 */
 .postcode-overlay {
     position: fixed;

@@ -133,6 +133,28 @@
     /* 마우스 커서를 '금지' 모양으로 변경 */
 }
 
+/* 에러 메시지 스타일 추가 */
+.error-message {
+    font-size: 12px;
+    color: #EF4444;
+    margin-bottom: 10px;
+    padding-left: 8px;
+    text-align: left;
+}
+
+/* 로딩 중일 때 input 스타일 */
+.login-input:disabled {
+    background: #F8F9FA;
+    color: #94A3B8;
+}
+
+/* 로딩 중일 때 버튼 스타일 */
+.sns-btn:disabled {
+    background: #F5F5F5;
+    color: #999;
+    cursor: not-allowed;
+}
+
 @media (max-width: 900px) {
     .login-card {
         width: 100%;

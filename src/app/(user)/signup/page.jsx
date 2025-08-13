@@ -4,33 +4,35 @@ import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './signup.css';
+import { validatePassword, PASSWORD_CONFIG } from '@/app/(user)/components/passwordUtils';
+import { formatPhoneNumber, PHONE_CONFIG } from '@/app/(user)/components/phoneUtils';
+import { createValidationSetter, createDuplicateCheckHandler, handleNicknameValidation } from '@/app/(user)/components/duplicateUtils';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
+import { processAddressData } from '@/app/(user)/components/addressUtils';
+import { useUserStore } from '@/store/userStore';
 
 export default function Signup() {
-    const router = useRouter(); // 라우터 추가
+    const router = useRouter();
+
+    // Zustand 스토어 사용
+    const { userInfo, updateUserInfo, updateField, updateAgreements, processSignup } = useUserStore();
 
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
-        name: '',
-        loginId: '',
-        password: '',
+        name: userInfo.name || '',
+        loginId: userInfo.loginId || '',
+        password: userInfo.password || '',
         passwordConfirm: '',
-        nickname: '',
-        email: '',
-        phone: '',
-        address: ''
+        nickname: userInfo.nickname || '',
+        email: userInfo.email || '',
+        phone: userInfo.phone || '',
+        address: userInfo.address || ''
     });
 
     // 체크박스 상태
-    const [agreements, setAgreements] = useState({
-        terms: false,
-        privacy: false,
-        age: false,
-        location: false,
-        push: false
-    });
+    const [agreements, setAgreements] = useState(userInfo.agreements);
 
     // 모달 상태
     const [modalStates, setModalStates] = useState({
@@ -51,9 +53,48 @@ export default function Signup() {
         nickname: { status: 'default', message: '💡 중복 확인을 눌러주세요', checked: false }
     });
 
+    // 검증 메시지 설정 함수 생성
+    const setValidationMessage = createValidationSetter(setValidationStates);
+
     // 기타 검증 상태
     const [passwordMatch, setPasswordMatch] = useState({ status: 'default', message: '' });
     const [isFormValid, setIsFormValid] = useState(false);
+
+    // 중복 확인 핸들러 생성
+    const handleDuplicateCheck = createDuplicateCheckHandler(formData, setValidationMessage);
+
+    // 스토어 상태 변경 시 로컬 상태 동기화
+    useEffect(() => {
+        setFormData(prev => ({
+            ...prev,
+            name: userInfo.name || '',
+            loginId: userInfo.loginId || '',
+            password: userInfo.password || '',
+            nickname: userInfo.nickname || '',
+            email: userInfo.email || '',
+            phone: userInfo.phone || '',
+            address: userInfo.address || ''
+        }));
+    }, [userInfo.name, userInfo.loginId, userInfo.password, userInfo.nickname, userInfo.email, userInfo.phone, userInfo.address]);
+
+    // 약관 동의 상태 동기화
+    useEffect(() => {
+        setAgreements(prev => ({ ...prev, ...userInfo.agreements }));
+    }, [userInfo.agreements]);
+
+    // 닉네임 자동 검증 - 컴포넌트 마운트 시 실행
+    useEffect(() => {
+        if (formData.nickname.trim() === '') {
+            setValidationStates(prev => ({
+                ...prev,
+                nickname: {
+                    status: 'success',
+                    message: '✅ 아이디가 닉네임이 됩니다',
+                    checked: true
+                }
+            }));
+        }
+    }, []);
 
     // 모달 열기/닫기 함수
     const openModal = (type) => {
@@ -66,191 +107,63 @@ export default function Signup() {
 
     // 입력값 변경 핸들러
     const handleInputChange = (field, value) => {
-        setFormData(prev => ({
-            ...prev,
-            [field]: value
-        }));
+        if (field === 'phone') {
+            value = formatPhoneNumber(value);
+        }
 
-        // 중복 확인 상태 초기화 (값이 변경되면)
+        setFormData(prev => ({ ...prev, [field]: value }));
+
+        if (field !== 'passwordConfirm' && field !== 'nickname') {
+            updateField(field, value);
+        }
+
+        // 중복 확인 상태 초기화
         if (['loginId', 'email', 'nickname'].includes(field)) {
-            // 닉네임 길이 검증 추가
-            if (field === 'nickname' && value) {
-                if (value.length < 2) { // 2글자 미만 오류
-                    setValidationStates(prev => ({
-                        ...prev,
-                        [field]: {
-                            status: 'error',
-                            message: '❌ 닉네임은 2글자 이상이어야 합니다',
-                            checked: false
-                        }
-                    }));
-                    return; //(기본 메시지 안 보여줌)
-                } else if (value.length > 10) { // 10글자 초과 오류
-                    setValidationStates(prev => ({
-                        ...prev,
-                        [field]: {
-                            status: 'error',
-                            message: '❌ 닉네임은 10글자 이하여야 합니다',
-                            checked: false
-                        }
-                    }));
-                    return;
-                }
+            if (field === 'nickname') {
+                const shouldContinue = handleNicknameValidation(value, setValidationMessage);
+                if (!shouldContinue) return;
             }
-            setValidationStates(prev => ({
-                ...prev,
-                [field]: {
-                    status: 'default',
-                    message: '💡 중복 확인을 눌러주세요',
-                    checked: false
-                }
-            }));
+
+            // 일반 필드들 (loginId, email, nickname 길이 체크 통과한 경우)
+            setValidationMessage(field, 'default', '💡 중복 확인을 눌러주세요');
         }
 
         // 비밀번호 확인 검증
         if (field === 'passwordConfirm' || field === 'password') {
             const password = field === 'password' ? value : formData.password;
             const passwordConfirm = field === 'passwordConfirm' ? value : formData.passwordConfirm;
-
-            // 비밀번호 길이 검증
-            if (field === 'password' && value && value.length < 8) {
-                setPasswordMatch({
-                    status: 'error',
-                    message: '❌ 비밀번호는 8자 이상이어야 합니다'
-                });
-            }
-
-            else if (passwordConfirm && password !== passwordConfirm) {
-                setPasswordMatch({
-                    status: 'error',
-                    message: '❌ 비밀번호가 일치하지 않습니다'
-                });
-            } else if (passwordConfirm && password === passwordConfirm) {
-                if (password.length >= 8) {
-                    setPasswordMatch({
-                        status: 'success',
-                        message: '✅ 비밀번호가 일치합니다'
-                    });
-                }
-            } else {
-                setPasswordMatch({ status: 'default', message: '' });
-            }
+            const result = validatePassword(password, passwordConfirm);
+            setPasswordMatch(result);
         }
     };
 
     // 체크박스 변경 핸들러
     const handleAgreementChange = (field, checked) => {
-        setAgreements(prev => ({
-            ...prev,
+        const newAgreements = {
+            ...agreements,
             [field]: checked
-        }));
+        };
+        setAgreements(newAgreements);
+        updateAgreements({ [field]: checked });
     };
 
     // 전체 동의 체크박스
     const handleAllAgreements = (checked) => {
-        setAgreements({
+        const newAgreements = {
             terms: checked,
             privacy: checked,
             age: checked,
             location: checked,
             push: checked
-        });
-    };
-
-    // 중복 확인 API 호출 (임시)
-    const checkDuplicate = async (type, value) => {
-        // 임시 로직 - 실제로는 API 호출
-        return new Promise(resolve => {
-            setTimeout(() => {
-                // 임시로 특정 값들을 중복으로 처리
-                const duplicates = {
-                    loginId: ['admin', 'test', 'user'],
-                    email: ['test@test.com', 'admin@admin.com'],
-                    nickname: ['관리자', '테스트']
-                };
-
-                const isDuplicate = duplicates[type]?.includes(value);
-                resolve({
-                    available: !isDuplicate,
-                    message: isDuplicate ? '이미 사용 중입니다' : '사용 가능합니다'
-                });
-            }, 1000);
-        });
-    };
-
-    // 중복 확인 핸들러
-    const handleDuplicateCheck = async (type) => {
-        const value = formData[type];
-
-        if (!value.trim()) {
-            setValidationStates(prev => ({
-                ...prev,
-                [type]: {
-                    status: 'error',
-                    message: '❌ 입력값을 확인해주세요',
-                    checked: false
-                }
-            }));
-            return;
-        }
-
-        // 로딩 상태
-        setValidationStates(prev => ({
-            ...prev,
-            [type]: { status: 'loading', message: '🔄 확인 중...', checked: false }
-        }));
-
-        try {
-            const result = await checkDuplicate(type, value);
-
-            setValidationStates(prev => ({
-                ...prev,
-                [type]: {
-                    status: result.available ? 'success' : 'error',
-                    message: result.available
-                        ? `✅ 사용 가능한 ${getFieldName(type)}입니다`
-                        : `❌ ${result.message}`,
-                    checked: result.available
-                }
-            }));
-        } catch (error) {
-            setValidationStates(prev => ({
-                ...prev,
-                [type]: {
-                    status: 'error',
-                    message: '❌ 확인 중 오류가 발생했습니다',
-                    checked: false
-                }
-            }));
-        }
-    };
-
-    // 필드명 매핑
-    const getFieldName = (type) => {
-        const names = {
-            loginId: '아이디',
-            email: '이메일',
-            nickname: '닉네임'
         };
-        return names[type] || type;
+        setAgreements(newAgreements);
+        updateAgreements(newAgreements);
     };
 
     // 주소 검색 완료 핸들러
     const handleAddressComplete = (data) => {
-        let fullAddress = data.address;
-        let extraAddress = '';
-
-        if (data.addressType === 'R') {
-            if (data.bname !== '') {
-                extraAddress += data.bname;
-            }
-            if (data.buildingName !== '') {
-                extraAddress += (extraAddress !== '' ? `, ${data.buildingName}` : data.buildingName);
-            }
-            fullAddress += (extraAddress !== '' ? ` (${extraAddress})` : '');
-        }
-
-        handleInputChange('address', fullAddress);
+        const processedAddress = processAddressData(data, true); // 도로명 주소
+        setFormData(prev => ({ ...prev, address: processedAddress }));
         setIsPostcodeOpen(false);
     };
 
@@ -263,15 +176,19 @@ export default function Signup() {
     useEffect(() => {
         const requiredFields = ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone', 'address'];
         const requiredAgreements = ['terms', 'privacy', 'age'];
-        const requiredChecks = ['loginId', 'email', 'nickname'];
+        const requiredChecks = ['loginId', 'email'];
 
         const isFieldsValid = requiredFields.every(field => formData[field].trim());
         const isAgreementsValid = requiredAgreements.every(field => agreements[field]);
         const isChecksValid = requiredChecks.every(field =>
             formData[field] === '' || validationStates[field].checked
         );
-        const isPasswordValid = passwordMatch.status === 'success' || passwordMatch.status === 'default';
-        const isNicknameValid = formData.nickname.trim() !== ''; // 별도 변수로 분리
+
+        const isPasswordValid = formData.passwordConfirm ?
+            passwordMatch.status === 'success' :
+            formData.password.length >= 8;
+
+        const isNicknameValid = formData.nickname.trim() === '' || validationStates.nickname.checked;
 
         setIsFormValid(
             isFieldsValid &&
@@ -286,7 +203,32 @@ export default function Signup() {
     const handleSubmit = (e) => {
         e.preventDefault();
         if (isFormValid) {
-            router.push(`/signup/complete?nickname=${encodeURIComponent(formData.nickname)}`);
+            const storeData = {
+                name: formData.name,
+                loginId: formData.loginId,
+                password: formData.password,
+                nickname: formData.nickname,
+                email: formData.email,
+                phone: formData.phone,
+                address: formData.address
+            };
+
+            // 스토어에 사용자 정보 업데이트
+            updateUserInfo({
+                ...storeData,
+                agreements,
+                signupType: 'normal',
+                signupStep: 3
+            });
+
+            // 로컬스토리지에 회원 정보 저장
+            processSignup({
+                ...storeData,
+                agreements,
+                signupType: 'normal'
+            });
+
+            router.push('/signup/complete');
         }
     };
 
@@ -349,9 +291,10 @@ export default function Signup() {
                         <input
                             className="signup-input"
                             type="password"
-                            placeholder="비밀번호를 입력하세요(8자 이상)"
+                            placeholder={PASSWORD_CONFIG.placeholder}
                             value={formData.password}
                             onChange={(e) => handleInputChange('password', e.target.value)}
+                            maxLength={PASSWORD_CONFIG.maxLength}
                         />
                     </div>
 
@@ -424,9 +367,10 @@ export default function Signup() {
                         <input
                             className="signup-input"
                             type="text"
-                            placeholder="휴대전화번호를 입력하세요"
+                            placeholder={PHONE_CONFIG.placeholder}
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
+                            maxLength={PHONE_CONFIG.maxLength}
                         />
                     </div>
 
@@ -434,19 +378,22 @@ export default function Signup() {
                     <div className="signup-row">
                         <div className="signup-input-container">
                             <input
-                                className="signup-input"
+                                className={`signup-input ${formData.address ? 'has-address' : ''}`}
                                 type="text"
                                 placeholder="주소를 검색하세요"
                                 value={formData.address}
+                                onClick={handleAddressSearch}
                                 readOnly
                             />
-                            <button
-                                className="signup-check-btn"
-                                type="button"
-                                onClick={handleAddressSearch}
-                            >
-                                주소 검색
-                            </button>
+                            {!formData.address && (
+                                <button
+                                    className="signup-check-btn"
+                                    type="button"
+                                    onClick={handleAddressSearch}
+                                >
+                                    주소 검색
+                                </button>
+                            )}
                         </div>
                     </div>
 
