@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import './MyReviewDetail.css';
+import '../css/MyReviewDetail.css';
 import MyReviewEdit from './MyReviewEditForm';
 
 const MyReviewPage = ({ review, onClose }) => {

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import "./MyReviewList.css";
+import "../css/MyReviewList.css";
 import MyReviewPage from "./MyReviewDetail";
 
 const mockReviews = [

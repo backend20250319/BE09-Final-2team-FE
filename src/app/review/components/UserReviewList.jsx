@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import './UserReviewList.css';
+import '../css/UserReviewList.css';
 
 const reviews = [
     { title: '오리 뽁뽁이', date: '2000년 00월 00일', img: 'https://asset.m-gs.kr/prod/1079743862/1/550', rating: 5 },

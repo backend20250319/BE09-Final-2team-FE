@@ -3,7 +3,7 @@
 
 import React, { useState } from 'react';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
-import './MyReviewAddForm.css';
+import '../css/MyReviewAddForm.css';
 
 const MyReviewAddForm = ({ onClose }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
