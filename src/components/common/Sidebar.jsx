@@ -16,6 +16,7 @@ export default function Sidebar({
   footer, // 사이드바 하단에 표시될 푸터 요소
   onBack = false, // 뒤로가기 버튼 표시 여부
   onClose = false, // 닫기 버튼 표시 여부
+  onCloseCallback, // 사이드바가 닫힐 때 실행할 콜백 함수
   add = false, // 더보기 버튼(점 3개 아이콘) 표시 여부
   onAdd, // 더보기 버튼 클릭 시 실행할 함수
   onTitleClick, // 제목 클릭 시 실행할 함수
@@ -35,6 +36,10 @@ export default function Sidebar({
             open(); // 이 사이드바만 열기
           } else {
             close();
+            // 사이드바가 닫힐 때 콜백 함수 실행
+            if (onCloseCallback) {
+              onCloseCallback();
+            }
           }
         }}
       >
@@ -42,7 +47,16 @@ export default function Sidebar({
           <SheetHeader className="pt-4 border-b">
             <div className="flex items-center justify-between relative">
               {onBack ? (
-                <button onClick={close} className="p-1 hover:bg-gray-100 rounded-full" aria-label="뒤로가기">
+                <button
+                  onClick={() => {
+                    close();
+                    if (onCloseCallback) {
+                      onCloseCallback();
+                    }
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded-full"
+                  aria-label="뒤로가기"
+                >
                   <ChevronLeft />
                 </button>
               ) : (

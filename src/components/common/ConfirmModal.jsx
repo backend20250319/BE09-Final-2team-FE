@@ -18,6 +18,7 @@ export default function ConfirmModal({
   type = MODAL_TYPES.CONFIRM_CANCEL,
   confirmText = "확인",
   cancelText = "취소",
+  confirmButtonStyle = "min-w-[90px] min-h-10 bg-[#85B3EB] hover:bg-[#65A2EE]",
 }) {
   return (
     <Dialog open={open} onOpenChange={onCancel}>
@@ -33,7 +34,7 @@ export default function ConfirmModal({
           {type === MODAL_TYPES.CONFIRM_ONLY ? (
             // 확인 버튼만 있는 모달
             <div className="flex justify-center">
-              <Button onClick={onConfirm} className="min-w-[120px] min-h-10 bg-[#85B3EB] hover:bg-[#65A2EE]">
+              <Button onClick={onConfirm} className={`min-w-[120px] min-h-10 ${confirmButtonStyle}`}>
                 {confirmText}
               </Button>
             </div>
@@ -46,7 +47,7 @@ export default function ConfirmModal({
               >
                 {cancelText}
               </Button>
-              <Button onClick={onConfirm} className="min-w-[90px] min-h-10 bg-[#85B3EB] hover:bg-[#65A2EE]">
+              <Button onClick={onConfirm} className={`min-w-[90px] min-h-10 ${confirmButtonStyle}`}>
                 {confirmText}
               </Button>
             </div>
