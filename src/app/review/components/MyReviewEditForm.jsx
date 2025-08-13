@@ -162,19 +162,7 @@ const MyReviewEditForm = ({ onClose }) => {
                 onConfirm={modalConfig.onConfirm}
                 onCancel={() => {
                     setModalOpen(false);
-                    setTimeout(() => {
-                        setModalConfig({
-                            title: '수정 취소',
-                            message: '리뷰 수정을 취소했습니다.',
-                            type: MODAL_TYPES.CONFIRM_ONLY,
-                            confirmText: '확인',
-                            onConfirm: () => {
-                                setModalOpen(false);
-                                handleClose(); // ← 사이드바도 닫기
-                            },
-                        });
-                        setModalOpen(true);
-                    }, 500);
+                    handleClose();
                 }}
             />
         </>

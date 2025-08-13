@@ -153,7 +153,8 @@ const MyReviewAddForm = ({ onClose }) => {
                         </div>
 
                         <div className="submit-container">
-                            <button className="submit-button" onClick={handleSubmit}>등록</button>
+                            <button className="submit-button" onClick={handleSubmit}
+                                    disabled={rating === 0} >등록</button>
                         </div>
                     </div>
                 </aside>
