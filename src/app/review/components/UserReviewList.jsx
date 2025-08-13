@@ -12,13 +12,13 @@ const reviews = [
 const UserReviewList = ({ onClose, open }) => {
     const [isClosing, setIsClosing] = useState(false);
 
-    useEffect(() => {
-        const handleEsc = (e) => {
-            if (e.key === "Escape") handleClose();
-        };
-        document.addEventListener("keydown", handleEsc);
-        return () => document.removeEventListener("keydown", handleEsc);
-    }, []);
+    // useEffect(() => {
+    //     const handleEsc = (e) => {
+    //         if (e.key === "Escape") handleClose();
+    //     };
+    //     document.addEventListener("keydown", handleEsc);
+    //     return () => document.removeEventListener("keydown", handleEsc);
+    // }, []);
 
     const handleClose = () => {
         setIsClosing(true);
@@ -28,7 +28,6 @@ const UserReviewList = ({ onClose, open }) => {
         }, 300);
     };
 
-    // ✅ Hook 실행 후 조건부 렌더링
     if (!open && !isClosing) {
         return null;
     };
