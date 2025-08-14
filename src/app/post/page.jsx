@@ -5,14 +5,15 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loadPosts } from "./lib/postStorage";
 
-/* ---------- 아이콘 & 유틸 ---------- */
-// 본문 HTML에 이미지가 있는지 검사
+/* 고정 높이: 목록 영역 */
+const LIST_MIN_HEIGHT = 400;
+
+/* 아이콘 & 유틸 */
 const hasImage = (html = "") => {
   if (typeof html !== "string" || !html) return false;
   return /<img[^>]+src=["']([^"']+)["']/i.test(html);
 };
 
-// 심플한 사진 아이콘 (라인 스타일, 포인트 색 #65A2EE)
 const PhotoIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -28,7 +29,7 @@ const PhotoIcon = () => (
   </svg>
 );
 
-/* ---------- 결정적 더미 데이터 (SSR/CSR 일치) ---------- */
+/* 결정적 더미 데이터 (SSR/CSR 일치) */
 const viewsByIndex = (i) => ((i * 73) % 300) + 1;
 const commentsByIndexTips = (i) => (i % 3 === 0 ? ((i * 7) % 5) + 1 : 0);
 const commentsByIndexGroup = (i) => (i % 4 === 0 ? ((i * 5) % 5) + 1 : 0);
@@ -63,6 +64,9 @@ export default function PostBoardPage() {
   const [sort, setSort] = useState("latest"); // "latest" | "views"
   const [currentPage, setCurrentPage] = useState(1);
   const [excludeCompleted, setExcludeCompleted] = useState(false);
+
+  // 검색: 입력값과 실제 적용 검색어 분리
+  const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
   // 로컬 저장 글
@@ -75,7 +79,7 @@ export default function PostBoardPage() {
     setCurrentPage(1);
   }, [sp]);
 
-  // 로컬 데이터 로드 함수 (목록 새로고침 공통)
+  // 로컬 데이터 로드 함수
   const reload = () => {
     const tips = loadPosts("tips") || [];
     const group = loadPosts("groupbuy") || [];
@@ -83,7 +87,7 @@ export default function PostBoardPage() {
     setUserGroup(group);
   };
 
-  // 최초 로드 + 상세에서 알림 받을 때 갱신
+  // 최초 로드 + 상세/작성에서 알림 받을 때 갱신
   useEffect(() => {
     reload();
 
@@ -103,11 +107,11 @@ export default function PostBoardPage() {
 
   const postsPerPage = 10;
 
-  // 로컬글을 더미 위에 쌓기
+  // 로 lokal글 + 더미
   const mergedTips = useMemo(() => [...userTips, ...dummyTips], [userTips]);
   const mergedGroup = useMemo(() => [...userGroup, ...dummyGroup], [userGroup]);
 
-  // 🔎 검색 (제목/내용, 대소문자 무시)
+  // 검색 (제목/내용, 대소문자 무시)
   const normalize = (v) => (typeof v === "string" ? v.toLowerCase() : "");
   const query = normalize(searchQuery);
 
@@ -141,14 +145,34 @@ export default function PostBoardPage() {
 
   const totalPages = Math.ceil(prepared.length / postsPerPage) || 1;
   const safePage = Math.min(currentPage, totalPages);
+
   const currentPosts = prepared.slice(
     (safePage - 1) * postsPerPage,
     safePage * postsPerPage
   );
 
+  // 번호 계산용
+  const baseIndex = (safePage - 1) * postsPerPage; // 현재 페이지 시작 인덱스 (0,10,20…)
+  const totalCount = prepared.length;               // 전체 게시글 수
+  // latest(최신순)일 때는 역순 번호, 그 외(조회수순 등)는 누적 증가 번호
+  const numberingMode = sort === "latest" ? "desc" : "asc";
+
   const handleTabChange = (tab) => {
     setSelectedTab(tab);
     setCurrentPage(1);
+  };
+
+  // 엔터/버튼으로만 검색
+  const submitSearch = () => {
+    setSearchQuery(searchInput.trim());
+    setCurrentPage(1);
+  };
+
+  const onKeyDownSearch = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      submitSearch();
+    }
   };
 
   return (
@@ -179,19 +203,25 @@ export default function PostBoardPage() {
 
       {/* 검색 / 정렬 / 모집완료 제외 */}
       <div className="flex items-center justify-between mb-2">
-        {/* 돋보기 세로 중앙 정렬 */}
+        {/* 검색창 */}
         <div className="relative">
           <input
             type="text"
             placeholder="제목/내용 검색"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setCurrentPage(1);
-            }}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
+            onKeyDown={onKeyDownSearch}
             className="w-72 border rounded-full px-4 py-2 pr-10 text-sm focus:outline-none"
           />
-          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+          <button
+            type="button"
+            onClick={submitSearch}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 rounded-full px-2 py-1 text-gray-500 hover:bg-gray-100 cursor-pointer"
+            aria-label="검색"
+            title="검색"
+          >
+            🔍
+          </button>
         </div>
 
         <div className="flex items-center gap-3">
@@ -222,17 +252,29 @@ export default function PostBoardPage() {
         </div>
       </div>
 
-      {/* 테이블 */}
-      {currentPosts.length === 0 ? (
-        <div className="py-16 text-center text-sm text-gray-500">검색 결과가 없습니다.</div>
-      ) : selectedTab === "tips" ? (
-        <TipsTable posts={currentPosts} />
-      ) : (
-        <GroupBuyTable posts={currentPosts} />
-      )}
+      {/* 목록 영역 높이 고정 → 페이지네이션 고정 위치 보장 */}
+      <div className="relative" style={{ minHeight: LIST_MIN_HEIGHT }}>
+        {currentPosts.length === 0 ? (
+          <div className="py-8 text-center text-sm text-gray-500">검색 결과가 없습니다.</div>
+        ) : selectedTab === "tips" ? (
+          <TipsTable
+            posts={currentPosts}
+            baseIndex={baseIndex}
+            totalCount={totalCount}
+            numberingMode={numberingMode}
+          />
+        ) : (
+          <GroupBuyTable
+            posts={currentPosts}
+            baseIndex={baseIndex}
+            totalCount={totalCount}
+            numberingMode={numberingMode}
+          />
+        )}
+      </div>
 
-      {/* 페이지네이션 */}
-      <div className="flex justify-center items-center space-x-2 text-sm mt-4">
+      {/* 페이지네이션 (근접) */}
+      <div className="flex justify-center items-center space-x-2 text-sm mt-2 pt-2 border-t border-gray-100">
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           className="text-gray-500 hover:text-blue-500"
@@ -262,7 +304,7 @@ export default function PostBoardPage() {
       <div className="flex justify-end mt-6">
         <Link href={`/post/write?tab=${selectedTab}`}>
           <button
-            className="px-6 py-2 text-white rounded hover:brightness-95"
+            className="px-6 py-2 text-white rounded hover:brightness-95 cursor-pointer"
             style={{ backgroundColor: "#65A2EE" }}
           >
             글쓰기
@@ -273,8 +315,11 @@ export default function PostBoardPage() {
   );
 }
 
-/* ---------- 테이블 컴포넌트 ---------- */
-function TipsTable({ posts }) {
+/* 테이블 컴포넌트 */
+// numberingMode: "asc" | "desc"
+// asc  → baseIndex + idx + 1
+// desc → totalCount - (baseIndex + idx)
+function TipsTable({ posts, baseIndex = 0, totalCount = 0, numberingMode = "asc" }) {
   return (
     <table className="w-full text-sm text-center border-t border-gray-300">
       <thead className="bg-gray-100">
@@ -291,13 +336,16 @@ function TipsTable({ posts }) {
           const commentCount = Array.isArray(p.comments)
             ? p.comments.length
             : Number(p.comments) || 0;
+          const number =
+            numberingMode === "desc"
+              ? totalCount - (baseIndex + idx)
+              : baseIndex + idx + 1;
           return (
             <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
-              <td className="py-2">{idx + 1}</td>
+              <td className="py-2">{number}</td>
               <td className="py-2 text-left pl-2">
                 <div className="flex items-center gap-2 min-w-0">
                   {hasImage(p.content) && <PhotoIcon />}
-                  {/* 상세 링크: id가 없으면 제목으로 대체, 탭 힌트 추가 */}
                   <Link
                     href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`}
                     className="truncate hover:underline"
@@ -321,7 +369,7 @@ function TipsTable({ posts }) {
   );
 }
 
-function GroupBuyTable({ posts }) {
+function GroupBuyTable({ posts, baseIndex = 0, totalCount = 0, numberingMode = "asc" }) {
   return (
     <table className="w-full text-sm text-center border-t border-gray-300">
       <thead className="bg-gray-100">
@@ -340,14 +388,17 @@ function GroupBuyTable({ posts }) {
           const commentCount = Array.isArray(p.comments)
             ? p.comments.length
             : Number(p.comments) || 0;
+          const number =
+            numberingMode === "desc"
+              ? totalCount - (baseIndex + idx)
+              : baseIndex + idx + 1;
           return (
             <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
-              <td className="py-2">{idx + 1}</td>
+              <td className="py-2">{number}</td>
               <td className="py-2">{p.status || "모집중"}</td>
               <td className="py-2 text-left pl-2">
                 <div className="flex items-center gap-2 min-w-0">
                   {hasImage(p.content) && <PhotoIcon />}
-                  {/* 상세 링크: id가 없으면 제목으로 대체, 탭 힌트 추가 */}
                   <Link
                     href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=groupbuy`}
                     className="truncate hover:underline"
