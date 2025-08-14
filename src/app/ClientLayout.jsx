@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import Header from "@/components/common/Header";
 import Footer from "@/components/common/Footer";
 
-const noLayoutPaths = ["/login", "/signup", "/signup/complete", "/additional-info"]; // 필요 경로 추가
+const noLayoutPaths = ["/login", "/signup", "/signup/complete", "/additional-info", "/find-account"]; // 필요 경로 추가
 
 function LayoutContent({ children }) {
   const pathname = usePathname();

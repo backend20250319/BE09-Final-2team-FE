@@ -174,9 +174,9 @@ export default function Login() {
                 <div className="login-links">
                     <Link href="/signup" className="signup-link">계정이 없으신가요? 회원가입</Link>
                     <div className="find-links">
-                        <a href="#" className="find-link">아이디 찾기</a>
+                        <Link href="/find-account?tab=findId" className="find-link">아이디 찾기</Link>
                         <span className="divider"> | </span>
-                        <a href="#" className="find-link">비밀번호 찾기</a>
+                        <Link href="/find-account?tab=findPassword" className="find-link">비밀번호 찾기</Link>
                     </div>
                 </div>
             </div>
