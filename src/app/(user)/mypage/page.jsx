@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import "./mypage.css";
 import ProfileEdit from "@/app/(user)/profile-edit/page";
+import PasswordChange from "@/app/(user)/password-change/page";
 import MyReviewList from "@/app/review/components/MyReviewList";
 import UserReviewList from "@/app/review/components/UserReviewList";
 import ProductCard from "@/components/common/ProductCard";
@@ -15,6 +16,7 @@ const MyPage = () => {
   const [activeTab, setActiveTab] = useState("");
   const [dashboardTab, setDashboardTab] = useState("purchase");
   const { open: openProfileEditSidebar } = useSidebar("profile-edit");
+  const { open: openPasswordChangeSidebar } = useSidebar("password-change");
   const { open: openLocationSidebar, isOpen: isLocationSidebarOpen } = useSidebar("location-management");
   const { open: openWishlistSidebar, isOpen: isWishlistSidebarOpen } = useSidebar("wishlist");
   const { open: openWidthdrawalSidebar, isOpen: isWidthdrawalSidebarOpen } = useSidebar("withdrawal");
@@ -67,6 +69,11 @@ const MyPage = () => {
       status: "USED",
     },
   ];
+  const dummyReviews = [
+    { id: 1, content: "좋은 거래였습니다" },
+    { id: 2, content: "상품 상태 좋아요" },
+    { id: 3, content: "친절하게 거래해주셨어요" },
+  ];
 
   const renderProfileSection = () => (
     <div className="profile-section">
@@ -117,9 +124,7 @@ const MyPage = () => {
             </div>
             <div className="transaction-item">
               <span className="transaction-label">작성 리뷰</span>
-              <span className="transaction-value" onClick={() => setUserReviewOpen(true)} style={{ cursor: "pointer" }}>
-                3
-              </span>
+              <span className="transaction-value">{dummyReviews.length}</span>
               <span className="transaction-unit">개</span>
             </div>
           </div>
@@ -220,7 +225,7 @@ const MyPage = () => {
             <h3 className="menu-title">내 정보</h3>
             <div className="menu-items">
               <button onClick={openProfileEditSidebar}>프로필 수정</button>
-              <button onClick={() => setActiveTab("password-change")}>비밀번호 변경</button>
+              <button onClick={openPasswordChangeSidebar}>비밀번호 변경</button>
               <button onClick={openLocationSidebar}>거래지역 관리</button>
               <button onClick={() => setActiveTab("child-management")}>자녀 관리</button>
               <button
@@ -268,6 +273,7 @@ const MyPage = () => {
 
       {/* 사이드바들 */}
       <ProfileEdit />
+      <PasswordChange />
       <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)} />
       <UserReviewList open={userReviewOpen} onClose={() => setUserReviewOpen(false)} />
       <TradingAreaManagement />
