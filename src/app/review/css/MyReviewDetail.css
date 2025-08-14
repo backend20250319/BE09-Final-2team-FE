@@ -60,7 +60,7 @@
     overflow-y: auto;
 }
 
-/* ✅ 새로 추가된 flex 레이아웃 */
+
 .product-summary {
     display: flex;
     gap: 20px;
@@ -100,18 +100,41 @@
     margin-bottom: 12px;
 }
 
+
 .star-rating {
     display: flex;
     gap: 5px;
 }
 
-.star {
+.star-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 20px;
+    height: 20px;
     font-size: 20px;
-    color: #ddd;
 }
 
-.star.active {
+.star-background {
+    color: #ddd;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.star-foreground.full {
     color: #f9e000;
+    position: absolute;
+    left: 0;
+    top: 0;
+}
+
+.star-foreground.half {
+    color: #f9e000;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 50%;
+    overflow: hidden;
 }
 
 .review-details {
@@ -179,5 +202,4 @@
 .edit-button:hover {
     background: #85b3eb;
     color: #fff;
-
 }

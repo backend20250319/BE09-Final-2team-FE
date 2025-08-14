@@ -1,19 +1,18 @@
 'use client';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 
-const MyReviewEditForm = ({ onClose }) => {
-    const [rating, setRating] = useState(3);
-    const [answers, setAnswers] = useState({
+const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave }) => {
+    const [rating, setRating] = useState(initialRating || 3);
+    const [answers, setAnswers] = useState(initialAnswers || {
         kind: true,
         promise: true,
         satisfaction: true,
     });
-    const [reviewText, setReviewText] = useState('안녕하세요');
+    const [reviewText, setReviewText] = useState(initialReviewText || '안녕하세요');
 
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
-
     const [modalOpen, setModalOpen] = useState(false);
     const [modalConfig, setModalConfig] = useState({
         title: '',
@@ -36,6 +35,13 @@ const MyReviewEditForm = ({ onClose }) => {
             confirmText: '수정',
             cancelText: '취소',
             onConfirm: () => {
+                // 🔹 부모 state 갱신
+                onSave && onSave({
+                    rating,
+                    answers,
+                    reviewText
+                });
+
                 setModalOpen(false);
                 setTimeout(() => {
                     setModalConfig({
@@ -67,16 +73,9 @@ const MyReviewEditForm = ({ onClose }) => {
             <aside className={`review-edit-sidebar ${animateClass}`}>
                 <div className="sidebar-header">
                     <button className="back-button" onClick={handleClose}>
-                        <svg
-                            width="24"
-                            height="24"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="black"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
+                        <svg width="24" height="24" viewBox="0 0 24 24"
+                             fill="none" stroke="black" strokeWidth="2"
+                             strokeLinecap="round" strokeLinejoin="round">
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
@@ -89,7 +88,6 @@ const MyReviewEditForm = ({ onClose }) => {
                         {[1, 2, 3, 4, 5].map((num) => {
                             const isFull = rating >= num;
                             const isHalf = rating >= num - 0.5 && rating < num;
-
                             return (
                                 <span
                                     key={num}
@@ -162,22 +160,11 @@ const MyReviewEditForm = ({ onClose }) => {
                 onConfirm={modalConfig.onConfirm}
                 onCancel={() => {
                     setModalOpen(false);
-                    setTimeout(() => {
-                        setModalConfig({
-                            title: '수정 취소',
-                            message: '리뷰 수정을 취소했습니다.',
-                            type: MODAL_TYPES.CONFIRM_ONLY,
-                            confirmText: '확인',
-                            onConfirm: () => {
-                                setModalOpen(false);
-                                handleClose(); // ← 사이드바도 닫기
-                            },
-                        });
-                        setModalOpen(true);
-                    }, 500);
+                    handleClose();
                 }}
             />
         </>
     );
 };
+
 export default MyReviewEditForm;

@@ -22,7 +22,7 @@ const MyReviewPage = ({ review, onClose }) => {
         }, 300);
     };
 
-    const reviewData = {
+    const [reviewData, setReviewData] = useState({
         ...review,
         reviewDetails: [
             '상대가 친절했어요.',
@@ -30,7 +30,7 @@ const MyReviewPage = ({ review, onClose }) => {
             '상품 상태가 좋아요.',
         ],
         reviewText: '아이도 좋아하고 상태도 매우 좋았습니다. 감사합니다!',
-    };
+    });
 
     return (
         <>
@@ -53,10 +53,22 @@ const MyReviewPage = ({ review, onClose }) => {
                             <h2 className="product-title">{reviewData.title}</h2>
                             <p className="review-date">{reviewData.date}</p>
                             <div className="star-rating">
-                                {[...Array(5)].map((_, index) => (
-                                    <span key={index} className={`star ${index < reviewData.rating ? 'active' : ''}`}>★</span>
-                                ))}
+                                {[1, 2, 3, 4, 5].map((num) => {
+                                    const isFull = reviewData.rating >= num;
+                                    const isHalf = reviewData.rating >= num - 0.5 && reviewData.rating < num;
+                                    return (
+                                        <span key={num} className="star-wrapper">
+                                            <span className="star-background">★</span>
+                                            {isFull ? (
+                                                <span className="star-foreground full">★</span>
+                                            ) : isHalf ? (
+                                                <span className="star-foreground half">★</span>
+                                            ) : null}
+                                        </span>
+                                    );
+                                })}
                             </div>
+
                         </div>
                     </div>
 
@@ -82,9 +94,29 @@ const MyReviewPage = ({ review, onClose }) => {
                     </div>
                 </div>
             </aside>
-
             {editOpen && (
-                <MyReviewEdit onClose={handleEditClose} />
+                <MyReviewEdit
+                    onClose={handleEditClose}
+                    initialRating={reviewData.rating}
+                    initialAnswers={{
+                        kind: reviewData.reviewDetails.includes('상대가 친절했어요.'),
+                        promise: reviewData.reviewDetails.includes('상대가 약속을 잘 지켰어요.'),
+                        satisfaction: reviewData.reviewDetails.includes('상품 상태가 좋아요.')
+                    }}
+                    initialReviewText={reviewData.reviewText}
+                    onSave={(updated) => {
+                        setReviewData({
+                            ...reviewData,
+                            rating: updated.rating,
+                            reviewText: updated.reviewText,
+                            reviewDetails: [
+                                updated.answers.kind ? '상대가 친절했어요.' : '상대가 친절하지 않았어요.',
+                                updated.answers.promise ? '상대가 약속을 잘 지켰어요.' : '상대가 약속을 지키지 않았어요.',
+                                updated.answers.satisfaction ? '상품 상태가 좋아요.' : '상품 상태가 좋지 않아요.'
+                            ]
+                        });
+                    }}
+                />
             )}
         </>
     );

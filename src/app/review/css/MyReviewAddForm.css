@@ -209,3 +209,15 @@
     background-color: #85B3EB;
     color: #fff;
 }
+
+.submit-button:disabled {
+    background-color: #f5f5f5;
+    color: #ccc;
+    border-color: #ddd;
+    cursor: not-allowed;
+}
+
+.submit-button:hover:disabled {
+    background-color: #f5f5f5;
+    color: #ccc;
+}
