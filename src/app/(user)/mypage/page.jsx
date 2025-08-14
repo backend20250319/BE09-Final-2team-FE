@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import "./mypage.css";
+import ProfileEdit from "@/app/(user)/profile-edit/page";
 import MyReviewList from "@/app/review/components/MyReviewList";
 import UserReviewList from "@/app/review/components/UserReviewList";
 import ProductCard from "@/components/common/ProductCard";
@@ -13,6 +14,7 @@ import WithdrawlSidebar from "../withdrawal/components/withdrawlSidebar";
 const MyPage = () => {
   const [activeTab, setActiveTab] = useState("");
   const [dashboardTab, setDashboardTab] = useState("purchase");
+  const { open: openProfileEditSidebar } = useSidebar("profile-edit");
   const { open: openLocationSidebar, isOpen: isLocationSidebarOpen } = useSidebar("location-management");
   const { open: openWishlistSidebar, isOpen: isWishlistSidebarOpen } = useSidebar("wishlist");
   const { open: openWidthdrawalSidebar, isOpen: isWidthdrawalSidebarOpen } = useSidebar("withdrawal");
@@ -217,7 +219,7 @@ const MyPage = () => {
           <div className="menu-group">
             <h3 className="menu-title">내 정보</h3>
             <div className="menu-items">
-              <button onClick={() => setActiveTab("profile-edit")}>프로필 수정</button>
+              <button onClick={openProfileEditSidebar}>프로필 수정</button>
               <button onClick={() => setActiveTab("password-change")}>비밀번호 변경</button>
               <button onClick={openLocationSidebar}>거래지역 관리</button>
               <button onClick={() => setActiveTab("child-management")}>자녀 관리</button>
@@ -265,6 +267,7 @@ const MyPage = () => {
       </div>
 
       {/* 사이드바들 */}
+      <ProfileEdit />
       <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)} />
       <UserReviewList open={userReviewOpen} onClose={() => setUserReviewOpen(false)} />
       <TradingAreaManagement />
