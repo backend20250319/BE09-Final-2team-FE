@@ -1,0 +1,361 @@
+/* Reset and base styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Pretendard Variable";
+  background-color: #ffffff;
+}
+
+/* Find Account Container */
+.find-account-container {
+  min-height: 100vh;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Find Account Card */
+.find-account-card {
+  width: 640px;
+  background: #fff;
+  border-radius: 8px;
+  border: 1px solid #dddddd;
+  padding: 64px 131px;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 10px;
+  position: relative;
+}
+
+/* Find Account Content */
+.find-account-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 로고만 중앙 정렬되게*/
+  gap: 10px;
+  width: 100%;
+  padding-bottom: 50px;
+}
+
+/* Tab Navigation */
+.tab-navigation {
+  align-self: flex-start; /* 탭 네비게이션만 왼쪽 정렬 */
+  width: 100%;
+  display: flex;
+  align-items: center; /* 세로 중앙 정렬 */
+  justify-content: flex-start;
+  padding: 0; /* 패딩 제거 */
+  margin-bottom: 20px;
+}
+
+.tab-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  color: #666;
+  height: 40px; /* 높이 지정 */
+  display: flex;
+  align-items: center; /* 텍스트 세로 중앙 정렬 */
+}
+
+.tab-btn.active {
+  color: #000;
+  font-weight: bold;
+}
+
+.tab-btn:hover {
+  color: #000000;
+}
+
+.tab-divider {
+  display: flex;
+  align-items: center;
+  height: 40px; /* 높이를 탭 버튼과 동일하게 */
+  color: #ddd;
+  margin: 0 8px;
+}
+
+/* Logo Container */
+.logo-container {
+  width: 174px;
+  height: 129px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px auto; /* auto로 변경하여 가운데 정렬 */
+}
+
+.logo-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Form */
+.find-form {
+  width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Form Group */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-input {
+  width: 100%;
+  height: 46px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.21;
+  color: #000000;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.form-input::placeholder {
+  color: #94a3b8;
+}
+
+.form-input:focus {
+  border-color: #85b3eb;
+}
+
+.form-input.error {
+  border-color: #ef4444;
+}
+
+/* Input with Button */
+.input-with-button {
+  display: flex;
+  gap: 8px;
+}
+
+.form-input-with-btn {
+  flex: 1;
+  height: 46px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  padding: 0 16px;
+  font-family: "Inter", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.21;
+  color: #000000;
+  background-color: #ffffff;
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+.form-input-with-btn::placeholder {
+  color: #94a3b8;
+}
+
+.form-input-with-btn:focus {
+  border-color: #85b3eb;
+}
+
+.form-input-with-btn.error {
+  border-color: #ef4444;
+}
+
+.verify-btn {
+  width: 80px;
+  height: 46px;
+  background-color: #85b3eb;
+  border: none;
+  border-radius: 8px;
+  font-family: "Pretendard Variable", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.verify-btn:hover:not(:disabled) {
+  background-color: #6b9aff;
+}
+
+.verify-btn:disabled {
+  background-color: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Error and Success Messages */
+.error-message {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #ef4444;
+  margin-top: 4px;
+}
+
+.success-message {
+  font-family: "Inter", sans-serif;
+  font-size: 12px;
+  color: #10b981;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* Info Message */
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: center;
+  margin: 10px 0;
+}
+
+.info-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.info-text {
+  font-family: "Pretendard Variable", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.19;
+  color: #94a3b8;
+}
+
+/* Submit Button */
+.submit-button {
+  width: 100%;
+  height: 48px;
+  border: none;
+  border-radius: 8px;
+  font-family: "Pretendard Variable", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.5;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 20px;
+}
+
+.submit-button.active {
+  background-color: #85b3eb;
+  color: #ffffff;
+}
+
+.submit-button.active:hover {
+  background-color: #6b9aff;
+}
+
+.submit-button.disabled {
+  background-color: rgba(221, 221, 221, 0.87);
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* ConfirmModal CSS 수정 */
+.dialog-content {
+  min-height: 280px;
+  padding: 48px 32px; /* 상하 여백 증가 */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center; /* 내용 중앙 정렬 */
+  text-align: center; /* 텍스트 중앙 정렬 */
+  gap: 16px; /* 요소들 사이 간격 추가 */
+}
+
+/* 모달 내부 텍스트 스타일 추가 */
+.result-text {
+  display: flex;
+  align-items: center;
+  gap: 4px; /* 텍스트 사이 간격 */
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.result-id {
+  font-weight: bold;
+  color: #000;
+}
+
+/* 모달 버튼 스타일 수정 */
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 24px; /* 버튼과 텍스트 사이 여백 */
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .find-account-container {
+    padding: 20px 10px;
+  }
+
+  .find-account-card {
+    width: 100%;
+    max-width: 640px;
+    padding: 40px 20px;
+  }
+
+  .find-form {
+    width: 100%;
+    max-width: 360px;
+  }
+
+  .input-with-button {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .verify-btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .find-account-card {
+    padding: 30px 16px;
+  }
+
+  .logo-container {
+    width: 120px;
+    height: 90px;
+  }
+
+  .tab-btn {
+    font-size: 14px;
+  }
+
+  .form-input,
+  .form-input-with-btn,
+  .verify-btn {
+    height: 40px;
+    font-size: 12px;
+  }
+
+  .submit-button {
+    height: 44px;
+    font-size: 14px;
+  }
+}
