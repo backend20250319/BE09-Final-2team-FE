@@ -128,7 +128,7 @@
 }
 
 .option-button {
-    width: 140px;            /* 버튼 가로 고정 */
+    width: 145px;            /* 버튼 가로 고정 */
     height: 44px;            /* 버튼 세로 고정 */
     display: flex;           /* 가운데 정렬을 위해 flex 사용 */
     align-items: center;     /* 세로 가운데 정렬 */

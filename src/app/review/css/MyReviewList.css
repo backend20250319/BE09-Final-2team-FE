@@ -286,9 +286,9 @@ body {
     font-size: 16px;
     font-weight: 400;
     color: #999999;
-    text-decoration: none;
     align-self: flex-end;
     transition: color 0.2s ease;
+    text-decoration: underline;
 }
 
 .review-detail-link:hover {

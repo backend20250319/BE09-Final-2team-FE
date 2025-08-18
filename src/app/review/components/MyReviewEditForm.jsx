@@ -28,6 +28,17 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
     };
 
     const handleSubmit = () => {
+        if (reviewText.length < 20) {
+            setModalConfig({
+                title: '알림',
+                message: '리뷰 내용을 20자 이상 입력해주세요.',
+                type: MODAL_TYPES.CONFIRM_ONLY,
+                confirmText: '확인',
+                onConfirm: () => setModalOpen(false),
+            });
+            setModalOpen(true);
+            return;
+        }
         setModalConfig({
             title: '리뷰 수정',
             message: '리뷰를 수정하시겠습니까?',
@@ -138,6 +149,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                                 placeholder="리뷰를 입력하세요"
                                 value={reviewText}
                                 onChange={(e) => setReviewText(e.target.value)}
+                                minLength={20}
                                 maxLength={1000}
                             />
                             <div className="character-count">{reviewText.length}/1000</div>
