@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loadPosts, removePost } from "../lib/postStorage";
+import ConfirmModal, { MODAL_TYPES } from "@/components/common/ConfirmModal";
+
 
 /* -----------------------------
-   Storage helpers
+    Storage helpers
 ----------------------------- */
 const TYPE_FROM_CATEGORY = (category) => (category === "공동구매" ? "groupbuy" : "tips");
 const KEY_FROM_TYPE = (type) => (type === "groupbuy" ? "posts:groupbuy" : "posts:tips");
@@ -113,10 +115,13 @@ export default function PostDetailPage() {
 
   const deviceId = useMemo(() => getOrCreateDeviceId(), []);
 
-  // state
+  // ---------- state ----------
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [toastVisible, setToastVisible] = useState(false);
+  const [deleteTargetCommentId, setDeleteTargetCommentId] = useState(null);
+  const [showDeletePostModal, setShowDeletePostModal] = useState(false);
 
   const [likes, setLikes] = useState(0);
   const [comments, setComments] = useState([]);
@@ -124,12 +129,12 @@ export default function PostDetailPage() {
   const [joinedHere, setJoinedHere] = useState(false);
   const [lastJoinedName, setLastJoinedName] = useState("");
 
-  // 모달
+  // Modal states
   const [showCloseModal, setShowCloseModal] = useState(false);
   const [showListModal, setShowListModal] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
-  // derived
+  // ---------- derived ----------
   const backTab =
     searchParams.get("tab") ||
     (post?.category === "공동구매" ? "groupbuy" : "tips") ||
@@ -142,9 +147,7 @@ export default function PostDetailPage() {
   const isClosed = Boolean(post?.closed) || (post?.status && post.status !== "모집중");
   const isOwner = post?.ownerDeviceId === deviceId;
 
-  /* ---------------------------------
-     hooks (항상 같은 순서)
-  ----------------------------------*/
+  /* ---------- bump view once ---------- */
   const bumpViewOnce = useCallback((p) => {
     if (!p) return;
     try {
@@ -158,6 +161,8 @@ export default function PostDetailPage() {
     } catch {}
   }, []);
 
+  /* ---------- load ----------
+  ----------------------------------*/
   useEffect(() => {
     if (!id) return;
     setLoading(true);
@@ -203,45 +208,45 @@ export default function PostDetailPage() {
     }
   }, [id, bumpViewOnce, deviceId]);
 
-  const onDelete = useCallback(() => {
-    if (!post) return;
-    if (!confirm("정말로 삭제하시겠어요? 되돌릴 수 없습니다.")) return;
-    try {
-      const type = TYPE_FROM_CATEGORY(post.category);
-      if (typeof removePost === "function") removePost(type, post.id);
-      try {
-        window.dispatchEvent(
-          new CustomEvent("posts:changed", { detail: { id: post.id, action: "delete" } })
-        );
-      } catch {}
-      router.push(`/post?tab=${backTab}`);
-    } catch {
-      alert("삭제 중 오류가 발생했습니다.");
-    }
-  }, [post, router, backTab]);
+const onDelete = useCallback(() => {
+  if (!post) return;
+  try {
+    const type = TYPE_FROM_CATEGORY(post.category);
+    if (typeof removePost === "function") removePost(type, post.id);
+    window.dispatchEvent(
+      new CustomEvent("posts:changed", { detail: { id: post.id, action: "delete" } })
+    );
+    router.push(`/post?tab=${backTab}`);
+  } catch {
+    alert("삭제 중 오류가 발생했습니다.");
+  }
+}, [post, router, backTab]);
+
 
   const onEdit = useCallback(() => {
     if (!post) return;
     router.push(`/post/write?id=${post.id}&tab=${backTab}`);
   }, [post, router, backTab]);
 
-  const onCopyUrl = useCallback(async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      alert("URL이 복사되었습니다.");
-    } catch {
-      alert("URL 복사에 실패했어요.");
-    }
-  }, []);
+const onCopyUrl = useCallback(async () => {
+  try {
+    await navigator.clipboard.writeText(window.location.href);
+    setToastVisible(true);
+    setTimeout(() => setToastVisible(false), 2000); // 2초 후 사라짐
+  } catch {
+    alert("URL 복사에 실패했어요.");
+  }
+}, []);
 
-  const onToggleLike = useCallback(() => {
-    if (!post) return;
-    const nextLikes = likes + 1;
-    setLikes(nextLikes);
-    const next = { ...post, likes: nextLikes };
-    setPost(next);
-    updatePostLocal(next);
-  }, [likes, post]);
+const onToggleLike = useCallback(() => {
+  if (!post) return;
+  const nextLikes = likes > 0 ? likes - 1 : 1;
+  setLikes(nextLikes);
+  const next = { ...post, likes: nextLikes };
+  setPost(next);
+  updatePostLocal(next);
+}, [likes, post]);
+
 
   const onAddComment = useCallback(() => {
     if (!post) return;
@@ -266,7 +271,7 @@ export default function PostDetailPage() {
     } catch {}
   }, [commentInput, comments, post]);
 
-  // 참여
+  // ---------- 참여 ----------
   const onJoin = useCallback(() => {
     if (!post || isFull || isClosed) return;
     const name = prompt("참여자 이름을 입력하세요:");
@@ -295,12 +300,20 @@ export default function PostDetailPage() {
     } catch {}
   }, [post, participants, isFull, isClosed]);
 
-  // 참여자 명단 보기 → 모달 오픈
+  // ---------- comment delete ----------
+const onDeleteComment = useCallback((commentId) => {
+  if (!post) return;
+  const nextComments = comments.filter((c) => c.id !== commentId);
+  setComments(nextComments);
+  const next = { ...post, comments: nextComments };
+  setPost(next);
+  updatePostLocal(next);
+}, [post, comments]);
+
   const onShowParticipants = useCallback(() => {
     setShowListModal(true);
   }, []);
 
-  // 참여 취소 (확인 모달에서 최종 수행)
   const onCancelJoin = useCallback(() => {
     if (!post || !joinedHere || isOwner) return;
     const names = participants.map((x) => (typeof x === "string" ? x : x?.name || ""));
@@ -322,7 +335,6 @@ export default function PostDetailPage() {
     } catch {}
   }, [post, joinedHere, isOwner, lastJoinedName, participants]);
 
-  // 실제 마감 처리
   const doCloseRecruitment = useCallback(() => {
     if (!post) return;
     const next = {
@@ -340,7 +352,6 @@ export default function PostDetailPage() {
     } catch {}
   }, [post]);
 
-  // 마감 버튼 클릭 → 모달 오픈
   const onCloseRecruitmentClick = useCallback(() => {
     if (!post) return;
     if (!isOwner) {
@@ -351,7 +362,7 @@ export default function PostDetailPage() {
     setShowCloseModal(true);
   }, [post, isOwner, isClosed, participants.length, maxParticipants]);
 
-  /* ----- early returns AFTER hooks ----- */
+  /* ----- early return after hooks ----- */
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
@@ -385,12 +396,10 @@ export default function PostDetailPage() {
   const createdAt = parseDateAny(post?.createdAt) || parseDateAny(post?.date) || null;
   const writtenDateTime = createdAt ? formatDateTime(createdAt) : "";
 
-  // 버튼 색
   const joinBtnColor = isClosed || isFull ? "#999999" : joinedHere ? "#65A2EE" : "#85B3EB";
   const closeBtnColor =
     participants.length < maxParticipants ? "#999999" : isClosed ? "#65A2EE" : "#85B3EB";
 
-  // 참가자 이름/시간 정규화
   const normalized = (Array.isArray(participants) ? participants : []).map((x) => {
     if (typeof x === "string") {
       return { name: x, joinedAt: post?.createdAt || null };
@@ -398,41 +407,59 @@ export default function PostDetailPage() {
     return { name: x?.name || "", joinedAt: x?.joinedAt || post?.createdAt || null };
   });
 
-  return (
-    <div className="mx-auto max-w-3xl px-4 py-8">
-      {/* 상단 브레드크럼 + 우측 유틸 */}
-      <div className="mb-2 flex items-center justify-between text-[13px] text-gray-500">
-        <div className="space-x-2">
-          <Link href={`/post?tab=${backTab}`} className="hover:underline">
-            {backTab === "groupbuy" ? "공동구매" : "육아꿀팁"}
-          </Link>
-          <span className="text-gray-300">›</span>
-          <span className="text-gray-400">상세</span>
-        </div>
+  /* ---------- return JSX ---------- */
+ return (
+    <>
+      {/* ✅토스트 메세지  */}
+{toastVisible && (
+  <div className="fixed bottom-6 left-1/2 -translate-x-1/2 animate-fade-in-out rounded-lg bg-black text-white px-4 py-2 text-sm shadow-lg z-[9999]">
+    URL이 복사되었습니다.
+  </div>
+)}
 
-        <div className="flex items-center gap-3">
-          <button onClick={onEdit} className="text-gray-400 hover:text-gray-600 cursor-pointer" type="button">
-            수정
-          </button>
-          <span className="text-gray-300">|</span>
-          <button onClick={onDelete} className="text-gray-400 hover:text-red-500 cursor-pointer" type="button">
-            삭제
-          </button>
-          <span className="text-gray-300">|</span>
-          <a href="#comments" className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer">
-            <span className="inline-block w-5 h-5 text-[16px] leading-5">💬</span>
-            <span className="text-[14px]">댓글 {comments.length}</span>
-          </a>
-          <span className="text-gray-300">|</span>
-          <button
-            onClick={onCopyUrl}
-            className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer"
-          >
-            <span className="inline-block w-5 h-5 text-[16px] leading-5">🔗</span>
-            <span className="text-[14px]">url 복사</span>
-          </button>
+
+      {/* ✅기존 화면 전체 */}
+      <div className="mx-auto max-w-3xl px-4 py-8">
+        {/* 상단 브레드크럼 + 우측 유틸 */}
+        <div className="mb-2 flex items-center justify-between text-[13px] text-gray-500">
+          <div className="space-x-2">
+            <Link href={`/post?tab=${backTab}`} className="hover:underline">
+              {backTab === "groupbuy" ? "공동구매" : "육아꿀팁"}
+            </Link>
+            <span className="text-gray-300">›</span>
+            <span className="text-gray-400">상세</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <button onClick={onEdit} className="text-gray-400 hover:text-gray-600 cursor-pointer" type="button">
+              수정
+            </button>
+            <span className="text-gray-300">|</span>
+            <button onClick={() => setShowDeletePostModal(true)} className="text-gray-400 hover:text-red-500 cursor-pointer" type="button">
+  삭제
+</button>
+
+            <span className="text-gray-300">|</span>
+            <a
+              onClick={(e) => {
+                e.preventDefault();
+                const first = document.querySelector('#comments li');
+                first?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }}
+              className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer"
+            >
+              <span className="inline-block w-5 h-5 text-[16px] leading-5">💬</span>
+              <span className="text-[14px]">댓글 {comments.length}</span>
+            </a>
+            <span className="text-gray-300">|</span>
+            <button
+              onClick={onCopyUrl}
+              className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer"
+            >
+              <span className="inline-block w-5 h-5 text-[16px] leading-5">🔗</span>
+              <span className="text-[14px]">url 복사</span>
+            </button>
+          </div>
         </div>
-      </div>
 
       {/* 제목/메타 */}
       <div className="pb-4 border-b">
@@ -471,11 +498,10 @@ export default function PostDetailPage() {
         )}
       </article>
 
-      {/* 공동구매 전용: 참여/마감/명단 (작성자/비작성자에 따라 한 개만 노출) */}
+      {/* 공동구매 전용 참여/마감 */}
       {isGroupbuy && (
         <div className="mb-8">
           {isOwner ? (
-            /* 작성자: '참여 마감'만 */
             <div className="flex justify-center">
               <button
                 onClick={onCloseRecruitmentClick}
@@ -501,7 +527,6 @@ export default function PostDetailPage() {
               </button>
             </div>
           ) : (
-            /* 작성자 아님: '참여하기'만 */
             <div className="flex justify-center">
               <button
                 onClick={onJoin}
@@ -520,7 +545,6 @@ export default function PostDetailPage() {
             </div>
           )}
 
-          {/* 참여자 명단 (모두에게 노출) */}
           <div className="mt-6 flex justify-end">
             <button
               onClick={onShowParticipants}
@@ -537,13 +561,12 @@ export default function PostDetailPage() {
       <div className="mb-6 flex items-center justify-between">
         <div className="flex items-center gap-6 text-sm text-gray-700">
           <button onClick={onToggleLike} className="group inline-flex items-center gap-1 cursor-pointer">
-            <span>❤️</span>
-            <span>좋아요 {likes}</span>
-          </button>
-        <a href="#comments" className="inline-flex items-center gap-1 cursor-pointer">
-            <span>💬</span>
-            <span>댓글 {comments.length}</span>
-          </a>
+  <span className="text-[18px] leading-5">
+    {likes > 0 ? '❤️' : '♡'}
+  </span>
+  <span>좋아요 {likes}</span>
+</button>
+
         </div>
         <Link
           href={`/post?tab=${backTab}`}
@@ -555,60 +578,112 @@ export default function PostDetailPage() {
 
       <div className="h-px w-full bg-gray-200" />
 
-      {/* 댓글 리스트 */}
-      <section id="comments" className="mt-6">
-        {comments.length > 0 ? (
-          <ul className="space-y-6">
-            {comments.map((c) => {
-              const d = parseDateAny(c.createdAt);
-              const when = d ? formatDateTime(d) : "";
-              return (
-                <li key={c.id} className="flex gap-3">
-                  <div className="mt-1 h-8 w-8 flex-none rounded-full bg-gray-200 text-center leading-8 text-gray-600">
-                    {c.author?.[0] || "익"}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 text-sm text-gray-500">
-                      <span className="font-medium text-gray-700">{c.author || "익명"}</span>
-                      {when && (
-                        <>
-                          <span className="mx-2 text-gray-300">·</span>
-                          <span>{when}</span>
-                        </>
-                      )}
-                    </div>
-                    <div className="whitespace-pre-wrap text-[15px] leading-7 text-gray-800">
-                      {c.content}
-                    </div>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        ) : (
-          <div className="text-sm text-gray-500">아직 댓글이 없어요.</div>
-        )}
-      </section>
+{/* 댓글 리스트 */}
+<section id="comments" className="mt-6">
+  {comments.length > 0 ? (
+    <ul className="space-y-6">
+      {comments.map((c) => {
+        const d = parseDateAny(c.createdAt);
+        const when = d ? formatDateTime(d) : "";
+        return (
+          <li key={c.id} className="flex gap-3">
+            <div className="mt-1 h-8 w-8 flex-none rounded-full bg-gray-200 text-center leading-8 text-gray-600">
+              {c.author?.[0] || "익"}
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="mb-1 flex items-center justify-between text-sm text-gray-500">
+                <div>
+                  <span className="font-medium text-gray-700">{c.author || "익명"}</span>
+                  {when && (
+                    <>
+                      <span className="mx-2 text-gray-300">·</span>
+                      <span>{when}</span>
+                    </>
+                  )}
+                </div>
+                {/* ✅ 삭제 버튼 */}
+                <button
+  onClick={() => setDeleteTargetCommentId(c.id)}  
+  className="text-xs text-gray-400 hover:text-red-500"
+>
+  삭제
+</button>
 
-      {/* 댓글 입력 */}
-      <div className="mt-8 rounded-2xl border bg-white p-4 shadow-sm">
-        <div className="mb-3 text-sm font-medium text-gray-700">의견을 남겨보세요</div>
-        <div className="flex items-end gap-2">
-          <textarea
-            className="min-h-[44px] w-full resize-none rounded-xl border px-4 py-3 text-[15px] outline-none focus:ring-2 focus:ring-gray-200"
-            placeholder="댓글을 작성하여 게시글에 참여해보세요 !"
-            value={commentInput}
-            onChange={(e) => setCommentInput(e.target.value)}
-          />
-          <button
-            onClick={onAddComment}
-            className="h-10 shrink-0 rounded-xl bg-black px-4 text-sm font-medium text-white hover:opacity-90 cursor-pointer"
-          >
-            등록
-          </button>
-        </div>
-      </div>
+              </div>
+              <div className="whitespace-pre-wrap text-[15px] leading-7 text-gray-800">
+                {c.content}
+              </div>
+            </div>
+          </li>
+        );
+      })}
+    </ul>
+  ) : (
+    <div className="text-sm text-gray-500">아직 댓글이 없어요.</div>
+  )}
+  {/* ===== 댓글 삭제 확인 모달 ===== */}     
+<ConfirmModal
+  open={!!deleteTargetCommentId}
+  title="댓글 삭제"
+  message="댓글을 삭제하시겠습니까?"
+  onCancel={() => setDeleteTargetCommentId(null)}
+  onConfirm={() => {
+    onDeleteComment(deleteTargetCommentId);
+    setDeleteTargetCommentId(null);
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+  type={MODAL_TYPES.CONFIRM_CANCEL}
+/>
+</section>
+{/* ===== 게시글 삭제 모달 ===== */}
+<ConfirmModal
+  open={showDeletePostModal}
+  title="게시글 삭제"
+  message="정말로 삭제하시겠습니까?<br/>삭제 후 되돌릴 수 없습니다."
+  onCancel={() => setShowDeletePostModal(false)}
+  onConfirm={() => {
+    setShowDeletePostModal(false);
+    onDelete();
+  }}
+  confirmText="삭제"
+  cancelText="취소"
+  type={MODAL_TYPES.CONFIRM_CANCEL}
+/>
 
+{/* 댓글 입력칸 */}
+<div id="commentInput" className="mt-8 rounded-2xl border bg-white p-4 shadow-sm">
+  <div className="mb-3 text-sm font-medium text-gray-700">의견을 남겨보세요</div>
+  <div className="flex items-end gap-2">
+    <textarea
+      className={`min-h-[44px] w-full resize-none rounded-xl border px-4 py-3 text-[15px] outline-none 
+        ${commentInput.length > 1000 ? "border-red-500" : "focus:ring-2 focus:ring-gray-200"}`}
+      placeholder="댓글을 작성하여 게시글에 참여해보세요 !"
+      value={commentInput}
+      onChange={(e) => setCommentInput(e.target.value)}
+      maxLength={1001}
+    />
+    <div className="flex flex-col items-center gap-1">
+      <span
+        className={commentInput.length > 1000 ? "text-[12px] text-red-500" : "text-[12px] text-gray-400"}
+      >
+        {commentInput.length} / 1000
+      </span>
+      <button
+        onClick={onAddComment}
+        disabled={commentInput.trim().length === 0 || commentInput.length > 1000}
+        className={`h-10 shrink-0 rounded-xl px-4 text-sm font-medium whitespace-nowrap
+          ${
+            commentInput.trim().length === 0 || commentInput.length > 1000
+              ? "bg-gray-300 cursor-not-allowed text-white"
+              : "bg-[#85B3EB] cursor-pointer hover:brightness-95 text-white"
+          }`}
+      >
+        등록
+      </button>
+    </div>
+  </div>
+</div>
       {/* ===== 참여 마감 확인 모달 ===== */}
       {showCloseModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
@@ -636,11 +711,10 @@ export default function PostDetailPage() {
         </div>
       )}
 
-      {/* ===== 참여자 명단 모달 (크기 고정) ===== */}
+      {/* ===== 참여자 명단 모달 ===== */}
       {showListModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="w-[460px] h-[520px] max-w-[90vw] rounded-3xl bg-white p-6 shadow-xl flex flex-col">
-            {/* 헤더 */}
             <div className="mb-2 flex items-start justify-between">
               <div className="w-full text-center">
                 <div className="text-[18px] font-semibold leading-tight">공동 구매</div>
@@ -654,8 +728,6 @@ export default function PostDetailPage() {
                 ×
               </button>
             </div>
-
-            {/* 리스트 (스크롤) */}
             <ul className="mt-4 mb-6 space-y-3 overflow-y-auto">
               {normalized.map((p, idx) => {
                 const when = p.joinedAt ? formatDateTime(parseDateAny(p.joinedAt) || new Date()) : "";
@@ -671,8 +743,6 @@ export default function PostDetailPage() {
                 );
               })}
             </ul>
-
-            {/* 하단 버튼: 작성자 제외 & 내가 참여했을 때만 */}
             {!isOwner && joinedHere && (
               <div className="mt-auto flex justify-center">
                 <button
@@ -716,5 +786,6 @@ export default function PostDetailPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
