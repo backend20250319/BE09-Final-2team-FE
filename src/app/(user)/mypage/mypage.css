@@ -208,6 +208,58 @@
     flex-direction: column;
 }
 
+/* 자녀 정보 표시 */
+.children-display {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    height: 100%;           /* 부모 높이에 맞춤 */
+    justify-content: center; /* 세로 중앙 정렬 */
+    padding: 16px;          /* 내부 여백 */
+    box-sizing: border-box; /* 패딩 포함 계산 */
+}
+
+.child-info-card {
+    width: 100%;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.child-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px;
+}
+
+.child-emoji {
+    font-size: 20px;
+}
+
+.child-nickname {
+    font-weight: 600;
+    font-size: 18px;
+    color: #000000;
+}
+
+.child-birth-date {
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.child-current-age {
+    font-size: 16px;
+    font-weight: 600;
+    color: #6B9AFF;
+    align-items: center;
+    text-align: center;
+}
+
 /* Transaction Card */
 .transaction-card {
     background: #FFFFFF;
@@ -373,76 +425,4 @@
     text-align: center;
     color: #999;
     padding: 40px 0;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    .main-content {
-        flex-direction: column;
-        gap: 30px;
-    }
-
-    .sidebar {
-        width: 100%;
-        flex-direction: row;
-        justify-content: space-around;
-    }
-
-    .profile-section {
-        flex-direction: column;
-    }
-
-    .profile-card {
-        width: 100%;
-    }
-
-    .right-cards {
-        flex-direction: row;
-        gap: 0;
-    }
-}
-
-@media (max-width: 768px) {
-    .mypage-container {
-        padding: 0 10px;
-        width: 100%;
-    }
-
-    .main-content {
-        padding: 20px 0;
-    }
-
-    .tab-item {
-        padding: 10px 25px;
-        font-size: 14px;
-    }
-
-    .item-count {
-        font-size: 12px;
-    }
-
-    .profile-card,
-    .child-card,
-    .transaction-card {
-        padding: 20px 15px;
-    }
-
-    .card-title {
-        font-size: 14px;
-        top: -10px;
-        left: 15px;
-    }
-
-    .right-cards {
-        flex-direction: column;
-    }
-
-    .child-card {
-        border-radius: 12px 12px 0 0;
-        border-bottom: 1px solid #E9ECEF;
-    }
-
-    .transaction-card {
-        border-radius: 0 0 12px 12px;
-    }
 }
