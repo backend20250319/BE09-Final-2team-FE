@@ -11,15 +11,24 @@ const UserReviewDetail = ({ review, onClose }) => {
         }, 300);
     };
 
-    const [reviewData, setReviewData] = useState({
-        ...review,
-        reviewDetails: [
-            '상대가 친절했어요.',
-            '상대가 약속을 잘 지켰어요.',
-            '상품 상태가 좋아요.',
-        ],
-        reviewText: '아이도 좋아하고 상태도 매우 좋았습니다. 감사합니다!',
-    });
+    // 리뷰 상세 항목을 동적으로 생성하는 함수
+    const getReviewDetails = () => {
+        const details = [];
+        if (review.kind) {
+            details.push('상대가 친절했어요.');
+        }
+        if (review.promise) {
+            details.push('상대가 약속을 잘 지켰어요.');
+        }
+        if (review.satisfaction) {
+            details.push('상품 상태가 좋아요.');
+        }
+        return details;
+    };
+
+    // review prop에 모든 필요한 정보가 있으므로, reviewData 상태를 제거하고 직접 사용합니다.
+    const reviewDetailsItems = getReviewDetails();
+    const reviewTextContent = review.content || ''; // content가 없을 경우 빈 문자열로 처리
 
     return (
         <>
@@ -37,15 +46,15 @@ const UserReviewDetail = ({ review, onClose }) => {
                 <div className="review-detail-content">
                     <div className="product-summary">
                         <div className="product-image-container">
-                            <img src={reviewData.image} alt={reviewData.title} className="product-image" />
+                            <img src={review.img} alt={review.title} className="product-image" />
                         </div>
                         <div className="product-info">
-                            <h2 className="product-title">{reviewData.title}</h2>
-                            <p className="review-date">{reviewData.date}</p>
+                            <h2 className="product-title">상품명은 추후 추가</h2>
+                            <p className="review-date">{new Date(review.createdAt).toLocaleDateString()}</p>
                             <div className="star-rating">
                                 {[1, 2, 3, 4, 5].map((num) => {
-                                    const isFull = reviewData.rating >= num;
-                                    const isHalf = reviewData.rating >= num - 0.5 && reviewData.rating < num;
+                                    const isFull = review.rating >= num;
+                                    const isHalf = review.rating >= num - 0.5 && review.rating < num;
                                     return (
                                         <span key={num} className="star-wrapper">
                                             <span className="star-background">★</span>
@@ -58,12 +67,11 @@ const UserReviewDetail = ({ review, onClose }) => {
                                     );
                                 })}
                             </div>
-
                         </div>
                     </div>
 
                     <div className="review-details">
-                        {reviewData.reviewDetails.map((item, idx) => (
+                        {reviewDetailsItems.map((item, idx) => (
                             <div key={idx} className="review-detail-item">
                                 <span className="detail-text">{item}</span>
                             </div>
@@ -72,13 +80,14 @@ const UserReviewDetail = ({ review, onClose }) => {
 
                     <div className="review-text-container">
                         <div className="review-text-area">
-                            <p className="review-text">{reviewData.reviewText}</p>
-                            <div className="character-count">{reviewData.reviewText.length}/1000</div>
+                            {/* AI 요약이 아닌 원본 content를 표시합니다 */}
+                            <p className="review-text">{reviewTextContent}</p>
+                            {/* 글자 수도 동적으로 변경 */}
+                            <div className="character-count">{reviewTextContent.length}/1000</div>
                         </div>
                     </div>
                 </div>
             </aside>
-
         </>
     );
 };

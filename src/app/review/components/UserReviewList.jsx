@@ -1,20 +1,63 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../css/UserReviewList.css';
 import UserReviewDetail from './UserReviewDetail';
-
-const reviews = [
-    { title: '오리 뽁뽁이', date: '2000년 00월 00일', img: 'https://asset.m-gs.kr/prod/1079743862/1/550', rating: 5, comment: '좋아요' },
-    { title: '스케치북', date: '2000년 00월 00일', img: 'https://bmungu.co.kr/web/product/big/emungu1_4341.jpg', rating: 2, comment: '별로임' },
-    { title: '분양 끝났습니다~', date: '2000년 00월 00일', img: 'https://i.namu.wiki/i/oFOhcumUbZ58itrQIMmCTiRBm4OgD5AZDeOgCS6MJKLMAlK5gyZTfFcEFHH_rUNYKV648V4QvzBlzPQUh80Nug.webp', rating: 5, comment: '깔끔해요' },
-];
 
 const UserReviewList = ({ onClose, open }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [activeFilter, setActiveFilter] = useState('all');
     const [showReviewDetail, setShowReviewDetail] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
+    const [reviews, setReviews] = useState([]);
+    const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, positiveReviews: 0, negativeReviews: 0 });
+    const [positiveSummary, setPositiveSummary] = useState(''); // 긍정 종합 요약
+    const [negativeSummary, setNegativeSummary] = useState(''); // 부정 종합 요약
+
+    useEffect(() => {
+        if (open) {
+            const fetchData = async () => {
+                try {
+                    // 1. 모든 리뷰와 통계 데이터 가져오기 (기존)
+                    const reviewsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews');
+                    const statsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/stats');
+
+                    if (!reviewsResponse.ok || !statsResponse.ok) {
+                        throw new Error('Failed to fetch data');
+                    }
+
+                    const reviewsData = await reviewsResponse.json();
+                    const statsData = await statsResponse.json();
+
+                    setReviews(reviewsData.data);
+                    setStats(statsData.data);
+
+                    // 2. 새로운 API 호출: 종합 긍정 리뷰 요약 가져오기
+                    const positiveSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=positive');
+                    const positiveSummaryData = await positiveSummaryResponse.json();
+                    if (positiveSummaryData.success) {
+                        setPositiveSummary(positiveSummaryData.data);
+                    } else {
+                        setPositiveSummary('긍정 리뷰 요약을 가져오지 못했습니다.');
+                    }
+
+                    // 3. 새로운 API 호출: 종합 부정 리뷰 요약 가져오기
+                    const negativeSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=negative');
+                    const negativeSummaryData = await negativeSummaryResponse.json();
+                    if (negativeSummaryData.success) {
+                        setNegativeSummary(negativeSummaryData.data);
+                    } else {
+                        setNegativeSummary('부정 리뷰 요약을 가져오지 못했습니다.');
+                    }
+
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                }
+            };
+            fetchData();
+        }
+    }, [open]);
+
     const handleClose = () => {
         setIsClosing(true);
         setTimeout(() => {
@@ -26,26 +69,26 @@ const UserReviewList = ({ onClose, open }) => {
     const handleFilterClick = (filterType) => {
         setActiveFilter(filterType);
     };
-// 상세 리뷰 사이드바 열기
+
     const handleReviewDetailOpen = (review) => {
         setSelectedReview({ ...review, image: review.img });
         setShowReviewDetail(true);
     };
 
-    // 상세 리뷰 사이드바 닫기
     const handleReviewDetailClose = () => {
         setShowReviewDetail(false);
         setSelectedReview(null);
     };
+
     const filteredReviews = reviews.filter(review => {
         if (activeFilter === 'all') {
             return true;
         }
         if (activeFilter === 'positive') {
-            return review.rating >= 3;
+            return review.summary && review.summary.includes('긍정적');
         }
         if (activeFilter === 'negative') {
-            return review.rating < 3;
+            return review.summary && review.summary.includes('부정적');
         }
         return true;
     });
@@ -77,24 +120,39 @@ const UserReviewList = ({ onClose, open }) => {
                 </div>
 
                 <div className="average-rating-box">
-                    <p>"멋진맘"의 총 별점 평균과 총 리뷰 개수는</p>
-                    <div className="big-stars">★★★★★</div>
-                    <div className="rating-summary">5.0 / 120개</div>
-
                     <div className="positive-negative-reviews">
                         <div className="review-category-card">
-                            <p className="category-title positive">긍정적 리뷰 2개</p>
+                            <p className="category-title positive">긍정적 리뷰 {stats.positiveReviews}개</p>
                             <p className="category-content">
-                                고객들이 서비스 품질과 직원의 친절함에 대해 높이 평가하고 있습니다. 특히 빠른 배송과 제품의 품질에 대한 만족도가 높으며, 재구매 의사를 표현하는 고객들이 많습니다.
+                                {positiveSummary}
                             </p>
                         </div>
                         <div className="review-category-card">
-                            <p className="category-title negative">부정적 리뷰 1개</p>
+                            <p className="category-title negative">부정적 리뷰 {stats.negativeReviews}개</p>
                             <p className="category-content">
-                                일부 고객들이 배송 지연과 고객 서비스 응답 속도에 대해 아쉬움을 표현했습니다. 제품 포장 상태와 일부 품질 이슈에 대한 개선이 필요해 보입니다..
+                                {negativeSummary}
                             </p>
                         </div>
                     </div>
+                    <p>"멋진맘"의 총 별점 평균과 총 리뷰 개수는</p>
+                    <div className="big-stars">
+                        {[1, 2, 3, 4, 5].map((starIndex) => (
+                            <span key={starIndex} className="big-star-wrapper">
+                                <span className="big-star-background">★</span>
+                                {stats.averageRating >= starIndex ? (
+                                    <span className="big-star-foreground full">★</span>
+                                ) : (
+                                    stats.averageRating >= starIndex - 0.5 ? (
+                                        <span className="big-star-foreground half">★</span>
+                                    ) : null
+                                )}
+                            </span>
+                        ))}
+                    </div>
+                    <div className="rating-summary">
+                        {stats.averageRating.toFixed(1)} / {stats.totalReviews}개
+                    </div>
+
                 </div>
 
                 <div className="review-filters-container">
@@ -134,22 +192,36 @@ const UserReviewList = ({ onClose, open }) => {
                 </div>
 
                 <div className="review-list">
-                    {filteredReviews.map((review, index) => (
+                    {filteredReviews.map((review) => (
                         <div
                             className="review-card"
-                            key={index}
+                            key={review.reviewId}
                         >
                             <img src={review.img} alt={review.title} className="product-thumb" />
                             <div className="review-info">
-                                <h3 className="product-title">{review.title}</h3>
-                                <p className="review-date">{review.date}</p>
+                                <h3 className="product-title">상품명은 추후 추가</h3>
+                                <p className="review-date">
+                                    {new Date(review.createdAt).toLocaleDateString()}
+                                </p>
                                 <div className="review-stars">
-                                    {'★★★★★'.split('').map((_, i) => (
-                                        <span key={i} className={i < review.rating ? 'star active' : 'star'}>★</span>
+                                    {[1, 2, 3, 4, 5].map((starIndex) => (
+                                        <span
+                                            key={starIndex}
+                                            className="star-wrapper"
+                                        >
+                                            <span className="star-background">★</span>
+                                            {review.rating >= starIndex ? (
+                                                <span className="star-foreground full">★</span>
+                                            ) : (
+                                                review.rating >= starIndex - 0.5 ? (
+                                                    <span className="star-foreground half">★</span>
+                                                ) : null
+                                            )}
+                                        </span>
                                     ))}
                                 </div>
                                 <div className="comment-text-box">
-                                    <p className="review-comment">{review.comment}</p>
+                                    <p className="review-comment">{review.summary}</p>
                                 </div>
                             </div>
                             <button
