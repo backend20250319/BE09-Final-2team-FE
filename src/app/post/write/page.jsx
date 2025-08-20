@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import dynamic from "next/dynamic";
 import { savePost, formatDate, loadPosts } from "../lib/postStorage";
 import RegionDrawer from "../components/RegionDrawer";
+import ConfirmModal, { MODAL_TYPES } from "@/components/common/ConfirmModal";
+
 
 // 형제 폴더의 에디터
 const Editor = dynamic(() => import("../components/Editor"), { ssr: false });
@@ -43,6 +45,7 @@ export default function PostWritePage() {
   // 원본 포스트(수정 모드에서 참조)
   const originalRef = useRef(null);
   const originalPeopleRef = useRef(2); // 마감 시 변경 방지용 원본 인원 저장
+  const [showEditCompleteModal, setShowEditCompleteModal] = useState(false);
 
   const [category, setCategory] = useState(
     backTab === "groupbuy" ? "공동구매" : "육아 꿀팁"
@@ -253,8 +256,7 @@ export default function PostWritePage() {
       window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: updatedPost.id, action: "update" } }));
     } catch {}
 
-    alert("수정되었습니다!");
-    router.push(`/post?tab=${nextType}`);
+    setShowEditCompleteModal(true);
   };
 
   if (loading) {
@@ -407,6 +409,19 @@ export default function PostWritePage() {
         onSave={(picked) => setRegion(picked)}
         width={600}
       />
+
+        <ConfirmModal
+  open={showEditCompleteModal}
+  title="수정 완료"
+  message="게시글이 수정되었습니다."
+  onConfirm={() => {
+    setShowEditCompleteModal(false);
+    router.push(`/post?tab=${category === "공동구매" ? "groupbuy" : "tips"}`);
+  }}
+  type={MODAL_TYPES.CONFIRM_ONLY}
+  confirmText="확인"
+/>
     </div>
+    
   );
 }
