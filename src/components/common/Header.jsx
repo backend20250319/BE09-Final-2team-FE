@@ -1,5 +1,7 @@
 'use client';
 
+// 🔥 개별 상태 훅들 import
+import { useUser, useIsAuthenticated, useUserLoading, useLogout } from '@/store/userStore';
 import ChatListSidebar from '@/app/chat/components/ChatListSideBar';
 import { groupCategoryWithColumn } from '@/utils/groupCategoryData';
 import { Heart, Menu, MessageCircleMore, Search, ShoppingBag, User } from 'lucide-react';
@@ -14,17 +16,23 @@ import { mockCategoryData } from './data/haderCategoryData';
 
 export default function Header() {
     const [isCategoryOpen, setIsCategoryOpen] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(true); // 추후 실제 로그인 상태로 교체
     const [categoryColumns, setCategoryColumns] = useState({});
+
+    // 개별 훅 사용 (무한 루프 방지)
+    const user = useUser();
+    const isAuthenticated = useIsAuthenticated();
+    const loading = useUserLoading();
+    const logout = useLogout();
+
     const router = useRouter();
     const [keyword, setKeyword] = useState('');
     const [isComposing, setIsComposing] = useState(false);
+
 
     const handleSearch = () => {
         if (keyword.trim() && !isComposing) {
             router.push(`/product/search?keyword=${encodeURIComponent(keyword.trim())}`);
         }
-
         setKeyword('');
     };
 
@@ -42,14 +50,31 @@ export default function Header() {
         setIsComposing(false);
     };
 
-    const handleLogout = () => {
-        // 실제 로그아웃 로직 추가 필요
-        setIsLoggedIn(false);
-        alert('로그아웃 됨');
+    // 백엔드 연동 로그아웃 핸들러
+    const handleLogout = async () => {
+        if (loading) return; // 로딩 중이면 중복 실행 방지
+
+        try {
+            const result = await logout();
+            if (result.success) {
+                alert('로그아웃되었습니다.');
+                router.push('/'); // 메인으로 이동
+            } else {
+                alert('로그아웃 중 오류가 발생했습니다.');
+            }
+        } catch (error) {
+            console.error('로그아웃 에러:', error);
+            alert('로그아웃 중 오류가 발생했습니다.');
+        }
+    };
+
+    // 로그인 페이지로 이동
+    const handleLoginClick = () => {
+        router.push('/login');
     };
 
     useEffect(() => {
-        // mount 시 mock 데이터를 컬럼별 구조로 가공
+        // mount 시 mock 데이터를 컬럼별 구조로 가공 (기존 그대로)
         const grouped = groupCategoryWithColumn(mockCategoryData);
         setCategoryColumns(grouped);
     }, []);
@@ -239,24 +264,32 @@ export default function Header() {
                                     </Link>
                                 </li>
                                 <li className='px-3'>|</li>
-                                {isLoggedIn ? (
+
+                                {/* 인증 상태에 따른 조건부 렌더링 (백엔드 연동) */}
+                                {isAuthenticated ? (
                                     <li className='relative'>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
-                                                <button className='flex items-center gap-1 cursor-pointer'>
+                                                <button
+                                                    className='flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors'
+                                                    disabled={loading}
+                                                >
                                                     <User color='#000000' />
-                                                    <span className='text-sm'>마이</span>
+                                                    <span className='text-sm'>
+                                                        {loading ? '로딩...' : '마이'}
+                                                    </span>
                                                 </button>
                                             </DropdownMenuTrigger>
-                                            <DropdownMenuContent align='center' className='w-25'>
-                                                <DropdownMenuItem asChild className='text-xs w-full justify-center'>
+                                            <DropdownMenuContent align='center' className='w-32'>
+                                                <DropdownMenuItem asChild className='text-xs w-full justify-center cursor-pointer'>
                                                     <Link href='/mypage'>마이페이지</Link>
                                                 </DropdownMenuItem>
                                                 <DropdownMenuItem
                                                     onClick={handleLogout}
-                                                    className='text-xs w-full justify-center'
+                                                    className='text-xs w-full justify-center cursor-pointer text-red-600 hover:text-red-700'
+                                                    disabled={loading}
                                                 >
-                                                    로그아웃
+                                                    {loading ? '로그아웃 중...' : '로그아웃'}
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -264,11 +297,14 @@ export default function Header() {
                                 ) : (
                                     <li>
                                         <button
-                                            onClick={() => router.push('/login')}
-                                            className='flex items-center gap-1 cursor-pointer'
+                                            onClick={handleLoginClick}
+                                            className='flex items-center gap-1 cursor-pointer hover:text-blue-600 transition-colors'
+                                            disabled={loading}
                                         >
                                             <User color='#000000' />
-                                            <span className='text-sm'>마이</span>
+                                            <span className='text-sm'>
+                                                {loading ? '확인중...' : '마이'}
+                                            </span>
                                         </button>
                                     </li>
                                 )}
