@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import '../css/MyReviewDetail.css';
 import MyReviewEditForm from './MyReviewEditForm';
 
-export default function MyReviewDetail({ review, onClose, animateClass }) {
+export default function MyReviewDetail({ review, onClose, animateClass, onSave: onReviewUpdate }) {
     const [editOpen, setEditOpen] = useState(false);
     const [editAnimateClass, setEditAnimateClass] = useState('animate-slide-in');
     const [reviewData, setReviewData] = useState(review);
@@ -113,19 +113,22 @@ export default function MyReviewDetail({ review, onClose, animateClass }) {
                     }}
                     initialReviewText={reviewData.content}
                     onSave={(updated) => {
-                        setReviewData({
+                        const newReviewData = {
                             ...reviewData,
                             rating: updated.rating,
                             content: updated.reviewText,
                             kind: updated.answers.kind,
                             promise: updated.answers.promise,
                             satisfaction: updated.answers.satisfaction,
-                        });
-                        setReviewDetails(getReviewDetails({
-                            kind: updated.answers.kind,
-                            promise: updated.answers.promise,
-                            satisfaction: updated.answers.satisfaction,
-                        }));
+                        };
+
+                        setReviewData(newReviewData);
+                        setReviewDetails(getReviewDetails(newReviewData));
+
+                        // 부모 컴포넌트에 완전한 업데이트 객체를 전달합니다.
+                        onReviewUpdate(newReviewData);
+
+                        handleEditClose();
                     }}
                     reviewId={reviewData.reviewId}
                     animateClass={editAnimateClass}
