@@ -1,32 +1,28 @@
 "use client";
 
-import React, {useState, useEffect} from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './login.css';
-import { useUserStore } from '@/store/userStore';
+import { useIsAuthenticated, useTempLogin } from '@/store/userStore'; // 🔥 개별 훅 사용
 
 export default function Login() {
     const router = useRouter();
+    const isAuthenticated = useIsAuthenticated(); // 개별 훅 사용
+    const tempLogin = useTempLogin(); // 로그인 함수만
 
-    // Zustand store 에서 로그인 함수들 가져오기
-    const { tempLogin, tempKakaoLogin, checkAuthStatus } = useUserStore();
-
-    // 로그인 폼 상태
     const [userId, setUserId] = useState('');
     const [password, setPassword] = useState('');
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
-
-    // 로딩 및 에러 상태
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
 
-    // 이미 로그인된 경우 메인으로 리다이렉트
+    // 이미 로그인된 경우만 리다이렉트 (무한 루프 방지)
     useEffect(() => {
-        if (checkAuthStatus()) {
+        if (isAuthenticated) {
             router.push('/');
         }
-    }, [checkAuthStatus, router]);
+    }, [isAuthenticated]); // router는 Next.js에서 안정적이므로 생략 가능
 
     // 입력값에 따른 버튼 활성화/비활성화
     useEffect(() => {
@@ -37,16 +33,14 @@ export default function Login() {
         }
     }, [userId, password]);
 
-    // 아이디 입력 변경 핸들러
     const handleUserIdChange = (e) => {
         setUserId(e.target.value);
-        setErrorMessage(''); // 입력 시 에러 메시지 초기화
+        setErrorMessage('');
     };
 
-    // 비밀번호 입력 변경 핸들러
     const handlePasswordChange = (e) => {
         setPassword(e.target.value);
-        setErrorMessage(''); // 입력 시 에러 메시지 초기화
+        setErrorMessage('');
     };
 
     // 일반 로그인 제출 핸들러
@@ -62,14 +56,12 @@ export default function Login() {
         setErrorMessage('');
 
         try {
-            // 임시 로그인 API 호출
             const result = await tempLogin(userId, password);
 
             if (result.success) {
-                // 로그인 성공 - 메인 페이지로 이동
+                console.log('✅ 로그인 성공, 메인 페이지로 이동');
                 router.push('/');
             } else {
-                // 로그인 실패 - 에러 메시지 표시
                 setErrorMessage(result.message);
             }
         } catch (error) {
@@ -79,7 +71,7 @@ export default function Login() {
         }
     };
 
-    // 카카오 로그인 핸들러
+    // 카카오 로그인 핸들러 (임시)
     const handleKakaoLogin = async () => {
         setIsLoading(true);
         setErrorMessage('');
@@ -115,12 +107,10 @@ export default function Login() {
     return (
         <div className="login-root">
             <div className="login-card">
-                {/* 메인 로고 */}
                 <Link href="/">
                     <img src="/images/common/main-logo.png" alt="main visual" className="login-main-image" />
                 </Link>
 
-                {/* 로그인 폼 */}
                 <form className="login-form" onSubmit={handleSubmit}>
                     <input
                         className="login-input"
@@ -141,14 +131,12 @@ export default function Login() {
                         required
                     />
 
-                    {/* 에러 메시지 표시 */}
                     {errorMessage && (
                         <div className="error-message">
                             ❌ {errorMessage}
                         </div>
                     )}
 
-                    {/* 일반 로그인 버튼 */}
                     <button
                         className="login-btn"
                         type="submit"
@@ -157,7 +145,6 @@ export default function Login() {
                         {isLoading ? '로그인 중...' : '로그인'}
                     </button>
 
-                    {/* 카카오 로그인 버튼 */}
                     <div className="login-sns">
                         <button
                             className="sns-btn kakao"
@@ -165,12 +152,11 @@ export default function Login() {
                             onClick={handleKakaoLogin}
                             disabled={isLoading}
                         >
-                            {isLoading ? '카카오 로그인 중...' : '카카오 아이디로 로그인'}
+                            카카오 아이디로 로그인
                         </button>
                     </div>
                 </form>
 
-                {/* 회원가입 및 찾기 링크 */}
                 <div className="login-links">
                     <Link href="/signup" className="signup-link">계정이 없으신가요? 회원가입</Link>
                     <div className="find-links">
