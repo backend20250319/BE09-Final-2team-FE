@@ -108,10 +108,9 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                     });
                 }
             },
-            // **수정된 부분**: 모달의 '취소' 버튼 클릭 시 폼 닫기
             onCancel: () => {
-                setModalOpen(false); // 모달 닫기
-                handleClose();      // 폼 전체 닫기
+                setModalOpen(false);
+                handleClose();
             },
         });
     };

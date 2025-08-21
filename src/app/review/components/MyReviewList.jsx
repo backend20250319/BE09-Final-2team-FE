@@ -50,21 +50,37 @@ export default function MyReviewList({ open, onClose }) {
             setDetailAnimateClass("animate-slide-in");
         }, 300);
     };
-
+    const handleReviewUpdate = (updatedReview) => {
+        setReviews((prev) =>
+            prev.map((r) =>
+                r.reviewId === updatedReview.reviewId ? updatedReview : r
+            )
+        );
+        setSelectedReview(updatedReview);
+    };
+    // ✅ 수정된 부분: overlay 클릭 시 상세 리뷰는 유지, 수정 사이드바만 닫기
     const handleOverlayClick = () => {
+        // 수정 사이드바 열려있으면 → 그것만 닫기
+        const editSidebar = document.querySelector(".review-edit-sidebar");
+        if (editSidebar) {
+            editSidebar.classList.add("animate-slide-out");
+            setTimeout(() => {
+                const closeButton = editSidebar.querySelector(".back-button");
+                if (closeButton) closeButton.click(); // MyReviewEditForm 닫기 트리거
+            }, 300);
+            return;
+        }
         if (detailOpen) {
             handleReviewDetailClose();
-        } else {
-            handleClose();
+            return;
         }
+        handleClose();
     };
 
     return (
         <>
-            {/* 오버레이는 두 사이드바 공용 */}
             <div className="overlay-background" onClick={handleOverlayClick}></div>
 
-            {/* 리스트 사이드바 */}
             <div className={`review-sidebar ${animateClass}`}>
                 <div className="sidebar-header">
                     <button className="back-button" onClick={handleClose}>
@@ -100,14 +116,20 @@ export default function MyReviewList({ open, onClose }) {
                                     <h3 className="product-title">{review.title || "상품명은 추후 추가"}</h3>
                                     <p className="review-date">{new Date(review.createdAt).toLocaleDateString()}</p>
                                     <div className="review-stars">
-                                        {[...Array(5)].map((_, index) => (
-                                            <span
-                                                key={index}
-                                                className={`star ${index < review.rating ? "active" : ""}`}
-                                            >
-                                                ★
-                                            </span>
-                                        ))}
+                                        {[1, 2, 3, 4, 5].map((num) => {
+                                            const isFull = review.rating >= num;
+                                            const isHalf = review.rating >= num - 0.5 && review.rating < num;
+                                            return (
+                                                <span key={num} className="star-wrapper">
+                                                    <span className="star-background">★</span>
+                                                    {isFull ? (
+                                                        <span className="star-foreground full">★</span>
+                                                    ) : isHalf ? (
+                                                        <span className="star-foreground half">★</span>
+                                                    ) : null}
+                                               </span>
+                                            );
+                                        })}
                                     </div>
                                 </div>
                             </div>
@@ -118,11 +140,11 @@ export default function MyReviewList({ open, onClose }) {
                 </div>
             </div>
 
-            {/* 상세 사이드바 - 리스트 사이드바 밖에서 렌더링 */}
             {detailOpen && selectedReview && (
                 <MyReviewDetail
                     review={selectedReview}
                     onClose={handleReviewDetailClose}
+                    onSave={handleReviewUpdate }
                     animateClass={detailAnimateClass}
                 />
             )}

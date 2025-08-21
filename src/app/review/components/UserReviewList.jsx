@@ -20,7 +20,7 @@ const UserReviewList = ({ onClose, open }) => {
                 try {
                     // 1. 모든 리뷰와 통계 데이터 가져오기 (기존)
                     const reviewsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews');
-                    const statsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/stats');
+                    const statsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/status');
 
                     if (!reviewsResponse.ok || !statsResponse.ok) {
                         throw new Error('Failed to fetch data');
