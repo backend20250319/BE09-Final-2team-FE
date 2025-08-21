@@ -7,9 +7,12 @@ import './signup.css';
 import ContentModal from '@/app/(user)/signup/components/ContentModal';
 import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
+import { useSignup } from '@/store/userStore'; // 백엔드 연동된 signup 함수
+import { userAPI } from '@/lib/api'; // 백엔드 API 호출 함수
 
 export default function Signup() {
-    const router = useRouter(); // 라우터 추가
+    const router = useRouter();
+    const signup = useSignup(); // Zustand에서 백엔드 연동된 signup 함수
 
     // 폼 데이터 상태
     const [formData, setFormData] = useState({
@@ -54,6 +57,7 @@ export default function Signup() {
     // 기타 검증 상태
     const [passwordMatch, setPasswordMatch] = useState({ status: 'default', message: '' });
     const [isFormValid, setIsFormValid] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false); // 제출 중 상태 추가
 
     // 모달 열기/닫기 함수
     const openModal = (type) => {
@@ -66,6 +70,23 @@ export default function Signup() {
 
     // 입력값 변경 핸들러
     const handleInputChange = (field, value) => {
+        // 휴대폰번호 포맷팅 (기존 로직 유지)
+        if (field === 'phone') {
+            // 숫자만 추출 후 포맷팅
+            const numbers = value.replace(/[^\d]/g, '');
+            if (numbers.length <= 11) {
+                if (numbers.length <= 3) {
+                    value = numbers;
+                } else if (numbers.length <= 7) {
+                    value = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
+                } else {
+                    value = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+                }
+            } else {
+                return; // 11자리 초과 시 입력 방지
+            }
+        }
+
         setFormData(prev => ({
             ...prev,
             [field]: value
@@ -119,7 +140,6 @@ export default function Signup() {
                     message: '❌ 비밀번호는 8자 이상이어야 합니다'
                 });
             }
-
             else if (passwordConfirm && password !== passwordConfirm) {
                 setPasswordMatch({
                     status: 'error',
@@ -157,25 +177,18 @@ export default function Signup() {
         });
     };
 
-    // 중복 확인 API 호출 (임시)
+    // 백엔드 연동 - 중복 확인 API 호출
     const checkDuplicate = async (type, value) => {
-        // 임시 로직 - 실제로는 API 호출
-        return new Promise(resolve => {
-            setTimeout(() => {
-                // 임시로 특정 값들을 중복으로 처리
-                const duplicates = {
-                    loginId: ['admin', 'test', 'user'],
-                    email: ['test@test.com', 'admin@admin.com'],
-                    nickname: ['관리자', '테스트']
-                };
-
-                const isDuplicate = duplicates[type]?.includes(value);
-                resolve({
-                    available: !isDuplicate,
-                    message: isDuplicate ? '이미 사용 중입니다' : '사용 가능합니다'
-                });
-            }, 1000);
-        });
+        try {
+            const response = await userAPI.checkDuplicate(type, value);
+            return {
+                available: !response.data.data.isDuplicate, // API 응답 구조에 맞게 수정
+                message: response.data.data.message
+            };
+        } catch (error) {
+            console.error('중복 확인 API 에러:', error);
+            throw new Error('중복 확인 중 오류가 발생했습니다.');
+        }
     };
 
     // 중복 확인 핸들러
@@ -263,15 +276,18 @@ export default function Signup() {
     useEffect(() => {
         const requiredFields = ['name', 'loginId', 'password', 'passwordConfirm', 'email', 'phone', 'address'];
         const requiredAgreements = ['terms', 'privacy', 'age'];
-        const requiredChecks = ['loginId', 'email', 'nickname'];
+        const requiredChecks = ['loginId', 'email'];
 
         const isFieldsValid = requiredFields.every(field => formData[field].trim());
         const isAgreementsValid = requiredAgreements.every(field => agreements[field]);
         const isChecksValid = requiredChecks.every(field =>
             formData[field] === '' || validationStates[field].checked
         );
-        const isPasswordValid = passwordMatch.status === 'success' || passwordMatch.status === 'default';
-        const isNicknameValid = formData.nickname.trim() !== ''; // 별도 변수로 분리
+        const isPasswordValid = passwordMatch.status === 'success' ||
+            (formData.password.length >= 8 && formData.passwordConfirm === '');
+
+        // 닉네임은 선택사항이므로 빈 값이거나 검증된 경우 통과
+        const isNicknameValid = formData.nickname.trim() === '' || validationStates.nickname.checked;
 
         setIsFormValid(
             isFieldsValid &&
@@ -282,11 +298,44 @@ export default function Signup() {
         );
     }, [formData, agreements, validationStates, passwordMatch]);
 
-    // 폼 제출 핸들러
-    const handleSubmit = (e) => {
+    // 백엔드 연동 - 폼 제출 핸들러
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        if (isFormValid) {
-            router.push(`/signup/complete?nickname=${encodeURIComponent(formData.nickname)}`);
+
+        if (!isFormValid || isSubmitting) return;
+
+        setIsSubmitting(true);
+
+        try {
+            // 휴대폰번호에서 하이픈 제거
+            const cleanPhone = formData.phone.replace(/[^\d]/g, '');
+
+            const signupData = {
+                loginId: formData.loginId,
+                password: formData.password,
+                name: formData.name,
+                email: formData.email,
+                phone: cleanPhone,
+                nickname: formData.nickname || null, // 빈 값이면 null
+                address: formData.address,
+                agreements
+            };
+
+            console.log('🚀 회원가입 요청 데이터:', signupData);
+
+            const result = await signup(signupData);
+
+            if (result.success) {
+                console.log('✅ 회원가입 성공, 완료 페이지로 이동');
+                router.push(`/signup/complete?nickname=${encodeURIComponent(formData.nickname || formData.name)}`);
+            } else {
+                alert(result.message || '회원가입에 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('회원가입 에러:', error);
+            alert('회원가입 중 오류가 발생했습니다.');
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -317,6 +366,7 @@ export default function Signup() {
                             placeholder="이름을 입력하세요"
                             value={formData.name}
                             onChange={(e) => handleInputChange('name', e.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -329,12 +379,13 @@ export default function Signup() {
                                 placeholder="아이디를 입력하세요"
                                 value={formData.loginId}
                                 onChange={(e) => handleInputChange('loginId', e.target.value)}
+                                disabled={isSubmitting}
                             />
                             <button
                                 className="signup-check-btn"
                                 type="button"
                                 onClick={() => handleDuplicateCheck('loginId')}
-                                disabled={validationStates.loginId.status === 'loading'}
+                                disabled={validationStates.loginId.status === 'loading' || isSubmitting}
                             >
                                 중복 확인
                             </button>
@@ -352,6 +403,7 @@ export default function Signup() {
                             placeholder="비밀번호를 입력하세요(8자 이상)"
                             value={formData.password}
                             onChange={(e) => handleInputChange('password', e.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -363,6 +415,7 @@ export default function Signup() {
                             placeholder="비밀번호를 다시 입력하세요"
                             value={formData.passwordConfirm}
                             onChange={(e) => handleInputChange('passwordConfirm', e.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
                     {passwordMatch.message && (
@@ -380,12 +433,14 @@ export default function Signup() {
                                 placeholder="닉네임을 입력하세요 (선택, 2~10자)"
                                 value={formData.nickname}
                                 onChange={(e) => handleInputChange('nickname', e.target.value)}
+                                disabled={isSubmitting}
                             />
                             <button
                                 className="signup-check-btn"
                                 type="button"
                                 onClick={() => handleDuplicateCheck('nickname')}
-                                disabled={validationStates.nickname.status === 'loading'}
+                                disabled={validationStates.nickname.status === 'loading' ||
+                                    formData.nickname.trim() === '' || isSubmitting}
                             >
                                 중복 확인
                             </button>
@@ -404,12 +459,13 @@ export default function Signup() {
                                 placeholder="이메일을 입력하세요"
                                 value={formData.email}
                                 onChange={(e) => handleInputChange('email', e.target.value)}
+                                disabled={isSubmitting}
                             />
                             <button
                                 className="signup-check-btn"
                                 type="button"
                                 onClick={() => handleDuplicateCheck('email')}
-                                disabled={validationStates.email.status === 'loading'}
+                                disabled={validationStates.email.status === 'loading' || isSubmitting}
                             >
                                 중복 확인
                             </button>
@@ -427,6 +483,7 @@ export default function Signup() {
                             placeholder="휴대전화번호를 입력하세요"
                             value={formData.phone}
                             onChange={(e) => handleInputChange('phone', e.target.value)}
+                            disabled={isSubmitting}
                         />
                     </div>
 
@@ -444,6 +501,7 @@ export default function Signup() {
                                 className="signup-check-btn"
                                 type="button"
                                 onClick={handleAddressSearch}
+                                disabled={isSubmitting}
                             >
                                 주소 검색
                             </button>
@@ -457,6 +515,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={Object.values(agreements).every(Boolean)}
                                 onChange={(e) => handleAllAgreements(e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             전체동의
                         </label>
@@ -466,6 +525,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={agreements.terms}
                                 onChange={(e) => handleAgreementChange('terms', e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             (필수) 이용약관에 동의합니다
                             <span
@@ -481,6 +541,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={agreements.privacy}
                                 onChange={(e) => handleAgreementChange('privacy', e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             (필수) 개인정보 수집 및 이용에 동의합니다
                             <span
@@ -496,6 +557,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={agreements.age}
                                 onChange={(e) => handleAgreementChange('age', e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             (필수) 14세 이상입니다
                             <span
@@ -511,6 +573,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={agreements.location}
                                 onChange={(e) => handleAgreementChange('location', e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             (선택) 위치서비스 이용동의
                             <span
@@ -526,6 +589,7 @@ export default function Signup() {
                                 type="checkbox"
                                 checked={agreements.push}
                                 onChange={(e) => handleAgreementChange('push', e.target.checked)}
+                                disabled={isSubmitting}
                             />
                             (선택) 푸시 알림 이용동의
                             <span
@@ -540,9 +604,9 @@ export default function Signup() {
                     <button
                         className={`signup-btn ${isFormValid ? 'active' : ''}`}
                         type="submit"
-                        disabled={!isFormValid}
+                        disabled={!isFormValid || isSubmitting}
                     >
-                        회원가입
+                        {isSubmitting ? '회원가입 중...' : '회원가입'}
                     </button>
                 </form>
             </div>
