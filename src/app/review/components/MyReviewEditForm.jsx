@@ -3,14 +3,14 @@ import React, { useState } from 'react';
 import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 
-const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave }) => {
+const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave, reviewId }) => {
     const [rating, setRating] = useState(initialRating || 3);
     const [answers, setAnswers] = useState(initialAnswers || {
         kind: true,
         promise: true,
         satisfaction: true,
     });
-    const [reviewText, setReviewText] = useState(initialReviewText || '안녕하세요');
+    const [reviewText, setReviewText] = useState(initialReviewText || '');
 
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
     const [modalOpen, setModalOpen] = useState(false);
@@ -27,35 +27,66 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
         setAnswers(prev => ({ ...prev, [key]: value }));
     };
 
-    const handleSubmit = () => {
+    const handleClose = () => {
+        setAnimateClass('animate-slide-out');
+        setTimeout(() => {
+            onClose();
+        }, 300);
+    };
+
+    const showModal = (config) => {
+        setModalConfig(config);
+        setModalOpen(true);
+    };
+
+    const handleSubmit = async () => {
         if (reviewText.length < 20) {
-            setModalConfig({
+            showModal({
                 title: '알림',
                 message: '리뷰 내용을 20자 이상 입력해주세요.',
                 type: MODAL_TYPES.CONFIRM_ONLY,
                 confirmText: '확인',
                 onConfirm: () => setModalOpen(false),
             });
-            setModalOpen(true);
             return;
         }
-        setModalConfig({
+
+        showModal({
             title: '리뷰 수정',
             message: '리뷰를 수정하시겠습니까?',
             type: MODAL_TYPES.CONFIRM_CANCEL,
             confirmText: '수정',
             cancelText: '취소',
-            onConfirm: () => {
-                // 🔹 부모 state 갱신
-                onSave && onSave({
-                    rating,
-                    answers,
-                    reviewText
-                });
+            onConfirm: async () => {
+                const updatedReviewData = {
+                    rating: rating,
+                    content: reviewText,
+                    kind: answers.kind,
+                    promise: answers.promise,
+                    satisfaction: answers.satisfaction,
+                };
 
-                setModalOpen(false);
-                setTimeout(() => {
-                    setModalConfig({
+                try {
+                    const response = await fetch(`http://localhost:8000/api/v1/review-service/reviews/${reviewId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify(updatedReviewData),
+                    });
+
+                    if (!response.ok) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || '리뷰 수정에 실패했습니다.');
+                    }
+
+                    onSave && onSave({
+                        rating,
+                        answers,
+                        reviewText
+                    });
+
+                    showModal({
                         title: '수정 완료',
                         message: '리뷰가 성공적으로 수정되었습니다.',
                         type: MODAL_TYPES.CONFIRM_ONLY,
@@ -65,18 +96,23 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                             handleClose();
                         },
                     });
-                    setModalOpen(true);
-                }, 500);
+
+                } catch (error) {
+                    console.error("Error updating review:", error);
+                    showModal({
+                        title: '오류',
+                        message: `리뷰 수정 중 오류가 발생했습니다: ${error.message}`,
+                        type: MODAL_TYPES.CONFIRM_ONLY,
+                        confirmText: '확인',
+                        onConfirm: () => setModalOpen(false),
+                    });
+                }
+            },
+            onCancel: () => {
+                setModalOpen(false);
+                handleClose();
             },
         });
-        setModalOpen(true);
-    };
-
-    const handleClose = () => {
-        setAnimateClass('animate-slide-out');
-        setTimeout(() => {
-            onClose();
-        }, 300);
     };
 
     return (
@@ -170,10 +206,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                 confirmText={modalConfig.confirmText}
                 cancelText={modalConfig.cancelText}
                 onConfirm={modalConfig.onConfirm}
-                onCancel={() => {
-                    setModalOpen(false);
-                    handleClose();
-                }}
+                onCancel={modalConfig.onCancel}
             />
         </>
     );

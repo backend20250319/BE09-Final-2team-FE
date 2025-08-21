@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useState } from 'react';
@@ -28,9 +27,7 @@ const MyReviewAddForm = ({ onClose }) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
     };
 
-
-
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
         if (reviewText.length < 20) {
             setModalConfig({
                 title: '알림',
@@ -42,37 +39,69 @@ const MyReviewAddForm = ({ onClose }) => {
             setModalOpen(true);
             return;
         }
+
         setModalConfig({
             title: '리뷰 등록',
             message: '리뷰를 등록하시겠습니까?',
             type: MODAL_TYPES.CONFIRM_CANCEL,
             confirmText: '등록',
             cancelText: '취소',
-            onConfirm: () => {
+            onConfirm: async () => {
                 setModalOpen(false);
-                setTimeout(() => {
+
+                // Spring Boot로 직접 POST 요청
+                try {
+                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews',  {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            rating,
+                            kind: answers.kind,
+                            promise: answers.promise,
+                            satisfaction: answers.satisfaction,
+                            content: reviewText,
+                        }),
+                    });
+
+                    if (!response.ok) throw new Error('등록 실패');
+
+                    // 등록 성공 모달
+                    setTimeout(() => {
+                        setModalConfig({
+                            title: '등록 완료',
+                            message: '리뷰가 성공적으로 등록되었습니다.',
+                            type: MODAL_TYPES.CONFIRM_ONLY,
+                            confirmText: '확인',
+                            onConfirm: () => {
+                                setModalOpen(false);
+                                handleClose();
+                            },
+                        });
+                        setModalOpen(true);
+                    }, 500);
+                } catch (error) {
                     setModalConfig({
-                        title: '등록 완료',
-                        message: '리뷰가 성공적으로 등록되었습니다.',
+                        title: '오류',
+                        message: '리뷰 등록 중 오류가 발생했습니다.',
                         type: MODAL_TYPES.CONFIRM_ONLY,
                         confirmText: '확인',
-                        onConfirm: () => {
-                            setModalOpen(false);
-                            handleClose();
-                        },
+                        onConfirm: () => setModalOpen(false),
                     });
                     setModalOpen(true);
-                }, 500);
+                }
             },
         });
+
         setModalOpen(true);
     };
+
     const handleClose = () => {
         setAnimateClass('animate-slide-out');
         setTimeout(() => {
             onClose();
         }, 300);
     };
+
     const handleOutsideClick = (e) => {
         if (e.target.classList.contains('review-add-backdrop')) {
             handleClose();
@@ -165,8 +194,9 @@ const MyReviewAddForm = ({ onClose }) => {
                         </div>
 
                         <div className="submit-container">
-                            <button className="submit-button" onClick={handleSubmit}
-                                    disabled={rating === 0} >등록</button>
+                            <button className="submit-button" onClick={handleSubmit} disabled={rating === 0}>
+                                등록
+                            </button>
                         </div>
                     </div>
                 </aside>

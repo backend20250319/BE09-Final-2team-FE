@@ -9,7 +9,7 @@
     width: 599px;
     height: 100vh;
     background-color: #FFFFFF;
-    z-index: 104;
+    z-index: 50;
     overflow-y: auto;
 }
 
