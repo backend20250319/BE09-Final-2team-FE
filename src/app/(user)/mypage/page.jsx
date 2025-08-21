@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./mypage.css";
 import { useSidebar } from "@/hooks/useSidebar";
 import ProfileEdit from "@/app/(user)/profile-edit/page";
@@ -12,19 +12,57 @@ import WishlistSidebar from "@/components/common/WishlistSidebar";
 import WithdrawlSidebar from "../withdrawal/components/withdrawlSidebar";
 import MyReviewList from "@/app/review/components/MyReviewList";
 import UserReviewList from "@/app/review/components/UserReviewList";
+import { useUser, useIsAuthenticated, useUserLoading, useCheckAuthStatus } from '@/store/userStore'; // 🔥 개별 훅 사용
+import { useRouter } from 'next/navigation';
 
 const MyPage = () => {
+  const router = useRouter();
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
+  const loading = useUserLoading();
+  const checkAuthStatus = useCheckAuthStatus();
+
   const [activeTab, setActiveTab] = useState("");
   const [dashboardTab, setDashboardTab] = useState("purchase");
   const { open: openProfileEditSidebar } = useSidebar("profile-edit");
   const { open: openPasswordChangeSidebar } = useSidebar("password-change");
-  const { open: openLocationSidebar, isOpen: isLocationSidebarOpen } = useSidebar("location-management");
+  const { open: openLocationSidebar } = useSidebar("location-management");
   const { open: openChildManagementSidebar } = useSidebar("child-management");
-  const { open: openWishlistSidebar, isOpen: isWishlistSidebarOpen } = useSidebar("wishlist");
-  const { open: openWidthdrawalSidebar, isOpen: isWidthdrawalSidebarOpen } = useSidebar("withdrawal");
+  const { open: openWishlistSidebar } = useSidebar("wishlist");
+  const { open: openWidthdrawalSidebar } = useSidebar("withdrawal");
   const [reviewOpen, setReviewOpen] = useState(false);
   const [userReviewOpen, setUserReviewOpen] = useState(false);
 
+  // 마이페이지 진입 시 인증 확인 (로직 개선)
+  useEffect(() => {
+    // 이미 Zustand에 인증 상태가 있으면 추가 확인 생략
+    if (isAuthenticated && user) {
+      console.log('✅ 이미 인증된 상태 - API 호출 생략');
+      return;
+    }
+
+    const hasAccessToken = document.cookie.includes('accessToken=');
+
+    if (hasAccessToken) {
+      console.log('🔍 마이페이지 진입 - 인증 상태 확인');
+      checkAuthStatus().then((isAuth) => {
+        if (!isAuth) {
+          alert('로그인이 필요한 페이지입니다.');
+          router.push('/login');
+        }
+      }).catch((error) => {
+        console.error('인증 확인 에러:', error);
+        alert('로그인이 필요한 페이지입니다.');
+        router.push('/login');
+      });
+    } else {
+      console.log('🍪 쿠키 없음 - 로그인 페이지로 이동');
+      alert('로그인이 필요한 페이지입니다.');
+      router.push('/login');
+    }
+  }, []); // 빈 배열로 무한 루프 방지
+
+  // 더미 데이터들 그대로 유지
   const dummyChildren = [
     { id: 1, nickname: '첫째', birthDate: '2023-06-30', age: 2 },
     { id: 2, nickname: '둘째', birthDate: '2025-03-19', age: 0 }
@@ -54,6 +92,7 @@ const MyPage = () => {
       showReviewButton: true,
     },
   ];
+
   const dummySales = [
     {
       id: 1,
@@ -88,7 +127,7 @@ const MyPage = () => {
           <h3 className="card-title">프로필 정보</h3>
           <div className="profile-content">
             <div className="profile-avatar"></div>
-            <h2 className="profile-name">멋진맘</h2>
+            <h2 className="profile-name">{user.nickname || user.name}</h2>
             <div className="rating">
               <span className="stars">⭐⭐⭐⭐⭐</span>
               <span className="rating-score">(4.8)</span>
@@ -292,7 +331,7 @@ const MyPage = () => {
           </div>
 
           {/* 오른쪽 컨텐츠 */}
-          <div className="content-area">{renderTabContent()}</div>
+          <div className="content-area">{renderDashboard()}</div>
         </div>
 
         {/* 사이드바들 */}

@@ -1,143 +1,111 @@
-// 중복 확인 및 검증 유틸리티
+import { useUserStore } from '@/store/userStore';
 
-/**
- * 중복 확인 API 호출 (임시)
- * @param {string} type - 확인할 필드 타입 (loginId, email, nickname)
- * @param {string} value - 확인할 값
- * @returns {Promise<Object>} 중복 확인 결과 { available, message }
- */
-export const checkDuplicate = async (type, value) => {
-    return new Promise(resolve => {
-        setTimeout(() => {
-            const duplicates = {
-                loginId: ['admin', 'test', 'user'],
-                email: ['test@test.com', 'admin@admin.com'],
-                nickname: ['관리자', '테스트', 'admin']
-            };
-
-            const isDuplicate = duplicates[type]?.includes(value);
-            resolve({
-                available: !isDuplicate,
-                message: isDuplicate ? '이미 사용 중입니다' : '사용 가능합니다'
-            });
-        }, 1000);
-    });
+// 검증 상태 설정 함수 생성
+export const createValidationSetter = (setValidationStates) => (field, status, message) => {
+    setValidationStates(prev => ({
+        ...prev,
+        [field]: { status, message, checked: status === 'success' }
+    }));
 };
 
-/**
- * 필드명 매핑 함수
- * @param {string} type - 필드 타입
- * @returns {string} 한글 필드명
- */
-export const getFieldName = (type) => {
-    const names = {
-        loginId: '아이디',
-        email: '이메일',
-        nickname: '닉네임'
-    };
-    return names[type] || type;
-};
+// 백엔드 API와 연동된 중복 확인 핸들러
+export const createDuplicateCheckHandler = (formData, setValidationMessage) => {
+    const { checkDuplicate } = useUserStore.getState();
 
-/**
- * 기본 검증 에러 메시지 반환
- * @param {string} type - 필드 타입
- * @returns {string} 에러 메시지
- */
-export const getValidationErrorMessage = (type) => {
-    const messages = {
-        loginId: '❌ 아이디를 입력해주세요',
-        email: '❌ 이메일을 입력해주세요',
-        nickname: '✅ 아이디가 닉네임이 됩니다'
-    };
-    return messages[type] || '❌ 입력값을 확인해주세요';
-};
+    return async (field) => {
+        const value = formData[field];
 
-/**
- * 검증 상태 설정 헬퍼 함수 팩토리
- * @param {Function} setValidationStates - 상태 설정 함수
- * @returns {Function} 검증 메시지 설정 함수
- */
-export const createValidationSetter = (setValidationStates) => {
-    return (field, status, message, checked = false) => {
-        setValidationStates(prev => ({
-            ...prev,
-            [field]: { status, message, checked }
-        }));
-    };
-};
-
-/**
- * 중복 확인 핸들러 생성 함수
- * @param {Object} formData - 폼 데이터
- * @param {Function} setValidationMessage - 검증 메시지 설정 함수
- * @param {Object} options - 추가 옵션
- * @returns {Function} 중복 확인 핸들러
- */
-export const createDuplicateCheckHandler = (formData, setValidationMessage, options = {}) => {
-    const {
-        nicknameEmptyMessage = '✅ 아이디가 닉네임이 됩니다',
-        nicknameMinLength = 2,
-        nicknameMaxLength = 10
-    } = options;
-
-    return async (type) => {
-        const value = formData[type];
-
-        // 빈 값 체크
-        if (!value.trim()) {
-            if (type === 'nickname') {
-                setValidationMessage(type, 'success', nicknameEmptyMessage, true);
-                return;
-            }
-            setValidationMessage(type, 'error', getValidationErrorMessage(type));
+        if (!value || value.trim() === '') {
+            setValidationMessage(field, 'error', '❌ 값을 입력해주세요');
             return;
         }
 
-        // 닉네임 길이 체크
-        if (type === 'nickname' && (value.length < nicknameMinLength || value.length > nicknameMaxLength)) {
-            return;
-        }
-
-        // 로딩 상태
-        setValidationMessage(type, 'loading', '🔄 확인 중...');
+        // 로딩 상태 표시
+        setValidationMessage(field, 'loading', '⏳ 확인 중...');
 
         try {
-            const result = await checkDuplicate(type, value);
-            const message = result.available
-                ? `✅ 사용 가능한 ${getFieldName(type)}입니다`
-                : `❌ ${result.message}`;
-            const status = result.available ? 'success' : 'error';
-            setValidationMessage(type, status, message, result.available);
+            // 백엔드 API 호출
+            const result = await checkDuplicate(field, value.trim());
+
+            if (result.success) {
+                if (result.isDuplicate) {
+                    setValidationMessage(field, 'error', `❌ ${result.message}`);
+                } else {
+                    setValidationMessage(field, 'success', `✅ ${result.message}`);
+                }
+            } else {
+                setValidationMessage(field, 'error', `❌ ${result.message}`);
+            }
         } catch (error) {
-            setValidationMessage(type, 'error', '❌ 확인 중 오류가 발생했습니다');
+            console.error(`${field} 중복 확인 에러:`, error);
+            setValidationMessage(field, 'error', '❌ 중복 확인 중 오류가 발생했습니다');
         }
     };
 };
 
-/**
- * 닉네임 특별 검증 로직
- * @param {string} value - 닉네임 값
- * @param {Function} setValidationMessage - 검증 메시지 설정 함수
- * @param {Object} options - 설정 옵션
- * @returns {boolean} 계속 진행할지 여부
- */
-export const handleNicknameValidation = (value, setValidationMessage, options = {}) => {
-    const {
-        emptyMessage = '✅ 아이디가 닉네임이 됩니다',
-        minLength = 2,
-        maxLength = 10
-    } = options;
-
-    if (value.trim() === '') {
-        setValidationMessage('nickname', 'success', emptyMessage, true);
-        return false; // 더 이상 진행하지 않음
+// 닉네임 자동 검증 (빈 값일 때 아이디를 닉네임으로 사용)
+export const handleNicknameValidation = (nickname, setValidationMessage) => {
+    if (nickname.trim() === '') {
+        setValidationMessage('nickname', 'success', '✅ 아이디가 닉네임이 됩니다');
+        return false; // 중복 확인 API 호출하지 않음
     }
+    return true; // 중복 확인 API 호출 진행
+};
 
-    if (value.length < minLength || value.length > maxLength) {
-        const message = `❌ 닉네임은 ${value.length < minLength ? `${minLength}글자 이상` : `${maxLength}글자 이하`}이어야 합니다`;
-        setValidationMessage('nickname', 'error', message);
-        return false; // 더 이상 진행하지 않음
-    }
+// 실시간 입력 검증 (타이핑 시)
+export const createRealTimeValidator = (setValidationMessage) => {
+    return {
+        // 로그인 ID 실시간 검증
+        validateLoginId: (value) => {
+            if (!value || value.trim() === '') {
+                setValidationMessage('loginId', 'default', '💡 중복 확인을 눌러주세요');
+                return;
+            }
 
-    return true; // 계속 진행
+            // 기본적인 형식 검증
+            if (value.length < 4) {
+                setValidationMessage('loginId', 'error', '❌ 로그인 ID는 4자 이상이어야 합니다');
+                return;
+            }
+
+            if (!/^[a-zA-Z0-9@._-]+$/.test(value)) {
+                setValidationMessage('loginId', 'error', '❌ 영문, 숫자, @, ., _, - 만 사용 가능합니다');
+                return;
+            }
+
+            setValidationMessage('loginId', 'default', '💡 중복 확인을 눌러주세요');
+        },
+
+        // 이메일 실시간 검증
+        validateEmail: (value) => {
+            if (!value || value.trim() === '') {
+                setValidationMessage('email', 'default', '💡 중복 확인을 눌러주세요');
+                return;
+            }
+
+            // 이메일 형식 검증
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(value)) {
+                setValidationMessage('email', 'error', '❌ 올바른 이메일 형식이 아닙니다');
+                return;
+            }
+
+            setValidationMessage('email', 'default', '💡 중복 확인을 눌러주세요');
+        },
+
+        // 닉네임 실시간 검증
+        validateNickname: (value) => {
+            if (!value || value.trim() === '') {
+                setValidationMessage('nickname', 'success', '✅ 아이디가 닉네임이 됩니다');
+                return;
+            }
+
+            if (value.length > 15) {
+                setValidationMessage('nickname', 'error', '❌ 닉네임은 15자 이하로 입력해주세요');
+                return;
+            }
+
+            setValidationMessage('nickname', 'default', '💡 중복 확인을 눌러주세요');
+        }
+    };
 };
