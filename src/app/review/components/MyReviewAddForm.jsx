@@ -21,7 +21,9 @@ const MyReviewAddForm = ({ onClose }) => {
         confirmText: '확인',
         cancelText: '취소',
         onConfirm: () => {},
+        onCancel: () => {}, // onCancel 추가
     });
+    const [isLoading, setIsLoading] = useState(false);
 
     const toggleAnswer = (key, value) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
@@ -40,6 +42,18 @@ const MyReviewAddForm = ({ onClose }) => {
             return;
         }
 
+        if (reviewText.length > 1000) {
+            setModalConfig({
+                title: '알림',
+                message: '리뷰 내용은 1000자를 초과할 수 없습니다.',
+                type: MODAL_TYPES.CONFIRM_ONLY,
+                confirmText: '확인',
+                onConfirm: () => setModalOpen(false),
+            });
+            setModalOpen(true);
+            return;
+        }
+
         setModalConfig({
             title: '리뷰 등록',
             message: '리뷰를 등록하시겠습니까?',
@@ -48,10 +62,10 @@ const MyReviewAddForm = ({ onClose }) => {
             cancelText: '취소',
             onConfirm: async () => {
                 setModalOpen(false);
+                setIsLoading(true);
 
-                // Spring Boot로 직접 POST 요청
                 try {
-                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews',  {
+                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -65,20 +79,18 @@ const MyReviewAddForm = ({ onClose }) => {
 
                     if (!response.ok) throw new Error('등록 실패');
 
-                    // 등록 성공 모달
-                    setTimeout(() => {
-                        setModalConfig({
-                            title: '등록 완료',
-                            message: '리뷰가 성공적으로 등록되었습니다.',
-                            type: MODAL_TYPES.CONFIRM_ONLY,
-                            confirmText: '확인',
-                            onConfirm: () => {
-                                setModalOpen(false);
-                                handleClose();
-                            },
-                        });
-                        setModalOpen(true);
-                    }, 500);
+                    setModalConfig({
+                        title: '등록 완료',
+                        message: '리뷰가 성공적으로 등록되었습니다.',
+                        type: MODAL_TYPES.CONFIRM_ONLY,
+                        confirmText: '확인',
+                        onConfirm: () => {
+                            setModalOpen(false);
+                            handleClose();
+                        },
+                        onCancel: null, // 취소 버튼 없음
+                    });
+                    setModalOpen(true);
                 } catch (error) {
                     setModalConfig({
                         title: '오류',
@@ -86,9 +98,28 @@ const MyReviewAddForm = ({ onClose }) => {
                         type: MODAL_TYPES.CONFIRM_ONLY,
                         confirmText: '확인',
                         onConfirm: () => setModalOpen(false),
+                        onCancel: null, // 취소 버튼 없음
                     });
                     setModalOpen(true);
+                } finally {
+                    setIsLoading(false);
                 }
+            },
+            onCancel: () => {
+                setModalOpen(false);
+                setTimeout(() => {
+                    setModalConfig({
+                        title: '리뷰 등록',
+                        message: '리뷰 등록을 취소했습니다.',
+                        type: MODAL_TYPES.CONFIRM_ONLY,
+                        confirmText: '확인',
+                        onConfirm: () => {
+                            setModalOpen(false);
+                            handleClose();
+                        },
+                    });
+                    setModalOpen(true);
+                }, 500);
             },
         });
 
@@ -103,8 +134,15 @@ const MyReviewAddForm = ({ onClose }) => {
     };
 
     const handleOutsideClick = (e) => {
-        if (e.target.classList.contains('review-add-backdrop')) {
-            handleClose();
+        // 로딩 중이 아닐 때만
+        if (!isLoading && e.target.classList.contains('review-add-backdrop')) {
+            // modalConfig에 onCancel 함수가 있을 경우에만 onCancel 실행
+            if (modalOpen && modalConfig.onCancel) {
+                modalConfig.onCancel();
+            } else if (!modalOpen) {
+                // 모달이 열려 있지 않을 때만 폼 닫기
+                handleClose();
+            }
         }
     };
 
@@ -187,7 +225,6 @@ const MyReviewAddForm = ({ onClose }) => {
                                     value={reviewText}
                                     onChange={(e) => setReviewText(e.target.value)}
                                     minLength={20}
-                                    maxLength={1000}
                                 />
                                 <div className="character-count">{reviewText.length}/1000</div>
                             </div>
@@ -201,31 +238,25 @@ const MyReviewAddForm = ({ onClose }) => {
                     </div>
                 </aside>
             </div>
-
+            {isLoading && (
+                <ConfirmModal
+                    open={isLoading}
+                    title="등록 중"
+                    message="리뷰를 등록하는 중입니다..."
+                    type={MODAL_TYPES.CONFIRM_ONLY}
+                    confirmText="확인"
+                    onConfirm={() => {}}
+                />
+            )}
             <ConfirmModal
-                open={modalOpen}
+                open={modalOpen && !isLoading}
                 title={modalConfig.title}
                 message={modalConfig.message}
                 type={modalConfig.type}
                 confirmText={modalConfig.confirmText}
                 cancelText={modalConfig.cancelText}
                 onConfirm={modalConfig.onConfirm}
-                onCancel={() => {
-                    setModalOpen(false);
-                    setTimeout(() => {
-                        setModalConfig({
-                            title: '리뷰 등록',
-                            message: '리뷰 등록을 취소했습니다.',
-                            type: MODAL_TYPES.CONFIRM_ONLY,
-                            confirmText: '확인',
-                            onConfirm: () => {
-                                setModalOpen(false);
-                                handleClose();
-                            },
-                        });
-                        setModalOpen(true);
-                    }, 500);
-                }}
+                onCancel={modalConfig.onCancel}
             />
         </>
     );

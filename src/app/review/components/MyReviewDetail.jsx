@@ -128,7 +128,7 @@ export default function MyReviewDetail({ review, onClose, animateClass, onSave: 
                         // 부모 컴포넌트에 완전한 업데이트 객체를 전달합니다.
                         onReviewUpdate(newReviewData);
 
-                        handleEditClose();
+                        // handleEditClose();
                     }}
                     reviewId={reviewData.reviewId}
                     animateClass={editAnimateClass}

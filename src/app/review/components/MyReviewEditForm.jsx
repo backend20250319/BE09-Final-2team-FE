@@ -1,4 +1,5 @@
 'use client';
+
 import React, { useState } from 'react';
 import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
@@ -14,6 +15,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
 
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
     const [modalOpen, setModalOpen] = useState(false);
+    const [isLoading, setIsLoading] = useState(false); // 로딩 상태 추가
     const [modalConfig, setModalConfig] = useState({
         title: '',
         message: '',
@@ -21,6 +23,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
         confirmText: '확인',
         cancelText: '취소',
         onConfirm: () => {},
+        onCancel: () => {},
     });
 
     const toggleAnswer = (key, value) => {
@@ -51,6 +54,17 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
             return;
         }
 
+        if (reviewText.length > 1000) {
+            showModal({
+                title: '알림',
+                message: '리뷰 내용은 1000자를 초과할 수 없습니다.',
+                type: MODAL_TYPES.CONFIRM_ONLY,
+                confirmText: '확인',
+                onConfirm: () => setModalOpen(false),
+            });
+            return;
+        }
+
         showModal({
             title: '리뷰 수정',
             message: '리뷰를 수정하시겠습니까?',
@@ -58,6 +72,18 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
             confirmText: '수정',
             cancelText: '취소',
             onConfirm: async () => {
+                // 모달을 닫는 대신, 로딩 상태로 즉시 변경
+                setModalConfig({
+                    title: '수정 중',
+                    message: '리뷰를 수정하는 중입니다...',
+                    type: MODAL_TYPES.CONFIRM_ONLY,
+                    confirmText: '확인',
+                    onConfirm: () => {}, // 로딩 중에는 확인 버튼 동작 없음
+                    onCancel: null,
+                });
+
+                setIsLoading(true);
+
                 const updatedReviewData = {
                     rating: rating,
                     content: reviewText,
@@ -86,26 +112,32 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                         reviewText
                     });
 
-                    showModal({
+                    // 성공 시 완료 모달로 내용 변경
+                    setModalConfig({
                         title: '수정 완료',
                         message: '리뷰가 성공적으로 수정되었습니다.',
                         type: MODAL_TYPES.CONFIRM_ONLY,
                         confirmText: '확인',
                         onConfirm: () => {
-                            setModalOpen(false);
-                            handleClose();
+                            setModalOpen(false); // 최종 모달 닫기
+                            handleClose(); // 사이드바 애니메이션 시작
                         },
+                        onCancel: null,
                     });
 
                 } catch (error) {
                     console.error("Error updating review:", error);
-                    showModal({
+                    // 실패 시 오류 모달로 내용 변경
+                    setModalConfig({
                         title: '오류',
                         message: `리뷰 수정 중 오류가 발생했습니다: ${error.message}`,
                         type: MODAL_TYPES.CONFIRM_ONLY,
                         confirmText: '확인',
                         onConfirm: () => setModalOpen(false),
+                        onCancel: null,
                     });
+                } finally {
+                    setIsLoading(false);
                 }
             },
             onCancel: () => {
@@ -115,11 +147,24 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
         });
     };
 
+    const handleOutsideClick = (e) => {
+        if (modalOpen || isLoading) {
+            return;
+        }
+        if (e.target.classList.contains('review-edit-backdrop')) {
+            handleClose();
+        }
+    };
+
     return (
-        <>
+        <div className="review-edit-backdrop" onClick={handleOutsideClick}>
             <aside className={`review-edit-sidebar ${animateClass}`}>
                 <div className="sidebar-header">
-                    <button className="back-button" onClick={handleClose}>
+                    <button
+                        className="back-button"
+                        onClick={handleClose}
+                        disabled={modalOpen || isLoading}
+                    >
                         <svg width="24" height="24" viewBox="0 0 24 24"
                              fill="none" stroke="black" strokeWidth="2"
                              strokeLinecap="round" strokeLinejoin="round">
@@ -186,7 +231,6 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                                 value={reviewText}
                                 onChange={(e) => setReviewText(e.target.value)}
                                 minLength={20}
-                                maxLength={1000}
                             />
                             <div className="character-count">{reviewText.length}/1000</div>
                         </div>
@@ -198,17 +242,20 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                 </div>
             </aside>
 
-            <ConfirmModal
-                open={modalOpen}
-                title={modalConfig.title}
-                message={modalConfig.message}
-                type={modalConfig.type}
-                confirmText={modalConfig.confirmText}
-                cancelText={modalConfig.cancelText}
-                onConfirm={modalConfig.onConfirm}
-                onCancel={modalConfig.onCancel}
-            />
-        </>
+            {/* 로딩 모달과 최종 모달을 하나의 ConfirmModal 컴포넌트로 관리 */}
+            {modalOpen && (
+                <ConfirmModal
+                    open={modalOpen}
+                    title={modalConfig.title}
+                    message={modalConfig.message}
+                    type={modalConfig.type}
+                    confirmText={modalConfig.confirmText}
+                    cancelText={modalConfig.cancelText}
+                    onConfirm={modalConfig.onConfirm}
+                    onCancel={modalConfig.onCancel}
+                />
+            )}
+        </div>
     );
 };
 
