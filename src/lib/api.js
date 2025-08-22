@@ -1,16 +1,16 @@
 import axios from "axios";
 
-// axios 기본 설정 (기존 코드 + 백엔드 연동을 위한 최소 수정)
+// axios 기본 설정 (하이브리드 방식: 쿠키 + 토큰)
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1", // Gateway 주소로 변경
+    baseURL: "http://localhost:8000/api/v1",
     timeout: 10000,
     headers: {
         "Content-Type": "application/json",
     },
-    withCredentials: true, // HttpOnly 쿠키 지원 추가
+    withCredentials: true, // 쿠키 지원 (User Service용)
 });
 
-// 요청 인터셉터 (토큰 추가 등)
+// 요청 인터셉터 - 토큰 방식 유지
 api.interceptors.request.use(
     (config) => {
         const token = localStorage.getItem("token");
@@ -24,7 +24,7 @@ api.interceptors.request.use(
     }
 );
 
-// 응답 인터셉터 (에러 처리 등)
+// 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
     (response) => {
         return response;
@@ -35,7 +35,7 @@ api.interceptors.response.use(
     }
 );
 
-// User Service API 함수들만 추가
+// User Service API 함수들
 export const userAPI = {
     // 인증 관련
     signup: (data) => api.post('/user-service/auth/signup', data),
