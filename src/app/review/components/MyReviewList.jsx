@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import '../css/MyReviewList.css';
 import MyReviewDetail from './MyReviewDetail';
 
-export default function MyReviewList({ open, onClose }) {
+export default function MyReviewList({ open, onClose, user }) {
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
     const [animateClass, setAnimateClass] = useState("animate-slide-in");
@@ -18,6 +18,7 @@ export default function MyReviewList({ open, onClose }) {
                     const response = await fetch('http://localhost:8000/api/v1/review-service/reviews');
                     if (!response.ok) throw new Error('Failed to fetch reviews');
                     const data = await response.json();
+                    console.log('리뷰 데이터 구조:', data.data); // 데이터 구조 확인
                     setReviews(data.data);
                 } catch (error) {
                     console.error("Error fetching reviews:", error);
@@ -146,6 +147,7 @@ export default function MyReviewList({ open, onClose }) {
                     onClose={handleReviewDetailClose}
                     onSave={handleReviewUpdate }
                     animateClass={detailAnimateClass}
+                    user={user}
                 />
             )}
         </>

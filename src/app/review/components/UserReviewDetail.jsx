@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+'use client';
+
+import React, { useState, useEffect } from 'react';
 import '../css/UserReviewDetail.css';
 
-const UserReviewDetail = ({ review, onClose }) => {
+const UserReviewDetail = ({ review, onClose, user }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
 
     const handleClose = () => {
@@ -14,19 +16,18 @@ const UserReviewDetail = ({ review, onClose }) => {
     // 리뷰 상세 항목을 동적으로 생성하는 함수
     const getReviewDetails = () => {
         const details = [];
-        if (review.kind) {
-            details.push('상대가 친절했어요.');
+        if (review.kind !== undefined && review.kind !== null) {
+            details.push(review.kind ? '상대가 친절했어요.' : '상대가 친절하지 않았어요.');
         }
-        if (review.promise) {
-            details.push('상대가 약속을 잘 지켰어요.');
+        if (review.promise !== undefined && review.promise !== null) {
+            details.push(review.promise ? '상대가 약속을 잘 지켰어요.' : '상대가 약속을 지키지 않았어요.');
         }
-        if (review.satisfaction) {
-            details.push('상품 상태가 좋아요.');
+        if (review.satisfaction !== undefined && review.satisfaction !== null) {
+            details.push(review.satisfaction ? '상품 상태가 좋아요.' : '상품 상태가 좋지 않아요.');
         }
         return details;
     };
 
-    // review prop에 모든 필요한 정보가 있으므로, reviewData 상태를 제거하고 직접 사용합니다.
     const reviewDetailsItems = getReviewDetails();
     const reviewTextContent = review.content || ''; // content가 없을 경우 빈 문자열로 처리
 
@@ -40,7 +41,7 @@ const UserReviewDetail = ({ review, onClose }) => {
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h1 className="sidebar-title">00의 상세 리뷰 내역</h1>
+                    <h1 className="sidebar-title">"{user?.name || '사용자'}"의 상세 리뷰 내역</h1>
                 </div>
 
                 <div className="review-detail-content">
@@ -80,9 +81,7 @@ const UserReviewDetail = ({ review, onClose }) => {
 
                     <div className="review-text-container">
                         <div className="review-text-area">
-                            {/* AI 요약이 아닌 원본 content를 표시합니다 */}
                             <p className="review-text">{reviewTextContent}</p>
-                            {/* 글자 수도 동적으로 변경 */}
                             <div className="character-count">{reviewTextContent.length}/1000</div>
                         </div>
                     </div>

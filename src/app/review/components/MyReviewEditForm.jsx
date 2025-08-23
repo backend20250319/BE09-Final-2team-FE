@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 
-const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave, reviewId }) => {
+const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave, reviewId, user, review }) => {
     const [rating, setRating] = useState(initialRating || 3);
     const [answers, setAnswers] = useState(initialAnswers || {
         kind: true,
@@ -26,6 +26,33 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
         onCancel: () => {},
     });
 
+    // 상대방의 이름을 추출하는 함수
+    const getTargetUserName = () => {
+        if (!review) return '상대방';
+
+        console.log('리뷰 데이터:', review); // 리뷰 데이터 확인
+        console.log('현재 유저:', user); // 현재 유저 정보 확인
+
+        // 리뷰 데이터에서 상대방 정보 추출
+        // 일반적으로 리뷰에는 sellerId, buyerId, targetUserId 등의 필드가 있음
+        // 현재 로그인한 유저와 다른 ID를 가진 유저가 상대방
+
+        if (review.sellerName && review.sellerName !== user?.name) {
+            return review.sellerName;
+        }
+
+        if (review.buyerName && review.buyerName !== user?.name) {
+            return review.buyerName;
+        }
+
+        if (review.targetUserName) {
+            return review.targetUserName;
+        }
+
+        // 상대방 정보가 없는 경우 기본값
+        return '상대방';
+    };
+
     const toggleAnswer = (key, value) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
     };
@@ -43,16 +70,6 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
     };
 
     const handleSubmit = async () => {
-        if (reviewText.length < 20) {
-            showModal({
-                title: '알림',
-                message: '리뷰 내용을 20자 이상 입력해주세요.',
-                type: MODAL_TYPES.CONFIRM_ONLY,
-                confirmText: '확인',
-                onConfirm: () => setModalOpen(false),
-            });
-            return;
-        }
 
         if (reviewText.length > 1000) {
             showModal({
@@ -77,11 +94,12 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                     title: '수정 중',
                     message: '리뷰를 수정하는 중입니다...',
                     type: MODAL_TYPES.CONFIRM_ONLY,
-                    confirmText: '확인',
-                    onConfirm: () => {}, // 로딩 중에는 확인 버튼 동작 없음
+                    confirmText: null,
+                    cancelText: null,
+                    onConfirm: null, // 로딩 중에는 확인 버튼 동작 없음
                     onCancel: null,
                 });
-
+                setModalOpen(true);
                 setIsLoading(true);
 
                 const updatedReviewData = {
@@ -171,7 +189,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h1 className="sidebar-title">OO님과의 거래 리뷰</h1>
+                    <h1 className="sidebar-title">"{getTargetUserName()}"님과의 거래 리뷰</h1>
                 </div>
 
                 <div className="review-edit-content">
@@ -230,7 +248,7 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                                 placeholder="리뷰를 입력하세요"
                                 value={reviewText}
                                 onChange={(e) => setReviewText(e.target.value)}
-                                minLength={20}
+                                // minLength={20}
                             />
                             <div className="character-count">{reviewText.length}/1000</div>
                         </div>
@@ -244,17 +262,28 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
 
             {/* 로딩 모달과 최종 모달을 하나의 ConfirmModal 컴포넌트로 관리 */}
             {modalOpen && (
-                <ConfirmModal
-                    open={modalOpen}
-                    title={modalConfig.title}
-                    message={modalConfig.message}
-                    type={modalConfig.type}
-                    confirmText={modalConfig.confirmText}
-                    cancelText={modalConfig.cancelText}
-                    onConfirm={modalConfig.onConfirm}
-                    onCancel={modalConfig.onCancel}
-                />
+                (modalConfig.title === '수정 중' ? (
+                    <div className="custom-loading-modal">
+                        <div className="modal-content">
+                            <h2>{modalConfig.title}</h2>
+                            <p>{modalConfig.message}</p>
+                            <div className="spinner"></div> {/* 스피너 추가 */}
+                        </div>
+                    </div>
+                ) : (
+                    <ConfirmModal
+                        open={modalOpen}
+                        title={modalConfig.title}
+                        message={modalConfig.message}
+                        type={modalConfig.type}
+                        confirmText={modalConfig.confirmText}
+                        cancelText={modalConfig.cancelText}
+                        onConfirm={modalConfig.onConfirm}
+                        onCancel={modalConfig.onCancel}
+                    />
+                ))
             )}
+
         </div>
     );
 };
