@@ -337,8 +337,8 @@ const MyPage = () => {
         {/* 사이드바들 */}
         <ProfileEdit />
         <PasswordChange />
-        <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)} user={user} />
-        <UserReviewList open={userReviewOpen} onClose={() => setUserReviewOpen(false)} user={user} />
+        <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)}  />
+        <UserReviewList open={userReviewOpen} onClose={() => setUserReviewOpen(false)} />
         <TradingAreaManagement />
         <ChildManagement />
         <WishlistSidebar trigger={<span style={{ display: "none" }}>숨김</span>} />

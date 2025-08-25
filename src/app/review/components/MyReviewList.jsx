@@ -59,7 +59,6 @@ export default function MyReviewList({ open, onClose, user }) {
         );
         setSelectedReview(updatedReview);
     };
-    // ✅ 수정된 부분: overlay 클릭 시 상세 리뷰는 유지, 수정 사이드바만 닫기
     const handleOverlayClick = () => {
         // 수정 사이드바 열려있으면 → 그것만 닫기
         const editSidebar = document.querySelector(".review-edit-sidebar");

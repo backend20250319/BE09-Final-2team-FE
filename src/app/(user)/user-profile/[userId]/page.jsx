@@ -120,7 +120,7 @@ const OtherUserProfile = ({ userId }) => {
             <UserReviewList
                 open={userReviewOpen}
                 onClose={() => setUserReviewOpen(false)}
-                user={userData}
+                user={userId}
             />
         </div>
     );
