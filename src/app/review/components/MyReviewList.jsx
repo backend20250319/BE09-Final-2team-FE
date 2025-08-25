@@ -91,7 +91,7 @@ export default function MyReviewList({ open, onClose, user }) {
                     <h2 className="sidebar-title">나의 리뷰 내역</h2>
                 </div>
 
-                <div className="review-list">
+                <div className={`review-list ${reviews.length === 0 ? 'empty-state' : ''}`}>
                     {reviews.length > 0 ? (
                         reviews.map((review) => (
                             <div key={review.reviewId} className="review-item">
@@ -131,11 +131,19 @@ export default function MyReviewList({ open, onClose, user }) {
                                             );
                                         })}
                                     </div>
+                                    <div className="review-options">
+                                        {review.kind && <span className="review-badge kind-badge">친절해요</span>}
+                                        {!review.kind && <span className="review-badge unkind-badge">불친절해요</span>}
+                                        {review.promise && <span className="review-badge promise-badge">약속을 잘 지켜요</span>}
+                                        {!review.promise && <span className="review-badge unpromised-badge">약속을 안 지켜요</span>}
+                                        {review.satisfaction && <span className="review-badge satisfaction-badge">만족해요</span>}
+                                        {!review.satisfaction && <span className="review-badge unsatisfaction-badge">불만족스러워요</span>}
+                                    </div>
                                 </div>
                             </div>
                         ))
                     ) : (
-                        <p>작성된 리뷰가 없습니다.</p>
+                        <p>작성된 리뷰가 없습니다.</p> // 글자 폰트 크기 조절 및 가운데 정렬
                     )}
                 </div>
             </div>

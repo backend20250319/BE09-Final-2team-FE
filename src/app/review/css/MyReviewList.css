@@ -196,18 +196,64 @@ body {
     color: #000000;
     text-align: center;
 }
+.review-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
 
+.review-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* 긍정 옵션 뱃지 색상 */
+.kind-badge {
+    background-color: #e0f7fa;
+    color: #00796b;
+}
+
+.promise-badge {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.satisfaction-badge {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* 부정 옵션 뱃지 색상 */
+.unkind-badge, .unpromised-badge, .unsatisfaction-badge {
+    background-color: #ffebee;
+    color: #c62828;
+}
 /* Review List */
 .review-list {
     padding: 20px;
 }
+/* empty-state 클래스가 있을 때만 내용을 중앙 정렬합니다. */
+.review-list.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+}
 
+/* 리뷰가 없을 때 표시되는 <p> 태그의 스타일 */
+.review-list.empty-state p {
+    font-size: 1.2rem;
+    color: #999;
+}
 .review-item {
     display: flex;
     gap: 20px;
     padding: 20px 0;
     border-bottom: 1px solid #DDDDDD;
-    cursor: pointer; /* Added cursor pointer for clickability */
+    cursor: pointer;
 }
 
 .review-item:hover {
