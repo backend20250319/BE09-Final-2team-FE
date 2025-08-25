@@ -12,7 +12,7 @@ import WishlistSidebar from "@/components/common/WishlistSidebar";
 import WithdrawlSidebar from "../withdrawal/components/withdrawlSidebar";
 import MyReviewList from "@/app/review/components/MyReviewList";
 import UserReviewList from "@/app/review/components/UserReviewList";
-import { useUser, useIsAuthenticated, useUserLoading, useCheckAuthStatus } from '@/store/userStore'; // 🔥 개별 훅 사용
+import { useUser, useIsAuthenticated, useUserLoading, useCheckAuthStatus } from '@/store/userStore'; // 개별 훅 사용
 import { useRouter } from 'next/navigation';
 import {useProfileInfo, useFetchProfileInfo} from "@/store/mypageStore";
 
@@ -23,7 +23,7 @@ const MyPage = () => {
   const loading = useUserLoading();
   const checkAuthStatus = useCheckAuthStatus();
 
-    // myPageStore의 훅 사용
+  // myPageStore의 훅 사용
     const profileInfo = useProfileInfo();
     const fetchProfileInfo = useFetchProfileInfo();
 
@@ -38,41 +38,13 @@ const MyPage = () => {
   const [reviewOpen, setReviewOpen] = useState(false);
   const [userReviewOpen, setUserReviewOpen] = useState(false);
 
-  //마이페이지 진입 시 인증 확인 (로직 개선)
-  // useEffect(() => {
-  //   // 이미 Zustand에 인증 상태가 있으면 추가 확인 생략
-  //   if (isAuthenticated && user) {
-  //     console.log('✅ 이미 인증된 상태 - API 호출 생략');
-  //     return;
-  //   }
-
-  //   const hasAccessToken = document.cookie.includes('accessToken=');
-
-  //   if (hasAccessToken) {
-  //     console.log('🔍 마이페이지 진입 - 인증 상태 확인');
-  //     checkAuthStatus().then((isAuth) => {
-  //       if (!isAuth) {
-  //         alert('로그인이 필요한 페이지입니다.');
-  //         router.push('/login');
-  //       }
-  //     }).catch((error) => {
-  //       console.error('인증 확인 에러:', error);
-  //       alert('로그인이 필요한 페이지입니다.');
-  //       router.push('/login');
-  //     });
-  //   } else {
-  //     console.log('🍪 쿠키 없음 - 로그인 페이지로 이동');
-  //     alert('로그인이 필요한 페이지입니다.');
-  //     router.push('/login');
-  //   }
-  // }, []); // 빈 배열로 무한 루프 방지
     useEffect(() => {
         const initAuth = async () => {
             try {
                 if (loading) return;
 
                 if (isAuthenticated && user) {
-                    // 🔥 인증된 상태일 때 프로필 정보 가져오기
+                    // 인증된 상태일 때 프로필 정보 가져오기
                     fetchProfileInfo();
                     return;
                 }
@@ -81,7 +53,7 @@ const MyPage = () => {
                 console.log('🔍 인증 상태 체크 결과:', isAuth);
 
                 if (isAuth) {
-                    // 🔥 인증 성공 시 프로필 정보 가져오기
+                    // 인증 성공 시 프로필 정보 가져오기
                     fetchProfileInfo();
                 } else {
                     console.log('❌ 인증 실패 - 로그인 페이지로 이동');
@@ -93,7 +65,7 @@ const MyPage = () => {
             }
         };
 
-        initAuth();
+        void initAuth();
     }, [isAuthenticated, loading]);
 
 
