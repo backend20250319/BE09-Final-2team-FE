@@ -823,7 +823,7 @@ const ProductDetail = () => {
                             <div className='product-detail-trade-stat'>
                                 <span className='product-detail-stat-label'>리뷰수</span>
                                 {/* 리뷰 사이드바 */}
-                                <UserReviewList open={reviewSidebarOpen} onClose={() => setReviewSidebarOpen(false)} user={{ name: '닉넴닉크넴' }} />
+                                <UserReviewList open={reviewSidebarOpen} onClose={() => setReviewSidebarOpen(false)} />
                                 <a
                                     href='#'
                                     className='product-detail-stat-value'
