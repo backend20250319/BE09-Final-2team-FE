@@ -30,17 +30,17 @@ const MyReviewAddForm = ({ onClose }) => {
     };
 
     const handleSubmit = async () => {
-        if (reviewText.length < 20) {
-            setModalConfig({
-                title: '알림',
-                message: '리뷰 내용을 20자 이상 입력해주세요.',
-                type: MODAL_TYPES.CONFIRM_ONLY,
-                confirmText: '확인',
-                onConfirm: () => setModalOpen(false),
-            });
-            setModalOpen(true);
-            return;
-        }
+        // if (reviewText.length < 20) {
+        //     setModalConfig({
+        //         title: '알림',
+        //         message: '리뷰 내용을 20자 이상 입력해주세요.',
+        //         type: MODAL_TYPES.CONFIRM_ONLY,
+        //         confirmText: '확인',
+        //         onConfirm: () => setModalOpen(false),
+        //     });
+        //     setModalOpen(true);
+        //     return;
+        // }
 
         if (reviewText.length > 1000) {
             setModalConfig({
@@ -224,7 +224,7 @@ const MyReviewAddForm = ({ onClose }) => {
                                     placeholder="리뷰를 입력하세요"
                                     value={reviewText}
                                     onChange={(e) => setReviewText(e.target.value)}
-                                    minLength={20}
+                                    // minLength={20}
                                 />
                                 <div className="character-count">{reviewText.length}/1000</div>
                             </div>
@@ -239,14 +239,13 @@ const MyReviewAddForm = ({ onClose }) => {
                 </aside>
             </div>
             {isLoading && (
-                <ConfirmModal
-                    open={isLoading}
-                    title="등록 중"
-                    message="리뷰를 등록하는 중입니다..."
-                    type={MODAL_TYPES.CONFIRM_ONLY}
-                    confirmText="확인"
-                    onConfirm={() => {}}
-                />
+                <div className="custom-loading-modal">
+                    <div className="modal-content">
+                        <div className="spinner"></div> {/* 스피너 */}
+                        <h2>등록 중</h2>
+                        <p>리뷰를 등록하는 중입니다...</p>
+                    </div>
+                </div>
             )}
             <ConfirmModal
                 open={modalOpen && !isLoading}

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import '../css/MyReviewDetail.css';
 import MyReviewEditForm from './MyReviewEditForm';
 
-export default function MyReviewDetail({ review, onClose, animateClass, onSave: onReviewUpdate }) {
+export default function MyReviewDetail({ review, onClose, animateClass, onSave: onReviewUpdate, user }) {
     const [editOpen, setEditOpen] = useState(false);
     const [editAnimateClass, setEditAnimateClass] = useState('animate-slide-in');
     const [reviewData, setReviewData] = useState(review);
@@ -132,6 +132,8 @@ export default function MyReviewDetail({ review, onClose, animateClass, onSave: 
                     }}
                     reviewId={reviewData.reviewId}
                     animateClass={editAnimateClass}
+                    user={user}
+                    review={reviewData}
                 />
             )}
         </>

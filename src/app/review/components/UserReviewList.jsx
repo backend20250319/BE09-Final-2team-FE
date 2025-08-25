@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import '../css/UserReviewList.css';
 import UserReviewDetail from './UserReviewDetail';
 
-const UserReviewList = ({ onClose, open }) => {
+const UserReviewList = ({ onClose, open, user }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [activeFilter, setActiveFilter] = useState('all');
     const [showReviewDetail, setShowReviewDetail] = useState(false);
@@ -13,12 +13,14 @@ const UserReviewList = ({ onClose, open }) => {
     const [stats, setStats] = useState({ averageRating: 0, totalReviews: 0, positiveReviews: 0, negativeReviews: 0 });
     const [positiveSummary, setPositiveSummary] = useState(''); // 긍정 종합 요약
     const [negativeSummary, setNegativeSummary] = useState(''); // 부정 종합 요약
+    const [isLoading, setIsLoading] = useState(false);
 
     useEffect(() => {
         if (open) {
             const fetchData = async () => {
+                setIsLoading(true);
                 try {
-                    // 1. 모든 리뷰와 통계 데이터 가져오기 (기존)
+                    // 모든 리뷰와 통계 데이터 가져오기
                     const reviewsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews');
                     const statsResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/status');
 
@@ -29,29 +31,52 @@ const UserReviewList = ({ onClose, open }) => {
                     const reviewsData = await reviewsResponse.json();
                     const statsData = await statsResponse.json();
 
-                    setReviews(reviewsData.data);
-                    setStats(statsData.data);
+                    setReviews(reviewsData.data || []);
+                    setStats(statsData.data || { averageRating: 0, totalReviews: 0, positiveReviews: 0, negativeReviews: 0 });
 
-                    // 2. 새로운 API 호출: 종합 긍정 리뷰 요약 가져오기
-                    const positiveSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=positive');
-                    const positiveSummaryData = await positiveSummaryResponse.json();
-                    if (positiveSummaryData.success) {
-                        setPositiveSummary(positiveSummaryData.data);
-                    } else {
-                        setPositiveSummary('긍정 리뷰 요약을 가져오지 못했습니다.');
+                    // 종합 긍정 리뷰 요약 가져오기 (한국어로 변경)
+                    try {
+                        const positiveSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=긍정적');
+                        if (positiveSummaryResponse.ok) {
+                            const positiveSummaryData = await positiveSummaryResponse.json();
+                            if (positiveSummaryData.success) {
+                                setPositiveSummary(positiveSummaryData.data);
+                            } else {
+                                setPositiveSummary('긍정적 리뷰가 존재하지 않습니다.');
+                            }
+                        } else {
+                            setPositiveSummary('긍정적 리뷰가 존재하지 않습니다.');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching positive summary:", error);
+                        setPositiveSummary('긍정적 리뷰가 존재하지 않습니다.');
                     }
 
-                    // 3. 새로운 API 호출: 종합 부정 리뷰 요약 가져오기
-                    const negativeSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=negative');
-                    const negativeSummaryData = await negativeSummaryResponse.json();
-                    if (negativeSummaryData.success) {
-                        setNegativeSummary(negativeSummaryData.data);
-                    } else {
-                        setNegativeSummary('부정 리뷰 요약을 가져오지 못했습니다.');
+                    // 종합 부정 리뷰 요약 가져오기 (한국어로 변경)
+                    try {
+                        const negativeSummaryResponse = await fetch('http://localhost:8000/api/v1/review-service/reviews/summary?sentiment=부정적');
+                        if (negativeSummaryResponse.ok) {
+                            const negativeSummaryData = await negativeSummaryResponse.json();
+                            if (negativeSummaryData.success) {
+                                setNegativeSummary(negativeSummaryData.data);
+                            } else {
+                                setNegativeSummary('부정적 리뷰가 존재하지 않습니다.');
+                            }
+                        } else {
+                            setNegativeSummary('부정적 리뷰가 존재하지 않습니다.');
+                        }
+                    } catch (error) {
+                        console.error("Error fetching negative summary:", error);
+                        setNegativeSummary('부정적 리뷰가 존재하지 않습니다.');
                     }
 
                 } catch (error) {
                     console.error("Error fetching data:", error);
+                    // 기본값 설정
+                    setPositiveSummary('긍정적 리뷰가 존재하지 않습니다.');
+                    setNegativeSummary('부정적 리뷰가 존재하지 않습니다.');
+                } finally {
+                    setIsLoading(false);
                 }
             };
             fetchData();
@@ -80,15 +105,16 @@ const UserReviewList = ({ onClose, open }) => {
         setSelectedReview(null);
     };
 
+    // 수정된 필터링 로직: review 객체의 sentiment 속성을 사용합니다.
     const filteredReviews = reviews.filter(review => {
         if (activeFilter === 'all') {
             return true;
         }
         if (activeFilter === 'positive') {
-            return review.summary && review.summary.includes('긍정적');
+            return review.sentiment === '긍정적';
         }
         if (activeFilter === 'negative') {
-            return review.summary && review.summary.includes('부정적');
+            return review.sentiment === '부정적';
         }
         return true;
     });
@@ -116,7 +142,7 @@ const UserReviewList = ({ onClose, open }) => {
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h2 className="review-title">"멋진맘"님의 거래 리뷰 내역</h2>
+                    <h2 className="review-title">"{user?.name || '사용자'}"님의 거래 리뷰 내역</h2>
                 </div>
 
                 <div className="average-rating-box">
@@ -124,17 +150,17 @@ const UserReviewList = ({ onClose, open }) => {
                         <div className="review-category-card">
                             <p className="category-title positive">긍정적 리뷰 {stats.positiveReviews}개</p>
                             <p className="category-content">
-                                {positiveSummary}
+                                {isLoading ? '요약글을 생성 중입니다...' : (positiveSummary || '긍정적 리뷰가 존재하지 않습니다.')}
                             </p>
                         </div>
                         <div className="review-category-card">
                             <p className="category-title negative">부정적 리뷰 {stats.negativeReviews}개</p>
                             <p className="category-content">
-                                {negativeSummary}
+                                {isLoading ? '요약글을 생성 중입니다...' : (negativeSummary || '부정적 리뷰가 존재하지 않습니다.')}
                             </p>
                         </div>
                     </div>
-                    <p>"멋진맘"의 총 별점 평균과 총 리뷰 개수는</p>
+                    <p>"{user?.name || '사용자'}"의 총 별점 평균과 총 리뷰 개수는</p>
                     <div className="big-stars">
                         {[1, 2, 3, 4, 5].map((starIndex) => (
                             <span key={starIndex} className="big-star-wrapper">
@@ -152,7 +178,6 @@ const UserReviewList = ({ onClose, open }) => {
                     <div className="rating-summary">
                         {stats.averageRating.toFixed(1)} / {stats.totalReviews}개
                     </div>
-
                 </div>
 
                 <div className="review-filters-container">
@@ -239,6 +264,7 @@ const UserReviewList = ({ onClose, open }) => {
                     review={selectedReview}
                     onClose={handleReviewDetailClose}
                     open={showReviewDetail}
+                    user={user}
                 />
             )}
         </>

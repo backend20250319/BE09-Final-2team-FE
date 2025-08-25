@@ -337,7 +337,7 @@ const MyPage = () => {
         {/* 사이드바들 */}
         <ProfileEdit />
         <PasswordChange />
-        <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)} />
+        <MyReviewList open={reviewOpen} onClose={() => setReviewOpen(false)}  />
         <UserReviewList open={userReviewOpen} onClose={() => setUserReviewOpen(false)} />
         <TradingAreaManagement />
         <ChildManagement />
