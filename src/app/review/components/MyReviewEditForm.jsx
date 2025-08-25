@@ -37,11 +37,11 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
         // 일반적으로 리뷰에는 sellerId, buyerId, targetUserId 등의 필드가 있음
         // 현재 로그인한 유저와 다른 ID를 가진 유저가 상대방
 
-        if (review.sellerName && review.sellerName !== user?.name) {
+        if (review.sellerName && review.sellerName !== nickname?.name) {
             return review.sellerName;
         }
 
-        if (review.buyerName && review.buyerName !== user?.name) {
+        if (review.buyerName && review.buyerName !== nickname?.name) {
             return review.buyerName;
         }
 
