@@ -21,6 +21,7 @@ export default function Sidebar({
   onAdd, // 더보기 버튼 클릭 시 실행할 함수
   onTitleClick, // 제목 클릭 시 실행할 함수
   titleClickable = false, // 제목을 클릭 가능하게 할지 여부
+  headerContent, // 헤더에 추가할 컨텐츠
 }) {
   const { isOpen, open, close, closeAll } = useSidebar(sidebarKey);
 
@@ -73,6 +74,7 @@ export default function Sidebar({
                 {title}
               </SheetTitle>
               <div className="flex items-center gap-2">
+                {headerContent && headerContent}
                 {add && onAdd && (
                   <button onClick={onAdd} className="cursor-pointer">
                     <EllipsisVertical />
