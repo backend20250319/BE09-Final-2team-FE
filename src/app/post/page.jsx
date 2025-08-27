@@ -5,99 +5,123 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { loadPosts } from "./lib/postStorage";
 
-/* 고정 높이: 목록 영역 */
+/* 고정 높이 */
 const LIST_MIN_HEIGHT = 400;
 
-/* 아이콘 & 유틸 */
-const hasImage = (html = "") => {
-  if (typeof html !== "string" || !html) return false;
-  return /<img[^>]+src=["']([^"']+)["']/i.test(html);
+/* 썸네일 추출 */
+const firstImgSrc = (html = "") => {
+  if (typeof html !== "string" || !html) return null;
+  const m = html.match(/<img[^>]+src=["']([^"']+)["']/i);
+  return m ? m[1] : null;
+};
+const pickThumb = (p) => {
+  if (!p) return null;
+  if (Array.isArray(p.images) && p.images[0]) return p.images[0];
+  if (p.thumbnail) return p.thumbnail;
+  return firstImgSrc(p.content || "");
 };
 
-const PhotoIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    className="w-4 h-4 flex-none"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="#65A2EE"
-    strokeWidth={2}
-  >
-    <rect x="3" y="5" width="18" height="14" rx="2" ry="2" />
-    <circle cx="8.5" cy="10.5" r="1.5" />
-    <path d="M21 15l-5-5L5 21" />
-  </svg>
-);
-
-/* 결정적 더미 데이터 (SSR/CSR 일치) */
+/* 더미 (필요 시) */
 const viewsByIndex = (i) => ((i * 73) % 300) + 1;
 const commentsByIndexTips = (i) => (i % 3 === 0 ? ((i * 7) % 5) + 1 : 0);
-const commentsByIndexGroup = (i) => (i % 4 === 0 ? ((i * 5) % 5) + 1 : 0);
+const commentsByIndexAuction = (i) => (i % 4 === 0 ? ((i * 5) % 5) + 1 : 0);
 
-const dummyTips = Array.from({ length: 20 }, (_, i) => ({
-  id: 20 - i,
-  title: `육아 꿀팁 게시글 ${20 - i}`,
-  writer: i % 2 === 0 ? "홍길동" : "이순신",
+const dummyTips = Array.from({ length: 8 }, (_, i) => ({
+  id: 1000 + i,
+  title: `육아 꿀팁 더미 ${i + 1}`,
+  writer: i % 2 ? "홍길동" : "이순신",
   date: "2025.07.31",
   views: viewsByIndex(i),
   comments: commentsByIndexTips(i),
   content: "",
+  category: "육아 꿀팁",
 }));
 
-const dummyGroup = Array.from({ length: 20 }, (_, i) => ({
-  id: 20 - i,
-  status: i % 3 === 0 ? "모집중" : "모집완료",
-  title: `공동구매 게시글 ${20 - i}`,
-  region: ["서초동", "삼성동", "역삼동", "성수동", "장안동"][i % 5],
-  writer: i % 2 === 0 ? "홍길동" : "이순신",
+const dummyAuction = Array.from({ length: 6 }, (_, i) => ({
+  id: 2000 + i,
+  title: `경매 더미 ${i + 1}`,
+  writer: i % 2 ? "홍길동" : "이순신",
   date: "2025.07.31",
   views: viewsByIndex(i),
-  comments: commentsByIndexGroup(i),
+  comments: commentsByIndexAuction(i),
   content: "",
+  category: "경매",
+  startingPrice: 10000 + i * 1000,
+  minIncrement: 1000,
+  bids: [],
+  endTime: new Date(Date.now() + (i + 1) * 3600e3).toISOString(),
+  status: "진행중",
 }));
+
+/* 경매 상태/가격/남은 시간 */
+const currentPriceOf = (p) => {
+  const bids = Array.isArray(p?.bids) ? p.bids : [];
+  if (!bids.length) return Number(p?.startingPrice ?? 0) || 0;
+  return Number(bids[bids.length - 1].price) || 0;
+};
+const isAuctionClosed = (p) => {
+  const s = String(p?.status || "").toUpperCase();
+  if (s.includes("완료") || s.includes("CLOSED")) return true;
+  if (p?.closed) return true;
+  if (p?.endTime) return new Date(p.endTime).getTime() <= Date.now();
+  return false;
+};
+const remainLabel = (end) => {
+  if (!end) return "";
+  const ms = new Date(end).getTime() - Date.now();
+  if (ms <= 0) return "종료";
+  const d = Math.floor(ms / (24 * 3600e3));
+  const h = Math.floor((ms % (24 * 3600e3)) / 3600e3);
+  const m = Math.floor((ms % 3600e3) / 60e3);
+  if (d > 0) return `D-${d} ${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")} 남음`;
+};
 
 export default function PostBoardPage() {
   const sp = useSearchParams();
-  const defaultTab = sp.get("tab") === "groupbuy" ? "groupbuy" : "tips";
+  const defaultTab = sp.get("tab") === "auction" ? "auction" : "tips";
 
   const [selectedTab, setSelectedTab] = useState(defaultTab);
-  const [sort, setSort] = useState("latest"); // "latest" | "views"
+  const [sort, setSort] = useState("latest");
   const [currentPage, setCurrentPage] = useState(1);
   const [excludeCompleted, setExcludeCompleted] = useState(false);
 
-  // 검색: 입력값과 실제 적용 검색어 분리
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  // 로컬 저장 글
-  const [userTips, setUserTips] = useState([]);
-  const [userGroup, setUserGroup] = useState([]);
+  const [tips, setTips] = useState([]);
+  const [auctions, setAuctions] = useState([]);
 
-  // URL 쿼리(tab) 반영
   useEffect(() => {
-    setSelectedTab(sp.get("tab") === "groupbuy" ? "groupbuy" : "tips");
+    setSelectedTab(sp.get("tab") === "auction" ? "auction" : "tips");
     setCurrentPage(1);
   }, [sp]);
 
-  // 로컬 데이터 로드 함수
   const reload = () => {
-    const tips = loadPosts("tips") || [];
-    const group = loadPosts("groupbuy") || [];
-    setUserTips(tips);
-    setUserGroup(group);
+    // 1) 꿀팁: 기존 저장소 사용
+    const tipsArr = loadPosts("tips") || [];
+
+    // 2) 경매: 로컬스토리지에서 직접 읽기(키 고정: posts:auction)
+    let auctionArr = [];
+    try {
+      if (typeof window !== "undefined") {
+        auctionArr = JSON.parse(localStorage.getItem("posts:auction") || "[]");
+      }
+    } catch {
+      auctionArr = [];
+    }
+
+    setTips(tipsArr);
+    setAuctions(auctionArr);
   };
 
-  // 최초 로드 + 상세/작성에서 알림 받을 때 갱신
   useEffect(() => {
     reload();
-
     const onChanged = () => reload();
     const onFocusOrVisible = () => reload();
-
     window.addEventListener("posts:changed", onChanged);
     window.addEventListener("focus", onFocusOrVisible);
     document.addEventListener("visibilitychange", onFocusOrVisible);
-
     return () => {
       window.removeEventListener("posts:changed", onChanged);
       window.removeEventListener("focus", onFocusOrVisible);
@@ -105,69 +129,46 @@ export default function PostBoardPage() {
     };
   }, []);
 
-  const postsPerPage = 10;
+  // 더미와 병합(선택)
+  const mergedTips = useMemo(() => [...tips, ...dummyTips], [tips]);
+  const mergedAuction = useMemo(() => [...auctions, ...dummyAuction], [auctions]);
 
-  // 로 lokal글 + 더미
-  const mergedTips = useMemo(() => [...userTips, ...dummyTips], [userTips]);
-  const mergedGroup = useMemo(() => [...userGroup, ...dummyGroup], [userGroup]);
-
-  // 검색 (제목/내용, 대소문자 무시)
   const normalize = (v) => (typeof v === "string" ? v.toLowerCase() : "");
   const query = normalize(searchQuery);
 
   const filteredTips = useMemo(() => {
-    if (!query) return mergedTips;
-    return mergedTips.filter(
+    const arr = mergedTips;
+    if (!query) return arr;
+    return arr.filter(
       (p) => normalize(p.title).includes(query) || normalize(p.content).includes(query)
     );
   }, [mergedTips, query]);
 
-  const filteredGroup = useMemo(() => {
-    if (!query) return mergedGroup;
-    return mergedGroup.filter(
+  const filteredAuction = useMemo(() => {
+    let arr = mergedAuction;
+    if (excludeCompleted) arr = arr.filter((p) => !isAuctionClosed(p));
+    if (!query) return arr;
+    return arr.filter(
       (p) => normalize(p.title).includes(query) || normalize(p.content).includes(query)
     );
-  }, [mergedGroup, query]);
+  }, [mergedAuction, query, excludeCompleted]);
 
-  const getSortedPosts = (posts) => {
-    let filtered = posts;
-    if (selectedTab === "groupbuy" && excludeCompleted) {
-      filtered = filtered.filter((p) => (p.status || "모집중") === "모집중");
-    }
-    return [...filtered].sort((a, b) =>
+  const getSorted = (posts) =>
+    [...posts].sort((a, b) =>
       sort === "views" ? (b.views ?? 0) - (a.views ?? 0) : (b.id ?? 0) - (a.id ?? 0)
     );
-  };
 
-  // 탭별로 검색 → 정렬 → 페이지네이션
-  const prepared =
-    selectedTab === "tips" ? getSortedPosts(filteredTips) : getSortedPosts(filteredGroup);
+  const prepared = selectedTab === "tips" ? getSorted(filteredTips) : getSorted(filteredAuction);
 
+  const postsPerPage = selectedTab === "tips" ? 10 : 12;
   const totalPages = Math.ceil(prepared.length / postsPerPage) || 1;
   const safePage = Math.min(currentPage, totalPages);
+  const currentPosts = prepared.slice((safePage - 1) * postsPerPage, safePage * postsPerPage);
 
-  const currentPosts = prepared.slice(
-    (safePage - 1) * postsPerPage,
-    safePage * postsPerPage
-  );
-
-  // 번호 계산용
-  const baseIndex = (safePage - 1) * postsPerPage; // 현재 페이지 시작 인덱스 (0,10,20…)
-  const totalCount = prepared.length;               // 전체 게시글 수
-  // latest(최신순)일 때는 역순 번호, 그 외(조회수순 등)는 누적 증가 번호
-  const numberingMode = sort === "latest" ? "desc" : "asc";
-
-  const handleTabChange = (tab) => {
-    setSelectedTab(tab);
-    setCurrentPage(1);
-  };
-
-  // 엔터/버튼으로만 검색
   const submitSearch = () => {
     setSearchQuery(searchInput.trim());
     setCurrentPage(1);
   };
-
   const onKeyDownSearch = (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -180,30 +181,21 @@ export default function PostBoardPage() {
       {/* 탭 */}
       <div className="flex justify-center space-x-10 mb-6 text-lg font-medium">
         <button
-          className={
-            selectedTab === "tips"
-              ? "text-blue-500 border-b-2 border-blue-500 pb-1"
-              : "text-gray-400 hover:text-gray-600"
-          }
-          onClick={() => handleTabChange("tips")}
+          className={selectedTab === "tips" ? "text-blue-500 border-b-2 border-blue-500 pb-1" : "text-gray-400 hover:text-gray-600"}
+          onClick={() => { setSelectedTab("tips"); setCurrentPage(1); }}
         >
           육아 꿀팁
         </button>
         <button
-          className={
-            selectedTab === "groupbuy"
-              ? "text-blue-500 border-b-2 border-blue-500 pb-1"
-              : "text-gray-400 hover:text-gray-600"
-          }
-          onClick={() => handleTabChange("groupbuy")}
+          className={selectedTab === "auction" ? "text-blue-500 border-b-2 border-blue-500 pb-1" : "text-gray-400 hover:text-gray-600"}
+          onClick={() => { setSelectedTab("auction"); setCurrentPage(1); }}
         >
-          공동구매
+          경매
         </button>
       </div>
 
-      {/* 검색 / 정렬 / 모집완료 제외 */}
+      {/* 검색/정렬/필터 */}
       <div className="flex items-center justify-between mb-2">
-        {/* 검색창 */}
         <div className="relative">
           <input
             type="text"
@@ -226,14 +218,12 @@ export default function PostBoardPage() {
 
         <div className="flex items-center gap-3">
           <div className="flex space-x-4 text-sm">
-            {selectedTab === "groupbuy" && (
+            {selectedTab === "auction" && (
               <button
                 onClick={() => setExcludeCompleted((v) => !v)}
-                className={`px-3 py-1 rounded ${
-                  excludeCompleted ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"
-                } hover:bg-blue-200`}
+                className={`px-3 py-1 rounded ${excludeCompleted ? "bg-blue-500 text-white" : "bg-blue-100 text-blue-600"} hover:bg-blue-200`}
               >
-                {excludeCompleted ? "모집완료 포함" : "모집완료 제외"}
+                {excludeCompleted ? "경매완료 포함" : "경매완료 제외"}
               </button>
             )}
             <button
@@ -252,61 +242,36 @@ export default function PostBoardPage() {
         </div>
       </div>
 
-      {/* 목록 영역 높이 고정 → 페이지네이션 고정 위치 보장 */}
+      {/* 목록 */}
       <div className="relative" style={{ minHeight: LIST_MIN_HEIGHT }}>
         {currentPosts.length === 0 ? (
           <div className="py-8 text-center text-sm text-gray-500">검색 결과가 없습니다.</div>
         ) : selectedTab === "tips" ? (
-          <TipsTable
-            posts={currentPosts}
-            baseIndex={baseIndex}
-            totalCount={totalCount}
-            numberingMode={numberingMode}
-          />
+          <TipsTable posts={currentPosts} />
         ) : (
-          <GroupBuyTable
-            posts={currentPosts}
-            baseIndex={baseIndex}
-            totalCount={totalCount}
-            numberingMode={numberingMode}
-          />
+          <AuctionCardGrid posts={currentPosts} />
         )}
       </div>
 
-      {/* 페이지네이션 (근접) */}
+      {/* 페이지네이션 */}
       <div className="flex justify-center items-center space-x-2 text-sm mt-2 pt-2 border-t border-gray-100">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          className="text-gray-500 hover:text-blue-500"
-        >
+        <button onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} className="text-gray-500 hover:text-blue-500">
           &lt; Back
         </button>
         {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrentPage(i + 1)}
-            className={`px-2 py-1 rounded ${
-              safePage === i + 1 ? "bg-blue-100" : "hover:bg-blue-50"
-            }`}
-          >
+          <button key={i} onClick={() => setCurrentPage(i + 1)} className={`px-2 py-1 rounded ${safePage === i + 1 ? "bg-blue-100" : "hover:bg-blue-50"}`}>
             {i + 1}
           </button>
         ))}
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          className="text-gray-500 hover:text-blue-500"
-        >
+        <button onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))} className="text-gray-500 hover:text-blue-500">
           Next &gt;
         </button>
       </div>
 
-      {/* 글쓰기 버튼 */}
+      {/* 글쓰기 */}
       <div className="flex justify-end mt-6">
         <Link href={`/post/write?tab=${selectedTab}`}>
-          <button
-            className="px-6 py-2 text-white rounded hover:brightness-95 cursor-pointer"
-            style={{ backgroundColor: "#65A2EE" }}
-          >
+          <button className="px-6 py-2 text-white rounded hover:brightness-95 cursor-pointer" style={{ backgroundColor: "#65A2EE" }}>
             글쓰기
           </button>
         </Link>
@@ -315,11 +280,8 @@ export default function PostBoardPage() {
   );
 }
 
-/* 테이블 컴포넌트 */
-// numberingMode: "asc" | "desc"
-// asc  → baseIndex + idx + 1
-// desc → totalCount - (baseIndex + idx)
-function TipsTable({ posts, baseIndex = 0, totalCount = 0, numberingMode = "asc" }) {
+/* 꿀팁 표 */
+function TipsTable({ posts }) {
   return (
     <table className="w-full text-sm text-center border-t border-gray-300">
       <thead className="bg-gray-100">
@@ -332,93 +294,87 @@ function TipsTable({ posts, baseIndex = 0, totalCount = 0, numberingMode = "asc"
         </tr>
       </thead>
       <tbody>
-        {posts.map((p, idx) => {
-          const commentCount = Array.isArray(p.comments)
-            ? p.comments.length
-            : Number(p.comments) || 0;
-          const number =
-            numberingMode === "desc"
-              ? totalCount - (baseIndex + idx)
-              : baseIndex + idx + 1;
-          return (
-            <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
-              <td className="py-2">{number}</td>
-              <td className="py-2 text-left pl-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  {hasImage(p.content) && <PhotoIcon />}
-                  <Link
-                    href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`}
-                    className="truncate hover:underline"
-                    title={p.title}
-                  >
-                    {p.title}
-                  </Link>
-                  {commentCount > 0 && (
-                    <span className="text-blue-500 ml-1 flex-none">💬{commentCount}</span>
-                  )}
-                </div>
-              </td>
-              <td className="py-2">{p.writer}</td>
-              <td className="py-2">{p.date}</td>
-              <td className="py-2">{p.views ?? 0}</td>
-            </tr>
-          );
-        })}
+        {posts.map((p, idx) => (
+          <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
+            <td className="py-2">{idx + 1}</td>
+            <td className="py-2 text-left pl-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <Link href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`} className="truncate hover:underline" title={p.title}>
+                  {p.title}
+                </Link>
+                {Array.isArray(p.comments) && p.comments.length > 0 && (
+                  <span className="text-blue-500 ml-1 flex-none">💬{p.comments.length}</span>
+                )}
+              </div>
+            </td>
+            <td className="py-2">{p.writer || p.author || "익명"}</td>
+            <td className="py-2">{p.date}</td>
+            <td className="py-2">{p.views ?? 0}</td>
+          </tr>
+        ))}
       </tbody>
     </table>
   );
 }
 
-function GroupBuyTable({ posts, baseIndex = 0, totalCount = 0, numberingMode = "asc" }) {
+/* 경매 카드 그리드 */
+function AuctionCardGrid({ posts }) {
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   return (
-    <table className="w-full text-sm text-center border-t border-gray-300">
-      <thead className="bg-gray-100">
-        <tr>
-          <th className="py-2 w-12">No</th>
-          <th className="py-2 w-20">모집상태</th>
-          <th className="py-2 text-left">제목</th>
-          <th className="py-2 w-20">지역</th>
-          <th className="py-2 w-24">작성자</th>
-          <th className="py-2 w-28">작성일자</th>
-          <th className="py-2 w-20">조회수</th>
-        </tr>
-      </thead>
-      <tbody>
-        {posts.map((p, idx) => {
-          const commentCount = Array.isArray(p.comments)
-            ? p.comments.length
-            : Number(p.comments) || 0;
-          const number =
-            numberingMode === "desc"
-              ? totalCount - (baseIndex + idx)
-              : baseIndex + idx + 1;
-          return (
-            <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
-              <td className="py-2">{number}</td>
-              <td className="py-2">{p.status || "모집중"}</td>
-              <td className="py-2 text-left pl-2">
-                <div className="flex items-center gap-2 min-w-0">
-                  {hasImage(p.content) && <PhotoIcon />}
-                  <Link
-                    href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=groupbuy`}
-                    className="truncate hover:underline"
-                    title={p.title}
-                  >
-                    {p.title}
-                  </Link>
-                  {commentCount > 0 && (
-                    <span className="text-blue-500 ml-1 flex-none">💬{commentCount}</span>
-                  )}
-                </div>
-              </td>
-              <td className="py-2">{p.region || ""}</td>
-              <td className="py-2">{p.writer}</td>
-              <td className="py-2">{p.date}</td>
-              <td className="py-2">{p.views ?? 0}</td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {posts.map((p) => {
+        const thumb = pickThumb(p);
+        const label = mounted
+          ? (isAuctionClosed(p) ? "경매완료" : "진행중")
+          : (String(p?.status || "").includes("완료") ? "경매완료" : "진행중");
+        const closed = label === "경매완료";
+        const statusClass = closed ? "bg-gray-200 text-gray-600" : "bg-red-100 text-red-600";
+        const price = currentPriceOf(p);
+        const remain = mounted ? remainLabel(p.endTime) : "";
+
+        return (
+          <Link
+            key={p.id ?? p.title}
+            href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=auction`}
+            className="group block rounded-2xl border bg-white shadow-sm hover:shadow-md transition overflow-hidden"
+          >
+            <div className="relative aspect-video w-full bg-gray-100">
+              {thumb ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={thumb} alt="" className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]" />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center text-4xl">🧸</div>
+              )}
+              <span suppressHydrationWarning className={`absolute left-2 top-2 rounded-full px-2 py-1 text-xs ${statusClass}`}>
+                {label}
+              </span>
+              {remain && (
+                <span suppressHydrationWarning className="absolute right-2 top-2 rounded-full bg-black/60 px-2 py-1 text-xs text-white">
+                  {remain}
+                </span>
+              )}
+            </div>
+
+            <div className="p-3">
+              <div className="mb-1 line-clamp-2 text-[15px] font-semibold leading-snug">{p.title}</div>
+              <div className="mb-2 flex flex-wrap items-center gap-2 text-xs text-gray-500">
+                <span>{p.writer || p.author || "익명"}</span>
+                {p.date && (<><span className="text-gray-300">·</span><span>{p.date}</span></>)}
+                <span className="text-gray-300">·</span>
+                <span>조회 {p.views ?? 0}</span>
+                {Array.isArray(p.comments) && p.comments.length > 0 && (<><span className="text-gray-300">·</span><span>💬{p.comments.length}</span></>)}
+              </div>
+              <div className="flex items-center justify-between text-sm">
+                <div className="font-medium">현재가 <span className="text-gray-900">{price.toLocaleString()}원</span></div>
+                {typeof p.minIncrement !== "undefined" && (
+                  <div className="text-xs text-gray-500">+{Number(p.minIncrement).toLocaleString()}원</div>
+                )}
+              </div>
+            </div>
+          </Link>
+        );
+      })}
+    </div>
   );
 }
