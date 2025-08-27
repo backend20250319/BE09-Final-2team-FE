@@ -9,25 +9,72 @@ export const useWebSocketManager = (roomId, userId, onMessageReceived) => {
 
   // 연결 상태 동기화
   useEffect(() => {
+    let interval = null;
+
     const updateConnectionStatus = () => {
       const status = websocketManager.getConnectionStatus();
+
+      // 연결이 끊어진 경우 재연결 시도
+      if (!status.isConnected && status.hasClient && user?.id) {
+        websocketManager.forceReconnect(user.id, user).catch((error) => {
+          console.error("WebSocket 재연결 실패:", error);
+        });
+      }
+
       setIsConnected(status.isConnected);
       setError(status.error);
+
+      // 연결이 성공하면 주기적 확인 중단
+      if (status.isConnected && interval) {
+        clearInterval(interval);
+        interval = null;
+      }
     };
 
     // 초기 상태 설정
     updateConnectionStatus();
 
-    // 주기적으로 상태 확인 (1초마다)
-    const interval = setInterval(updateConnectionStatus, 1000);
+    // 연결이 안 된 경우에만 주기적으로 상태 확인 (3초마다)
+    if (!isConnected) {
+      interval = setInterval(updateConnectionStatus, 3000);
+    }
 
-    return () => clearInterval(interval);
-  }, []);
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [user]);
+
+  // 연결 상태가 변경될 때 주기적 확인 재시작/중단
+  useEffect(() => {
+    let interval = null;
+
+    const startPeriodicCheck = () => {
+      if (!isConnected && user?.id) {
+        interval = setInterval(() => {
+          const status = websocketManager.getConnectionStatus();
+          if (!status.isConnected && status.hasClient) {
+            websocketManager.forceReconnect(user.id, user).catch((error) => {
+              console.error("WebSocket 재연결 실패:", error);
+            });
+          }
+        }, 3000);
+      }
+    };
+
+    startPeriodicCheck();
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [isConnected, user]);
 
   // 채팅방 구독
   const subscribeToRoom = useCallback(() => {
     if (!roomId || !userId) {
-      console.log("구독 조건 미충족:", { roomId, userId });
       return false;
     }
 

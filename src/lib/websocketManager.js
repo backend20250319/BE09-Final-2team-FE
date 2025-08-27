@@ -15,7 +15,6 @@ class WebSocketManager {
   // WebSocket 연결
   connect(userId, userInfo = null) {
     if (this.client && this.isConnected) {
-      console.log("WebSocket이 이미 연결되어 있습니다.");
       return Promise.resolve();
     }
 
@@ -38,8 +37,6 @@ class WebSocketManager {
           }
         }
 
-        // console.log("STOMP 연결 헤더:", connectHeaders);
-
         this.client = new Client({
           webSocketFactory: () => {
             return new SockJS(url, null, {
@@ -57,7 +54,6 @@ class WebSocketManager {
         });
 
         this.client.onConnect = (frame) => {
-          // console.log("WebSocket 연결 성공! Frame:", frame);
           this.isConnected = true;
           this.error = null;
           this.reconnectAttempts = 0;
@@ -75,14 +71,12 @@ class WebSocketManager {
 
           if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
           } else {
             reject(new Error(this.error));
           }
         };
 
         this.client.onDisconnect = () => {
-          console.log("WebSocket 연결 해제됨");
           this.isConnected = false;
           this.client = null;
         };
@@ -110,7 +104,6 @@ class WebSocketManager {
       this.client = null;
       this.isConnected = false;
       this.error = null;
-      console.log("WebSocket 연결 해제됨");
     }
   }
 
@@ -145,7 +138,6 @@ class WebSocketManager {
       this.subscriptions.set(roomId, subscription);
       this.messageHandlers.set(roomId, messageHandler);
 
-      console.log(`채팅방 ${roomId} 구독 완료`);
       return true;
     } catch (error) {
       console.error("채팅방 구독 오류:", error);
@@ -159,14 +151,17 @@ class WebSocketManager {
       this.subscriptions.get(roomId).unsubscribe();
       this.subscriptions.delete(roomId);
       this.messageHandlers.delete(roomId);
-      console.log(`채팅방 ${roomId} 구독 해제`);
     }
   }
 
   // 메시지 전송
   sendMessage(roomId, senderId, senderName, content) {
     if (!this.isConnected || !this.client) {
-      console.error("WebSocket이 연결되지 않았습니다.");
+      console.error("WebSocket이 연결되지 않았습니다.", {
+        isConnected: this.isConnected,
+        hasClient: !!this.client,
+        error: this.error,
+      });
       return false;
     }
 
@@ -239,7 +234,6 @@ class WebSocketManager {
         body: JSON.stringify(readMessage),
       });
 
-      console.log(`읽음 처리 전송: 방 ${roomId}, 사용자 ${userId}, 메시지 ${messageIds.length}개`);
       return true;
     } catch (error) {
       console.error("읽음 처리 오류:", error);
@@ -256,10 +250,25 @@ class WebSocketManager {
 
   // 연결 상태 확인
   getConnectionStatus() {
-    return {
-      isConnected: this.isConnected,
+    // STOMP 클라이언트의 실제 연결 상태도 확인
+    const actualConnected = this.client && this.client.connected && this.client.active;
+
+    const status = {
+      isConnected: this.isConnected && actualConnected,
       error: this.error,
+      hasClient: !!this.client,
+      reconnectAttempts: this.reconnectAttempts,
+      actualConnected: actualConnected,
     };
+
+    return status;
+  }
+
+  // 연결 강제 재시도
+  async forceReconnect(userId, userInfo = null) {
+    this.disconnect();
+    this.reconnectAttempts = 0;
+    return this.connect(userId, userInfo);
   }
 }
 

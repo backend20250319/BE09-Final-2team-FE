@@ -49,6 +49,16 @@ export const useUserStore = create(
             console.log("✅ WebSocket 연결 성공");
           } catch (error) {
             console.error("❌ WebSocket 연결 실패:", error);
+            // WebSocket 연결 실패 시 3초 후 재시도
+            setTimeout(async () => {
+              try {
+                const userId = userData.id || response.data.data.id;
+                await websocketManager.connect(userId, userData);
+                console.log("✅ WebSocket 재연결 성공");
+              } catch (retryError) {
+                console.error("❌ WebSocket 재연결 실패:", retryError);
+              }
+            }, 3000);
           }
 
           return { success: true, data: response.data.data, message: "로그인되었습니다!" };
