@@ -4,17 +4,19 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import './form.css';
 import AddressSearch from '../components/AddressSearch';
+import { useCategoryStore } from '@/store/categoryStore';
 
 const ProductForm = () => {
     const searchParams = useSearchParams();
     const type = searchParams.get('type'); // 'regist' 또는 'modify'
     const productId = searchParams.get('productId'); // 수정 시 상품 번호
 
+    const categories = useCategoryStore((s) => s.categories);
+
     const [formData, setFormData] = useState({
         images: [],
         productName: '',
-        mainCategory: '출산/육아용품',
-        subCategory: '모유수유용품',
+        categoryId: null, // ✅ 서버에는 이것만 보내면 됨
         price: '',
         description: '',
         productStatus: 'USED', // 'NEW' 또는 'USED'
@@ -31,6 +33,8 @@ const ProductForm = () => {
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [showHashtagWarning, setShowHashtagWarning] = useState(false);
 
+    const isModifyMode = type === 'modify';
+
     // 수정 모드일 때 기존 데이터 로드
     useEffect(() => {
         if (type === 'modify' && productId) {
@@ -43,9 +47,14 @@ const ProductForm = () => {
     useEffect(() => {
         if (categories.length > 0) {
             setSelectedMainCategory(categories[0]);
-            setSelectedSubCategory(categories[0].children[0]);
+            setSelectedSubCategory(categories[0].children[0] || null);
+            setFormData((prev) => ({
+                ...prev,
+                mainCategory: categories[0].name,
+                subCategory: categories[0].children[0]?.name || '',
+            }));
         }
-    }, []);
+    }, [categories]);
 
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -167,114 +176,32 @@ const ProductForm = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-
-        // 가격 데이터에서 천 단위 구분자 제거하고 숫자로 변환
         const submitData = {
             ...formData,
             price: formData.price ? parseInt(formData.price.replace(/,/g, '')) : 0,
         };
 
-        // TODO: API 호출로 상품 등록/수정
+        // ✅ 서버에는 categoryId 하나만 전달
         console.log('제출된 데이터:', submitData);
     };
 
-    const isModifyMode = type === 'modify';
-
-    // 카테고리 데이터
-    const categories = [
-        {
-            id: 1,
-            name: '출산/육아용품',
-            parentId: null,
-            children: [
-                { id: 101, name: '모유수유용품', parentId: 1, children: [] },
-                { id: 102, name: '분유수유용품', parentId: 1, children: [] },
-                { id: 103, name: '튼살크림/스킨케어', parentId: 1, children: [] },
-                { id: 104, name: '임부복/수유복/언더웨어', parentId: 1, children: [] },
-                { id: 105, name: '물티슈/기저귀', parentId: 1, children: [] },
-                { id: 106, name: '분유/이유식', parentId: 1, children: [] },
-                { id: 107, name: '아기띠/기저귀가방', parentId: 1, children: [] },
-                { id: 108, name: '신생아/영유아의류', parentId: 1, children: [] },
-                { id: 109, name: '유아로션/목욕용품', parentId: 1, children: [] },
-                { id: 110, name: '유아건강/위생용품', parentId: 1, children: [] },
-                { id: 111, name: '유모차/웨건', parentId: 1, children: [] },
-            ],
-        },
-        {
-            id: 2,
-            name: '유아동의류',
-            parentId: null,
-            children: [
-                { id: 201, name: '유아용의류', parentId: 2, children: [] },
-                { id: 202, name: '아동용의류', parentId: 2, children: [] },
-                { id: 203, name: '내의/잠옷/속옷', parentId: 2, children: [] },
-                { id: 204, name: '패딩/자켓', parentId: 2, children: [] },
-                { id: 205, name: '한복/소품', parentId: 2, children: [] },
-            ],
-        },
-        {
-            id: 3,
-            name: '유아동잡화',
-            parentId: null,
-            children: [
-                { id: 301, name: '구두/운동화/샌들/부츠', parentId: 3, children: [] },
-                { id: 302, name: '장화/우비/우산', parentId: 3, children: [] },
-                { id: 303, name: '모자/장갑', parentId: 3, children: [] },
-                { id: 304, name: '책가방/여행가방', parentId: 3, children: [] },
-            ],
-        },
-        {
-            id: 4,
-            name: '유아동교구/완구',
-            parentId: null,
-            children: [
-                { id: 401, name: '신생아완구', parentId: 4, children: [] },
-                { id: 402, name: '원목교구', parentId: 4, children: [] },
-                { id: 403, name: '음악놀이/자석교구', parentId: 4, children: [] },
-                { id: 404, name: '전동차/핫휠', parentId: 4, children: [] },
-                { id: 405, name: '로봇', parentId: 4, children: [] },
-                { id: 406, name: '인형/디즈니의상', parentId: 4, children: [] },
-                { id: 407, name: '블록/레고', parentId: 4, children: [] },
-                { id: 408, name: '대형 완구용품', parentId: 4, children: [] },
-            ],
-        },
-        {
-            id: 5,
-            name: '유아동안전/실내용품',
-            parentId: null,
-            children: [{ id: 501, name: '카시트', parentId: 5, children: [] }],
-        },
-        {
-            id: 6,
-            name: '유아동가구',
-            parentId: null,
-            children: [{ id: 601, name: '침대/매트리스', parentId: 6, children: [] }],
-        },
-        {
-            id: 7,
-            name: '기타 유아동용품',
-            parentId: null,
-            children: [],
-        },
-    ];
-
+    // 메인 카테고리 변경
     const handleMainCategoryChange = (category) => {
         setSelectedMainCategory(category);
-        // 하위카테고리를 첫 번째 항목으로 자동 설정
-        const firstSubCategory = category.children[0];
-        setSelectedSubCategory(firstSubCategory);
+        const firstSub = category.children[0] || null;
+        setSelectedSubCategory(firstSub);
         setFormData((prev) => ({
             ...prev,
-            mainCategory: category.name,
-            subCategory: firstSubCategory ? firstSubCategory.name : '',
+            categoryId: firstSub ? firstSub.id : category.id, // ✅ 하위 있으면 하위 id, 없으면 부모 id
         }));
     };
 
+    // 서브 카테고리 변경
     const handleSubCategoryChange = (category) => {
         setSelectedSubCategory(category);
         setFormData((prev) => ({
             ...prev,
-            subCategory: category.name,
+            categoryId: category.id,
         }));
     };
 

@@ -182,6 +182,7 @@ export const useUserStore = create(
             partialize: (state) => ({
                 user: state.user,
                 isAuthenticated: state.isAuthenticated,
+                accessToken: state.accessToken,
             }), // 저장할 상태만 선택
         }
     )

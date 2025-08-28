@@ -1,10 +1,12 @@
 import axios from 'axios';
 import { useUserStore } from '@/store/userStore';
+import { TradeStatus } from '@/enums/tradeStatus';
 
 // 환경변수에서 API URL 가져오기
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
 const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || `${API_BASE_URL}/chat-service`;
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || `${API_BASE_URL}/user-service`;
+const PRODUCT_URL = `/product-service`;
 
 // axios 기본 설정 (쿠키 기반 인증)
 const api = axios.create({
@@ -84,43 +86,52 @@ export const chatAPI = {
 
 // Product Service API 함수들
 export const productAPI = {
-    // 상품 목록 조회
-    getProducts: (params = {}) => {
-        const queryParams = new URLSearchParams();
-        Object.entries(params).forEach(([key, value]) => {
-            if (value !== undefined && value !== null) {
-                queryParams.append(key, value);
-            }
-        });
-        return api.get(`/product-service/products?${queryParams.toString()}`);
+    // 카테고리 트리 조회
+    getCategoriesTree: () => api.get('product-service/categories/tree'),
+
+    // 주소 검색 (emd = 읍/면/동 이름)
+    searchAreas: (emd) => api.get(`/product-service/areas/search`, { params: { emd } }),
+
+    // ✅ 내 거래 요약 조회
+    getMyTradeSummary: () => api.get('/product-service/trades/me/summary'),
+
+    // 특정 유저 거래 요약 조회
+    getUserTradeSummary: (userId) => api.get(`/product-service/trades/users/${userId}/summary`),
+
+    // ✅ 내 구매 상품 조회
+    getMyPurchases: () => api.get('/product-service/trades/me/purchases'),
+
+    // ✅ 내 판매 상품 조회
+    getMySales: () => api.get('/product-service/trades/me/sales'),
+
+    // 타 유저 상품 조회
+    getUserSales: (sellerId) => api.get(`/product-service/trades/users/${sellerId}/sales`),
+
+    // ✅ 판매완료 처리
+    completeTrade: (productId, buyerId) => api.patch(`/product-service/trades/${productId}/complete`, { buyerId }),
+
+    // ✅ 상품 거래 상태 수정
+    updateTradeStatus: (productId, newStatus) => {
+        if (!Object.values(TradeStatus).includes(newStatus)) {
+            throw new Error(`❌ 잘못된 거래 상태 값: ${newStatus}`);
+        }
+        return api.patch(`/product-service/trades/${productId}/status`, { newStatus });
     },
+
+    // ✅ 상품 등록
+    createProduct: (productData) => api.post('/product-service/products', productData),
 
     // 상품 상세 조회
-    getProduct: (productId) => api.get(`/product-service/products/${productId}`),
+    getProductDetail: (productId) => api.get(`/product-service/products/${productId}`),
 
-    // 상품 요약 정보 조회 (여러 상품 ID로 한 번에 조회)
-    getProductsSummary: (productIds) => {
-        const ids = Array.isArray(productIds) ? productIds.join(',') : productIds;
-        return api.get(`/product-service/products/summary?productIds=${ids}`);
-    },
+    // 상품 요약 리스트 조회
+    getProductsSummary: (productIds) => api.get(`/product-service/products/summary?productIds=${productIds.join(',')}`),
 
-    // 상품 등록
-    createProduct: (data) => api.post('/product-service/products', data),
-
-    // 상품 수정
-    updateProduct: (productId, data) => api.put(`/product-service/products/${productId}`, data),
-
-    // 상품 삭제
-    deleteProduct: (productId) => api.delete(`/product-service/products/${productId}`),
-
-    // 내 상품 목록
-    getMyProducts: (userId) => api.get(`/product-service/products/my/${userId}`),
-
-    // 카테고리별 상품 조회
-    getProductsByCategory: (categoryId) => api.get(`/product-service/products/category/${categoryId}`),
+    // 홈 상품 섹션 조회
+    getHomeSections: () => api.get('/product-service/products/sections'),
 
     // 상품 검색
-    searchProducts: (keyword) => api.get(`/product-service/products/search?keyword=${encodeURIComponent(keyword)}`),
+    searchProducts: (searchRequest) => api.post('/product-service/products/search', searchRequest),
 };
 
 export default api;
