@@ -1,75 +1,220 @@
-// components/chat/ChatListSidebar.jsx
+/* 
+  2025-08-27
+  채팅방 목록 사이드바 메인 컴포넌트
+*/
 
 import Sidebar from "@/components/common/Sidebar";
-import { MessageCircleMore } from "lucide-react";
+import { MessageCircleMore, RefreshCw } from "lucide-react";
 import ChatRoomSidebar from "./ChatRoomSidebar";
+import ChatRoomCard from "./ChatRoomCard";
+import ChatListEmpty from "./ChatListEmpty";
+import ChatListHeader from "./ChatListHeader";
+import { useState, useEffect } from "react";
+import { chatAPI } from "../../../lib/api";
+import { useUser, useIsAuthenticated, useCheckAuthStatus } from "../../../store/userStore";
+import { useSidebar } from "../../../hooks/useSidebar";
 
 export default function ChatListSidebar({ trigger, children, sidebarKey = "chatList" }) {
-  // MongoDB에서 받은 채팅방 리스트 더미 (상품 ID만 포함)
-  const chatRoomData = [
-    {
-      id: 101,
-      opponentId: "user1",
-      name: "김철수",
-      avatar: "",
-      message: "안녕하세요~ 상품은 미사용 제품이고요 네고는 많이 못해드립니다!",
-      date: "7월 28일",
-      productId: "p101",
-    },
-    {
-      id: 102,
-      opponentId: "user2",
-      name: "유오동",
-      avatar: "",
-      message: "그럼요! 판매 중인 상품입니다!",
-      date: "7월 29일",
-      productId: "p102",
-    },
-  ];
+  const [loading, setLoading] = useState(true); // 초기 로딩
+  const [error, setError] = useState(null);
+  const [selectedChat, setSelectedChat] = useState(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [chatRooms, setChatRooms] = useState([]);
+  const [isInitialized, setIsInitialized] = useState(false); // 초기화 완료
+  const user = useUser();
+  const isAuthenticated = useIsAuthenticated();
+  const checkAuthStatus = useCheckAuthStatus();
+  const chatRoomSidebar = useSidebar("chatRoom");
 
-  // 상품 정보는 상품 API에서 가져오는 구조지만, 여기서는 더미로 흉내
-  const productMap = {
-    p101: {
-      productImg: "/images/text1.png",
-      productName: "나이키 슈즈",
-      productPrice: 20000,
-      isSale: false,
-    },
-    p102: {
-      productImg: "/images/test.jpg",
-      productName: "장난꾸러기 유아복 복장 코튼 장난꾸러기 세트",
-      productPrice: 35000,
-      isSale: false,
-    },
+  /** 채팅방 참여자 정보를 가져와서 otherUserNickname 설정 */
+  const loadParticipantNames = async (rooms, currentUserId) => {
+    const updatedRooms = await Promise.all(
+      rooms.map(async (room) => {
+        // 이미 otherUserNickname이 있으면 건너뛰기
+        if (room.otherUserNickname) return room;
+
+        try {
+          const response = await chatAPI.getRoomParticipants(room.id || room.roomId);
+          if (response.data.success) {
+            const participants = response.data.data || [];
+            // 현재 사용자가 아닌 다른 참여자를 찾아서 이름 설정
+            const otherUser = participants.find((p) => p.userId !== currentUserId);
+            if (otherUser) {
+              return {
+                ...room,
+                otherUserNickname: otherUser.nickname || "상대방",
+              };
+            }
+          }
+        } catch (error) {
+          console.error(`채팅방 ${room.id} 참여자 정보 로드 오류:`, error);
+        }
+        return room;
+      })
+    );
+    return updatedRooms;
+  };
+
+  /** 채팅방 목록 조회 (userId를 명시적으로 받음) */
+  const fetchChatRooms = async (isRefresh = false, userIdParam) => {
+    const uid = userIdParam ?? user?.id;
+    if (!uid) return; // 전이 상태에선 목록을 비우지 않고 조용히 반환
+
+    if (isRefresh) {
+      setRefreshing(true);
+    } else if (!isInitialized) {
+      setLoading(true);
+    }
+    setError(null);
+
+    try {
+      const response = await chatAPI.getMyRooms(uid);
+      if (response?.data?.success) {
+        const roomsData = response.data.data || [];
+
+        // 참여자 정보를 가져와서 name 설정
+        const roomsWithNames = await loadParticipantNames(roomsData, uid);
+        setChatRooms(roomsWithNames);
+      } else {
+        setError("채팅방 목록을 불러올 수 없습니다.");
+        setChatRooms([]);
+      }
+    } catch (e) {
+      console.error("채팅방 목록 조회 오류:", e);
+      setError("채팅방 목록을 불러올 수 없습니다.");
+      setChatRooms([]);
+    } finally {
+      if (isRefresh) setRefreshing(false);
+      else if (!isInitialized) setLoading(false);
+    }
+  };
+
+  /** 수동 새로고침 */
+  const handleRefresh = async () => {
+    await fetchChatRooms(true, user?.id);
+  };
+
+  /** 초기화: 인증 확인 → userId 확보되면 fetch → 초기화 해제 */
+  useEffect(() => {
+    const initializeData = async () => {
+      try {
+        const authResult = await checkAuthStatus();
+        const uid = authResult?.user?.id ?? user?.id;
+        if (uid) {
+          await fetchChatRooms(false, uid);
+        }
+        // uid 없으면 전이 상태: 목록 비우지 않고 대기
+      } catch (e) {
+        console.error("초기화 오류:", e);
+        setChatRooms([]); // 오류 시에만 비움
+      } finally {
+        setIsInitialized(true);
+        setLoading(false);
+      }
+    };
+    initializeData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  /** 인증/유저 변경 시 재조회 (초기화 완료 후에만) */
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (isAuthenticated && user?.id) {
+      fetchChatRooms(false, user.id);
+    } else {
+      // 로그아웃 확정 시에만 비우고자 한다면 아래 주석 해제
+      // setChatRooms([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, isAuthenticated, user?.id]);
+
+  /** 외부 새로고침 이벤트 */
+  useEffect(() => {
+    const handleRefreshChatRooms = () => {
+      console.log("채팅방 목록 새로고침 이벤트 수신");
+      if (isAuthenticated && user?.id) fetchChatRooms(false, user.id);
+    };
+    window.addEventListener("refreshChatRooms", handleRefreshChatRooms);
+    return () => {
+      window.removeEventListener("refreshChatRooms", handleRefreshChatRooms);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isInitialized, isAuthenticated, user?.id]);
+
+  /** 채팅방 클릭 핸들러 */
+  const handleChatClick = (chat) => {
+    const chatId = chat.id ?? chat.roomId;
+    const chatData = {
+      ...chat,
+      id: chatId, // 선택 비교 안정화
+      message: chat.lastMessage ?? chat.message,
+      date: chat.lastSentAt ? new Date(chat.lastSentAt).toLocaleString() : chat.date ?? "",
+      currentUserId: user?.id,
+      currentUserNickname: user?.nickname || user?.name || user?.loginId || "사용자",
+    };
+
+    setSelectedChat(chatData);
+    chatRoomSidebar.open();
+
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("chatRoomOpened", { detail: { roomId: chatId } }));
+    }, 150);
   };
 
   return (
-    // ChatListSidebar.jsx
-    <Sidebar
-      sidebarKey={sidebarKey}
-      title="채팅 목록"
-      trigger={
-        trigger ?? (
-          <button className="flex items-center gap-1 cursor-pointer">
-            <MessageCircleMore color="#000000" />
-            <span className="text-sm">채팅하기</span>
-          </button>
-        )
-      }
-    >
-      {/* children이 있으면 그대로 렌더링, 없으면 기본 UI */}
-      {typeof children !== "undefined" ? (
-        children
-      ) : (
-        // 기본 UI
-        <ul>
-          {chatRoomData.map((chat) => (
-            <li key={chat.id}>
-              <ChatRoomSidebar chat={{ ...chat, ...productMap[chat.productId] }} />
-            </li>
-          ))}
-        </ul>
-      )}
-    </Sidebar>
+    <>
+      {/* ChatListSidebar */}
+      <Sidebar
+        sidebarKey={sidebarKey}
+        title="채팅 목록"
+        trigger={
+          trigger ?? (
+            <button className="flex items-center gap-1 cursor-pointer">
+              <MessageCircleMore color="#000000" />
+              <span className="text-sm">채팅하기</span>
+            </button>
+          )
+        }
+      >
+        {/* children이 있으면 그대로 렌더링 */}
+        {typeof children !== "undefined" ? (
+          children
+        ) : (
+          <div>
+            {error && (
+              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">{error}</div>
+            )}
+
+            {loading || !isInitialized ? (
+              <div className="text-center py-8">
+                <div className="text-lg">로딩 중...</div>
+              </div>
+            ) : chatRooms.length === 0 ? (
+              <ChatListEmpty onRefresh={handleRefresh} refreshing={refreshing} />
+            ) : (
+              <div>
+                <ChatListHeader chatCount={chatRooms.length} onRefresh={handleRefresh} refreshing={refreshing} />
+                <div className="space-y-2">
+                  {chatRooms.map((chat, index) => {
+                    const id = chat.id ?? chat.roomId ?? index;
+                    return (
+                      <ChatRoomCard
+                        key={`chat-${id}`}
+                        chat={{ ...chat, id }}
+                        isSelected={selectedChat?.id === id}
+                        onClick={handleChatClick}
+                      />
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Sidebar>
+
+      {/* ChatRoomSidebar */}
+      {selectedChat && <ChatRoomSidebar chat={selectedChat} />}
+    </>
   );
 }
