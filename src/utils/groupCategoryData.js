@@ -1,28 +1,34 @@
-export function groupCategoryWithColumn(data) {
-  // 상위/하위 분리
-  const parents = data.filter((d) => d.parent_id === null);
-  const children = data.filter((d) => d.parent_id !== null);
+// utils/groupCategoryData.js
+export function groupCategoryWithColumn(categories, columnCount = 3) {
+    if (!Array.isArray(categories) || categories.length === 0) return {};
 
-  const columnMap = {};
+    // 각 상위 카테고리의 총 아이템 수 = 자기 자신 + children.length
+    const weightedCategories = categories.map((cat) => ({
+        ...cat,
+        weight: 1 + (cat.children?.length || 0),
+    }));
 
-  parents.forEach((parent) => {
-    const col = parent.column || 1;
-    if (!columnMap[col]) columnMap[col] = [];
+    // 전체 weight 합
+    const totalWeight = weightedCategories.reduce((sum, c) => sum + c.weight, 0);
+    const targetPerCol = Math.ceil(totalWeight / columnCount);
 
-    // 하위 카테고리 정렬 및 전체 객체 유지
-    const childItems = children
-      .filter((child) => child.parent_id === parent.id)
-      .sort((a, b) => a.sort_order - b.sort_order);
+    // 열별로 균등하게 배분
+    const grouped = {};
+    let currentCol = 0;
+    let currentWeight = 0;
+    grouped[currentCol] = [];
 
-    columnMap[col].push({
-      title: parent.code_value,
-      href: parent.href || "#",
-      items: childItems.map((child) => ({
-        name: child.code_value,
-        href: child.href || "#",
-      })),
-    });
-  });
+    for (const cat of weightedCategories) {
+        if (currentWeight + cat.weight > targetPerCol && currentCol < columnCount - 1) {
+            // 다음 열로 이동
+            currentCol++;
+            grouped[currentCol] = [];
+            currentWeight = 0;
+        }
 
-  return columnMap;
+        grouped[currentCol].push(cat);
+        currentWeight += cat.weight;
+    }
+
+    return grouped;
 }
