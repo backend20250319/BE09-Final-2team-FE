@@ -30,7 +30,7 @@ export const useUserStore = create(
                     // 3. 상태 업데이트
                     set({
                         user: user,
-                        accessToken: accessToken, // 🔹 응답에서 받은 토큰을 상태에 저장
+                        accessToken: accessToken, // 응답에서 받은 토큰을 상태에 저장
                         refreshToken: refreshToken,
                         isAuthenticated: true, // 로그인 성공 시 즉시 true 로 설정
                         isAuthReady: true,
@@ -55,7 +55,7 @@ export const useUserStore = create(
                 try {
                     set({ loading: true, error: null });
 
-                    // 🔹 userAPI.getDashboardData()를 사용하도록 수정
+                    // userAPI.getDashboardData()를 사용하도록 수정
                     const response = await userAPI.getDashboardData();
 
                     const dashboard = response.data?.data;
@@ -156,7 +156,6 @@ export const useUserStore = create(
             name: 'user-storage', // localStorage 키 이름
             partialize: (state) => ({
                 user: state.user,
-                //isAuthenticated: state.isAuthenticated,
                 accessToken: state.accessToken,
             }), // 저장할 상태만 선택
         }
