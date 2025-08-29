@@ -11,6 +11,7 @@ import ProductCard from '../../../components/common/ProductCard';
 import AddressSearch from '../components/AddressSearch';
 import './search.css';
 
+// TODO: 무한스크롤 구현/ api 응답 page객체 활용
 export default function Page() {
     const [loading, setLoading] = useState(false);
 
