@@ -241,7 +241,41 @@
 .filter-button:not(.active):hover {
     background-color: #e0e0e0;
 }
+.review-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
 
+.review-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* 긍정 옵션 뱃지 색상 */
+.kind-badge {
+    background-color: #e0f7fa; /* 연한 파란색 배경 */
+    color: #00796b; /* 글자색 */
+}
+
+.promise-badge {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.satisfaction-badge {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* 부정 옵션 뱃지 색상 */
+.unkind-badge, .unpromised-badge, .unsatisfaction-badge {
+    background-color: #ffebee; /* 연한 빨간색 배경 */
+    color: #c62828; /* 글자색 */
+}
 /* 리뷰 리스트 */
 .review-list {
     padding: 10px 20px;
@@ -249,7 +283,18 @@
     flex-direction: column;
     gap: 16px;
 }
-
+/* empty-state 클래스가 있을 때만 Flexbox를 적용하여 내용을 중앙 정렬합니다. */
+.review-list.empty-state {
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center;     /* 수직 중앙 정렬 */
+    min-height: 150px;       /* 최소 높이를 설정하여 중앙 정렬 공간 확보 */
+}
+/* 리뷰가 없을 때 표시되는 <p> 태그의 스타일 */
+.review-list.empty-state p {
+    font-size: 1.2rem; /* 글자 크기를 키웁니다. */
+    color: #999;
+}
 /* 개별 리뷰 카드 */
 .review-card {
     display: flex;

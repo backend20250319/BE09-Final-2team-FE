@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import '../css/UserReviewList.css';
 import UserReviewDetail from './UserReviewDetail';
 
-const UserReviewList = ({ onClose, open, user }) => {
+const UserReviewList = ({ onClose, open, user,nickname }) => {
     const [isClosing, setIsClosing] = useState(false);
     const [activeFilter, setActiveFilter] = useState('all');
     const [showReviewDetail, setShowReviewDetail] = useState(false);
@@ -142,7 +142,7 @@ const UserReviewList = ({ onClose, open, user }) => {
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h2 className="review-title">"{user?.name || '사용자'}"님의 거래 리뷰 내역</h2>
+                    <h2 className="review-title">"{nickname || '사용자'}"님의 거래 리뷰 내역</h2>
                 </div>
 
                 <div className="average-rating-box">
@@ -160,7 +160,7 @@ const UserReviewList = ({ onClose, open, user }) => {
                             </p>
                         </div>
                     </div>
-                    <p>"{user?.name || '사용자'}"의 총 별점 평균과 총 리뷰 개수는</p>
+                    <p>"{nickname || '사용자'}"의 총 별점 평균과 총 리뷰 개수는</p>
                     <div className="big-stars">
                         {[1, 2, 3, 4, 5].map((starIndex) => (
                             <span key={starIndex} className="big-star-wrapper">
@@ -216,8 +216,9 @@ const UserReviewList = ({ onClose, open, user }) => {
                     </div>
                 </div>
 
-                <div className="review-list">
-                    {filteredReviews.map((review) => (
+                <div className={`review-list ${filteredReviews.length === 0 ? 'empty-state' : ''}`}>
+                    {filteredReviews.length > 0 ? (
+                    filteredReviews.map((review) => (
                         <div
                             className="review-card"
                             key={review.reviewId}
@@ -245,6 +246,16 @@ const UserReviewList = ({ onClose, open, user }) => {
                                         </span>
                                     ))}
                                 </div>
+                                <div className="review-options">
+                                    {/* 긍정 옵션 뱃지 */}
+                                    {review.kind && <span className="review-badge kind-badge">친절해요</span>}
+                                    {review.promise && <span className="review-badge promise-badge">약속을 잘 지켜요</span>}
+                                    {review.satisfaction && <span className="review-badge satisfaction-badge">만족해요</span>}
+                                    {/* 부정 옵션 뱃지 */}
+                                    {!review.kind && <span className="review-badge unkind-badge">불친절해요</span>}
+                                    {!review.promise && <span className="review-badge unpromised-badge">약속을 안 지켜요</span>}
+                                    {!review.satisfaction && <span className="review-badge unsatisfaction-badge">불만족스러워요</span>}
+                                </div>
                                 <div className="comment-text-box">
                                     <p className="review-comment">{review.summary}</p>
                                 </div>
@@ -256,7 +267,9 @@ const UserReviewList = ({ onClose, open, user }) => {
                                 리뷰 상세
                             </button>
                         </div>
-                    ))}
+                    ))   ) : (
+                        <p>작성된 리뷰가 없습니다.</p>
+                    )}
                 </div>
             </aside>
             {selectedReview && (

@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 import '../css/MyReviewAddForm.css';
 
-const MyReviewAddForm = ({ onClose }) => {
+const MyReviewAddForm = ({ onClose ,nickname }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
     const [rating, setRating] = useState(0);
     const [answers, setAnswers] = useState({
@@ -165,7 +165,7 @@ const MyReviewAddForm = ({ onClose }) => {
                                 <polyline points="15 18 9 12 15 6" />
                             </svg>
                         </button>
-                        <h1 className="sidebar-title">OO님과의 거래 리뷰 작성하기</h1>
+                        <h1 className="sidebar-title">{nickname || '사용자'} 님과의 거래 리뷰 작성하기</h1>
                     </div>
 
                     <div className="review-edit-content">
@@ -241,7 +241,7 @@ const MyReviewAddForm = ({ onClose }) => {
             {isLoading && (
                 <div className="custom-loading-modal">
                     <div className="modal-content">
-                        <div className="spinner"></div> {/* 스피너 */}
+                        <div className="spinner"></div>
                         <h2>등록 중</h2>
                         <p>리뷰를 등록하는 중입니다...</p>
                     </div>

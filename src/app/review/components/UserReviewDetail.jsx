@@ -41,7 +41,7 @@ const UserReviewDetail = ({ review, onClose, user }) => {
                             <polyline points="15 18 9 12 15 6" />
                         </svg>
                     </button>
-                    <h1 className="sidebar-title">"{user?.name || '사용자'}"의 상세 리뷰 내역</h1>
+                    <h1 className="sidebar-title">"{user?.nickname || '구매자'}"의 상세 리뷰</h1>
                 </div>
 
                 <div className="review-detail-content">
