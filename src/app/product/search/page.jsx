@@ -1,20 +1,42 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { productAPI } from '@/lib/api';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCategoryStore } from '@/store/categoryStore';
+import { AgeGroup, AgeGroupText } from '@/enums/ageGroup';
+import { SortOption, SortOptionText } from '@/enums/sortOption';
+import { ProductStatus, ProductStatusText } from '@/enums/productStatus';
 import ProductCard from '../../../components/common/ProductCard';
 import AddressSearch from '../components/AddressSearch';
 import './search.css';
 
+// TODO: 무한스크롤 구현/ api 응답 page객체 활용
 export default function Page() {
-    const [searchQuery, setSearchQuery] = useState('');
-    const [selectedAgeGroups, setSelectedAgeGroups] = useState(['0~6개월']);
-    const [priceRange, setPriceRange] = useState({ min: '', max: '' });
-    const [selectedOptions, setSelectedOptions] = useState(['판매완료 상품 제외', '새상품', '중고']);
-    const [sortBy, setSortBy] = useState('추천순');
-    const [isFromCategory, setIsFromCategory] = useState(true);
+    const [loading, setLoading] = useState(false);
 
+    const [searchQuery, setSearchQuery] = useState(''); // 검색ㅓ
+    const [selectedAgeGroups, setSelectedAgeGroups] = useState(Object.values(AgeGroup)); // 연령대
+
+    // 가격
+    const [priceRange, setPriceRange] = useState({ min: '', max: '' });
+    // 실제 검색에 반영될 값
+    const [appliedPriceRange, setAppliedPriceRange] = useState({ min: '', max: '' });
+
+    // 지역 선택 값 상태
+    const [selectedAddresses, setSelectedAddresses] = useState([]);
+
+    // ⚡ 옵션을 enum/boolean 기반으로 분리
+    const [excludeSoldOut, setExcludeSoldOut] = useState(true);
+    const [selectedStatuses, setSelectedStatuses] = useState([ProductStatus.NEW, ProductStatus.USED]);
+
+    // 정렬
+    const [sortBy, setSortBy] = useState(SortOption.RECOMMENDED);
+
+    // 상품 리스트
+    const [products, setProducts] = useState([]);
+
+    const [isFromCategory, setIsFromCategory] = useState(true);
     const searchParams = useSearchParams();
     const router = useRouter();
     const pathname = usePathname();
@@ -46,49 +68,54 @@ export default function Page() {
 
     // URL 파라미터 확인
     useEffect(() => {
-        const category = searchParams.get('category');
+        const categoryId = searchParams.get('category');
         const keyword = searchParams.get('keyword');
 
-        if (category) {
-            // 카테고리로 들어온 경우: /search?category=3
+        if (categoryId) {
             setIsFromCategory(true);
-            setSelectedCategory(category);
 
-            // 카테고리 ID로 경로 설정
-            const categoryPath = findCategoryPath(category);
-            if (categoryPath) {
-                setCategoryPath(['전체', ...categoryPath]);
-                setSelectedCategory(categoryPath[categoryPath.length - 1]);
-                setSearchQuery(categoryPath[categoryPath.length - 1]);
+            // ✅ 카테고리 객체 찾기
+            const findCategoryById = (tree, id) => {
+                for (const category of tree) {
+                    if (category.id.toString() === id) return category;
+                    if (category.children?.length > 0) {
+                        const found = findCategoryById(category.children, id);
+                        if (found) return found;
+                    }
+                }
+                return null;
+            };
+
+            const categoryObj = findCategoryById(categories, categoryId);
+
+            if (categoryObj) {
+                setSelectedCategory(categoryObj); // ✅ 객체 저장
+                setCategoryPath(['전체', ...findCategoryPath(categoryId)]); // breadcrumb 세팅
+                setSearchQuery(categoryObj.name);
             } else {
-                // category 파라미터가 사라진 경우 초기화
                 setCategoryPath(['전체']);
                 setSelectedCategory(null);
             }
         }
 
         if (keyword) {
-            // 검색어로 들어온 경우: /search?keyword=유모차
             setIsFromCategory(false);
             setSearchQuery(decodeURIComponent(keyword));
         } else {
-            // keyword 파라미터가 사라지면 빈값
             setSearchQuery('');
         }
     }, [searchParams, categories]);
 
-    // 카테고리 확장/축소 토글 함수
+    // 카테고리 확장/축소 토글
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded((prev) => !prev);
     };
 
-    // 현재 표시할 카테고리 찾기
+    // 현재 표시할 카테고리
     const getCurrentCategory = () => {
-        if (categoryPath.length === 1) return null; // 전체만 있는 경우
+        if (categoryPath.length === 1) return null;
 
-        // 동적으로 경로를 따라가면서 현재 카테고리 찾기
         let currentCategory = categories.find((cat) => cat.name === categoryPath[1]);
-
         for (let i = 2; i < categoryPath.length; i++) {
             if (currentCategory?.children) {
                 currentCategory = currentCategory.children.find((cat) => cat.name === categoryPath[i]);
@@ -96,70 +123,57 @@ export default function Page() {
                 return null;
             }
         }
-
         return currentCategory;
     };
 
-    // 카테고리 클릭 시 경로/URL 업데이트
+    // 카테고리 클릭
     const handleCategoryClick = (categoryName) => {
         let clickedCategory;
 
         if (categoryPath.length === 1) {
-            // 메인 카테고리에서 첫 번째 클릭
             clickedCategory = categories.find((cat) => cat.name === categoryName);
         } else {
-            // 하위 카테고리에서 클릭
             const currentCategory = getCurrentCategory();
             clickedCategory = currentCategory?.children?.find((cat) => cat.name === categoryName);
         }
 
         const newPath = categoryPath.slice(1).concat(categoryName);
         setCategoryPath(['전체', ...newPath]);
-        // 선택된 카테고리를 경로의 마지막 카테고리로 설정
-        setSelectedCategory(categoryName);
 
-        // URL 업데이트 - 현재 검색어 유지하면서 카테고리 추가
         if (clickedCategory) {
+            setSelectedCategory(clickedCategory); // ✅ 객체 통째로 저장
+
             const params = new URLSearchParams(searchParams);
             params.set('category', clickedCategory.id.toString());
             router.push(`${pathname}?${params.toString()}`);
         }
     };
 
-    // 브레드크럼 클릭 시 경로/URL 업데이트
+    // 브레드크럼 클릭
     const handleBreadcrumbClick = (index) => {
         if (index === 0) {
-            // "전체" 클릭 시 메인으로 돌아가기
             setCategoryPath(['전체']);
             setSelectedCategory(null);
-            // URL에서 카테고리 파라미터 제거
             const params = new URLSearchParams(searchParams);
             params.delete('category');
             router.push(`${pathname}?${params.toString()}`);
         } else {
-            // 해당 인덱스까지만 경로 유지
             const newPath = categoryPath.slice(0, index + 1);
             setCategoryPath(newPath);
-            // 선택된 카테고리를 경로의 마지막 카테고리로 설정
             setSelectedCategory(newPath[newPath.length - 1]);
 
-            // URL 업데이트 - 해당 경로의 카테고리 ID 찾기
             const targetCategoryName = newPath[newPath.length - 1];
             let targetCategory = null;
 
             if (newPath.length === 2) {
-                // 메인 카테고리
                 targetCategory = categories.find((cat) => cat.name === targetCategoryName);
             } else {
-                // 하위 카테고리 - 경로를 따라가면서 찾기
                 let currentCategory = categories.find((cat) => cat.name === newPath[1]);
-
                 for (let i = 2; i < newPath.length - 1; i++) {
                     if (currentCategory?.children) {
                         currentCategory = currentCategory.children.find((cat) => cat.name === newPath[i]);
                     }
                 }
-
                 if (currentCategory?.children) {
                     targetCategory = currentCategory.children.find((cat) => cat.name === targetCategoryName);
                 }
@@ -173,66 +187,86 @@ export default function Page() {
         }
     };
 
-    // 샘플 상품 데이터
-    const products = Array.from({ length: 12 }, (_, index) => ({
-        id: index + 1,
-        productName: '상품명 ㅋㅋ',
-        price: '5,000원',
-        location: '송림 1동',
-        timeAgo: '9시간 전',
-        imageUrl:
-            'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-        trade_status: 'ON_SALE',
-        status: 'NEW',
-        hasWrittenReview: false,
-        showReviewButton: false,
-    }));
-
-    // 필터 토글 핸들러
-    const toggleAgeGroup = (age) => {
-        setSelectedAgeGroups((prev) => (prev.includes(age) ? prev.filter((a) => a !== age) : [...prev, age]));
+    // ageGroup 필터 토글
+    const toggleAgeGroup = (ageEnum) => {
+        setSelectedAgeGroups((prev) =>
+            prev.includes(ageEnum) ? prev.filter((a) => a !== ageEnum) : [...prev, ageEnum]
+        );
     };
 
-    const toggleOption = (option) => {
-        setSelectedOptions((prev) => {
-            let newOptions;
-
-            if (option === '판매완료 상품 제외') {
-                // 판매완료 상품 제외는 독립적으로 토글
-                newOptions = prev.includes(option) ? prev.filter((o) => o !== option) : [...prev, option];
+    // status 필터 토글
+    const toggleStatus = (status) => {
+        setSelectedStatuses((prev) => {
+            let newStatuses;
+            if (prev.includes(status)) {
+                newStatuses = prev.filter((s) => s !== status);
             } else {
-                // 새상품, 중고는 서로 연관됨
-                if (prev.includes(option)) {
-                    // 선택된 옵션을 해제
-                    newOptions = prev.filter((o) => o !== option);
-                } else {
-                    // 선택되지 않은 옵션을 추가
-                    newOptions = [...prev, option];
-                }
-
-                // 새상품과 중고가 둘 다 해제되면 둘 다 다시 체크
-                if (!newOptions.includes('새상품') && !newOptions.includes('중고')) {
-                    newOptions = [...newOptions, '새상품', '중고'];
-                }
+                newStatuses = [...prev, status];
             }
-
-            return newOptions;
+            if (!newStatuses.includes(ProductStatus.NEW) && !newStatuses.includes(ProductStatus.USED)) {
+                newStatuses = [ProductStatus.NEW, ProductStatus.USED];
+            }
+            return newStatuses;
         });
     };
+
+    // 판매완료 제외 토글
+    const toggleExcludeSoldOut = () => setExcludeSoldOut((prev) => !prev);
+
+    // ✅ 검색 API 호출 함수
+    const fetchProducts = async () => {
+        setLoading(true);
+        try {
+            const searchRequest = {
+                query: searchQuery || null,
+                categoryId: selectedCategory ? selectedCategory.id : null, // ✅ ID는 여기서 뽑음
+                ageGroups: selectedAgeGroups,
+                priceMin: appliedPriceRange.min ? Number(appliedPriceRange.min) : null, // ✅ 여기
+                priceMax: appliedPriceRange.max ? Number(appliedPriceRange.max) : null, // ✅ 여기
+                areaIds: selectedAddresses.map((a) => a.id),
+                excludeSoldOut,
+                statuses: selectedStatuses,
+                sort: sortBy,
+                page: 0,
+                size: 20,
+            };
+
+            console.log('searchRequest: ', searchRequest);
+
+            const { data } = await productAPI.searchProducts(searchRequest);
+
+            if (data.success) {
+                setProducts(data.data.content);
+            }
+        } catch (err) {
+            console.error('상품 검색 실패:', err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // ✅ 필터 바뀔 때마다 자동 호출 (가격은 제외!)
+    useEffect(() => {
+        fetchProducts();
+    }, [
+        searchQuery,
+        selectedCategory,
+        selectedAgeGroups,
+        selectedAddresses,
+        excludeSoldOut,
+        selectedStatuses,
+        sortBy,
+        appliedPriceRange, // ✅ "적용된 가격"만 의존성에 포함
+    ]);
 
     return (
         <div className='search-product-search-page'>
             {/* 검색&필터 섹션 */}
             <section className='search-search-filter-section'>
-                {/* 검색 결과 헤더 */}
                 <div className='search-search-result-header'>
                     {isFromCategory ? (
-                        // 카테고리로 들어온 경우
-                        <>
-                            <span className='search-search-result-text'>검색 결과</span>
-                        </>
+                        <span className='search-search-result-text'>검색 결과</span>
                     ) : (
-                        // 검색어로 들어온 경우
                         <>
                             <h1 className='search-search-query'>{searchQuery}</h1>
                             <span className='search-search-result-text'>검색 결과</span>
@@ -261,12 +295,7 @@ export default function Page() {
                         <div className='search-breadcrumb'>
                             {categoryPath.map((item, index) => (
                                 <React.Fragment key={index}>
-                                    <span
-                                        onClick={() => {
-                                            handleBreadcrumbClick(index);
-                                        }}
-                                        style={{ cursor: 'pointer' }}
-                                    >
+                                    <span onClick={() => handleBreadcrumbClick(index)} style={{ cursor: 'pointer' }}>
                                         {item}
                                     </span>
                                     {index < categoryPath.length - 1 && <span className='search-separator'>&gt;</span>}
@@ -287,7 +316,6 @@ export default function Page() {
                             <div className='search-filter-content'>
                                 <div className='search-category-grid'>
                                     {categoryPath.length === 1 ? (
-                                        // 메인 카테고리 뷰
                                         categories.map((category) => (
                                             <div key={category.id} className='search-category-item'>
                                                 <span
@@ -299,7 +327,6 @@ export default function Page() {
                                             </div>
                                         ))
                                     ) : (
-                                        // 서브 카테고리 뷰
                                         <div className='search-sub-categories-container'>
                                             {getCurrentCategory()?.children?.map((subCategory) => (
                                                 <div key={subCategory.id} className='search-category-item'>
@@ -327,15 +354,15 @@ export default function Page() {
                     </div>
                     <div className='search-filter-content'>
                         <div className='search-checkbox-group'>
-                            {['0~6개월', '6~12개월', '1~2세', '2~4세', '4~6세', '6~8세', '8세 이상'].map((age) => (
-                                <label key={age} className='search-checkbox-item'>
+                            {Object.entries(AgeGroupText).map(([enumKey, label]) => (
+                                <label key={enumKey} className='search-checkbox-item'>
                                     <input
                                         type='checkbox'
-                                        checked={selectedAgeGroups.includes(age)}
-                                        onChange={() => toggleAgeGroup(age)}
+                                        checked={selectedAgeGroups.includes(enumKey)}
+                                        onChange={() => toggleAgeGroup(enumKey)}
                                         className='search-checkbox-input'
                                     />
-                                    <span className='search-checkbox-text'>{age}</span>
+                                    <span className='search-checkbox-text'>{label}</span>
                                 </label>
                             ))}
                         </div>
@@ -370,7 +397,9 @@ export default function Page() {
                                 }}
                                 className='search-price-input'
                             />
-                            <button className='search-apply-button'>적용</button>
+                            <button className='search-apply-button' onClick={() => setAppliedPriceRange(priceRange)}>
+                                적용
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -381,7 +410,7 @@ export default function Page() {
                         <h3>지역</h3>
                     </div>
                     <div className='search-filter-content'>
-                        <AddressSearch />
+                        <AddressSearch onChange={setSelectedAddresses} />
                     </div>
                 </div>
 
@@ -392,15 +421,26 @@ export default function Page() {
                     </div>
                     <div className='search-filter-content'>
                         <div className='search-checkbox-group'>
-                            {['판매완료 상품 제외', '새상품', '중고'].map((option) => (
-                                <label key={option} className='search-checkbox-item'>
+                            {/* 판매완료 제외 */}
+                            <label className='search-checkbox-item'>
+                                <input
+                                    type='checkbox'
+                                    checked={excludeSoldOut}
+                                    onChange={toggleExcludeSoldOut}
+                                    className='search-checkbox-input'
+                                />
+                                <span className='search-checkbox-text'>판매완료 상품 제외</span>
+                            </label>
+                            {/* 새상품 / 중고 */}
+                            {Object.entries(ProductStatusText).map(([status, label]) => (
+                                <label key={status} className='search-checkbox-item'>
                                     <input
                                         type='checkbox'
-                                        checked={selectedOptions.includes(option)}
-                                        onChange={() => toggleOption(option)}
+                                        checked={selectedStatuses.includes(status)}
+                                        onChange={() => toggleStatus(status)}
                                         className='search-checkbox-input'
                                     />
-                                    <span className='search-checkbox-text'>{option}</span>
+                                    <span className='search-checkbox-text'>{label}</span>
                                 </label>
                             ))}
                         </div>
@@ -411,15 +451,15 @@ export default function Page() {
             {/* 정렬 섹션 */}
             <section className='search-sort-section'>
                 <div className='search-sort-options'>
-                    {['추천순', '최신순', '낮은가격순', '높은가격순'].map((option, index) => (
-                        <React.Fragment key={option}>
+                    {Object.entries(SortOptionText).map(([key, label], index, arr) => (
+                        <React.Fragment key={key}>
                             <button
-                                className={`search-sort-option ${sortBy === option ? 'active' : ''}`}
-                                onClick={() => setSortBy(option)}
+                                className={`search-sort-option ${sortBy === key ? 'active' : ''}`}
+                                onClick={() => setSortBy(key)}
                             >
-                                {option}
+                                {label}
                             </button>
-                            {index < 3 && <span className='search-sort-separator'>|</span>}
+                            {index < arr.length - 1 && <span className='search-sort-separator'>|</span>}
                         </React.Fragment>
                     ))}
                 </div>
