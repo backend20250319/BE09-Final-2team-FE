@@ -6,6 +6,10 @@ import './form.css';
 import AddressSearch from '../components/AddressSearch';
 import { useCategoryStore } from '@/store/categoryStore';
 
+import { productAPI, fileAPI } from '@/lib/api'; // API import
+import { TradeStatus } from '@/enums/tradeStatus';
+import { AgeGroup, AgeGroupText } from '@/enums/ageGroup';
+
 const ProductForm = () => {
     const searchParams = useSearchParams();
     const type = searchParams.get('type'); // 'regist' 또는 'modify'
@@ -14,12 +18,12 @@ const ProductForm = () => {
     const categories = useCategoryStore((s) => s.categories);
 
     const [formData, setFormData] = useState({
-        images: [],
+        images: [], // File | {id, url}
         productName: '',
-        categoryId: null, // ✅ 서버에는 이것만 보내면 됨
+        categoryId: null,
         price: '',
         description: '',
-        productStatus: 'USED', // 'NEW' 또는 'USED'
+        productStatus: 'USED',
         ageRange: '',
         locations: [],
         hashtags: [],
@@ -27,21 +31,41 @@ const ProductForm = () => {
 
     const [imageCount, setImageCount] = useState(0);
     const [hashtagInput, setHashtagInput] = useState('');
-    const [locationInput, setLocationInput] = useState('');
     const [isDragOver, setIsDragOver] = useState(false);
     const [selectedMainCategory, setSelectedMainCategory] = useState(null);
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [showHashtagWarning, setShowHashtagWarning] = useState(false);
 
+    // 수정/등록 여부
     const isModifyMode = type === 'modify';
 
-    // 수정 모드일 때 기존 데이터 로드
+    // ✅ 수정 모드일 때 기존 데이터 로드
     useEffect(() => {
-        if (type === 'modify' && productId) {
-            // TODO: API 호출로 기존 상품 데이터 로드
-            console.log('수정 모드:', productId);
-        }
-    }, [type, productId]);
+        const fetchProduct = async () => {
+            if (isModifyMode && productId) {
+                const { data } = await productAPI.getProduct(productId);
+                if (data.success) {
+                    const product = data.data;
+                    setFormData({
+                        images: product.images.map((img) => ({
+                            id: img.imageFileId,
+                            url: img.url,
+                        })), // ✅ 기존 이미지
+                        productName: product.name,
+                        categoryId: product.categoryId,
+                        price: product.price.toLocaleString(),
+                        description: product.content,
+                        productStatus: product.productStatus,
+                        ageRange: product.recommendedAge,
+                        locations: product.tradeAreas, // [{id, name}, …] 형태라 가정
+                        hashtags: product.hashtags,
+                    });
+                    setImageCount(product.images.length);
+                }
+            }
+        };
+        fetchProduct();
+    }, [isModifyMode, productId]);
 
     // 카테고리 초기값 설정
     useEffect(() => {
@@ -56,27 +80,26 @@ const ProductForm = () => {
         }
     }, [categories]);
 
+    // 이미지 업로드 핸들러
     const handleImageUpload = (e) => {
         const files = Array.from(e.target.files);
         const totalImages = formData.images.length + files.length;
 
         if (totalImages > 10) {
             alert('이미지는 최대 10개까지 업로드할 수 있습니다.');
-            // input 초기화
             e.target.value = '';
             return;
         }
 
         setFormData((prev) => ({
             ...prev,
-            images: [...prev.images, ...files],
+            images: [...prev.images, ...files], // File 객체 추가
         }));
         setImageCount(totalImages);
-
-        // input 초기화 (같은 파일을 다시 선택할 수 있도록)
         e.target.value = '';
     };
 
+    // 이미지 삭제
     const removeImage = (index) => {
         setFormData((prev) => ({
             ...prev,
@@ -85,6 +108,15 @@ const ProductForm = () => {
         setImageCount((prev) => prev - 1);
     };
 
+    // 이미지 표시 src 결정
+    const getImageSrc = (img) => {
+        if (img instanceof File) {
+            return URL.createObjectURL(img);
+        }
+        return img.url;
+    };
+
+    // 연령대 변경
     const handleAgeRangeChange = (age) => {
         setFormData((prev) => ({
             ...prev,
@@ -92,6 +124,7 @@ const ProductForm = () => {
         }));
     };
 
+    // 가격 입력
     const handlePriceChange = (value) => {
         // 숫자가 아닌 문자 제거
         const numericValue = value.replace(/[^0-9]/g, '');
@@ -106,23 +139,7 @@ const ProductForm = () => {
         setFormData((prev) => ({ ...prev, price: formattedValue }));
     };
 
-    const addLocation = () => {
-        if (locationInput.trim() && formData.locations.length < 3) {
-            setFormData((prev) => ({
-                ...prev,
-                locations: [...prev.locations, locationInput.trim()],
-            }));
-            setLocationInput('');
-        }
-    };
-
-    const removeLocation = (index) => {
-        setFormData((prev) => ({
-            ...prev,
-            locations: prev.locations.filter((_, i) => i !== index),
-        }));
-    };
-
+    // 해시태그
     const addHashtag = () => {
         if (hashtagInput.trim() && !hashtagInput.startsWith('#')) {
             if (formData.hashtags.length >= 10) {
@@ -174,15 +191,45 @@ const ProductForm = () => {
         setImageCount(totalImages);
     };
 
-    const handleSubmit = (e) => {
+    // 제출 처리
+    const handleSubmit = async (e) => {
         e.preventDefault();
+
+        let imageFileIds = [];
+
+        for (const img of formData.images) {
+            if (img instanceof File) {
+                // 신규 업로드 파일
+                const { data } = await fileAPI.upload([img]); // 파일 하나씩 업로드
+                if (data.success && data.data.length > 0) {
+                    imageFileIds.push(data.data[0].id);
+                }
+            } else {
+                // 기존 이미지
+                imageFileIds.push(img.id);
+            }
+        }
+
         const submitData = {
-            ...formData,
+            categoryId: formData.categoryId,
+            name: formData.productName,
+            content: formData.description,
             price: formData.price ? parseInt(formData.price.replace(/,/g, '')) : 0,
+            productStatus: formData.productStatus,
+            tradeStatus: TradeStatus.ON_SALE,
+            recommendedAge: formData.ageRange,
+            imageFileIds: imageFileIds, // formData.images 순서 그대로
+            areaIds: formData.locations.map((l) => l.id),
+            hashtags: formData.hashtags.map((h) => h.replace('#', '')),
         };
 
-        // ✅ 서버에는 categoryId 하나만 전달
-        console.log('제출된 데이터:', submitData);
+        console.log('submitData: ', submitData);
+
+        // if (isModifyMode) {
+        //     await productAPI.updateProduct(productId, submitData);
+        // } else {
+        //     await productAPI.createProduct(submitData);
+        // }
     };
 
     // 메인 카테고리 변경
@@ -192,7 +239,7 @@ const ProductForm = () => {
         setSelectedSubCategory(firstSub);
         setFormData((prev) => ({
             ...prev,
-            categoryId: firstSub ? firstSub.id : category.id, // ✅ 하위 있으면 하위 id, 없으면 부모 id
+            categoryId: firstSub ? firstSub.id : category.id, // 하위 있으면 하위 id, 없으면 부모 id
         }));
     };
 
@@ -245,7 +292,7 @@ const ProductForm = () => {
                         {formData.images.map((image, index) => (
                             <div key={index} className='image-upload-item uploaded'>
                                 <img
-                                    src={URL.createObjectURL(image)}
+                                    src={image instanceof File ? URL.createObjectURL(image) : image.url} // 기존 vs 신규 구분
                                     alt={`이미지 ${index + 1}`}
                                     className='uploaded-image'
                                 />
@@ -395,18 +442,23 @@ const ProductForm = () => {
                 <div className='form-field'>
                     <h3 className='field-title'>추천 연령대</h3>
                     <div className='age-range-options'>
-                        {['0~6개월', '6~12개월', '1~2세', '2~4세', '4~6세', '6~8세', '8세 이상'].map((age) => (
-                            <label key={age} className='age-option'>
+                        {Object.entries(AgeGroupText).map(([enumKey, label]) => (
+                            <label key={enumKey} className='age-option'>
                                 <input
                                     type='radio'
                                     name='ageRange'
-                                    value={age}
-                                    checked={formData.ageRange === age}
-                                    onChange={() => handleAgeRangeChange(age)}
+                                    value={enumKey} // ✅ enum 값 그대로
+                                    checked={formData.ageRange === enumKey}
+                                    onChange={() =>
+                                        setFormData((prev) => ({
+                                            ...prev,
+                                            ageRange: enumKey, // ✅ 상태에는 enum 값만 저장
+                                        }))
+                                    }
                                     className='age-radio'
                                 />
                                 <div className='age-radio-icon'>
-                                    {formData.ageRange === age ? (
+                                    {formData.ageRange === enumKey ? (
                                         <svg width='16' height='16' viewBox='0 0 16 16' fill='none'>
                                             <rect width='16' height='16' rx='2' fill='#85B3EB' />
                                             <path
@@ -430,7 +482,7 @@ const ProductForm = () => {
                                         </svg>
                                     )}
                                 </div>
-                                <span className='age-text'>{age}</span>
+                                <span className='age-text'>{label}</span> {/* ✅ AgeGroupText[enumKey] */}
                             </label>
                         ))}
                     </div>
@@ -504,7 +556,7 @@ const ProductForm = () => {
                 </div>
 
                 {/* 제출 버튼 */}
-                <button type='submit' onClick={handleSubmit} className='submit-button'>
+                <button type='submit' onClick={handleSubmit} className='product-form-submit-button'>
                     {isModifyMode ? '수정하기' : '판매하기'}
                 </button>
             </div>

@@ -629,7 +629,7 @@
 }
 
 /* Submit Button */
-.submit-button {
+.product-form-submit-button {
     width: 240px;
     height: 52px;
     background-color: #000000;
@@ -644,11 +644,11 @@
     transition: background-color 0.2s ease;
 }
 
-.submit-button:hover:not(:disabled) {
+.product-form-submit-button:hover:not(:disabled) {
     background-color: #333333;
 }
 
-.submit-button:disabled {
+.product-form-submit-button:disabled {
     background-color: #cccccc;
     cursor: not-allowed;
 }
@@ -736,7 +736,7 @@
         padding: 10px;
     }
 
-    .submit-button {
+    .product-form-submit-button {
         width: 100%;
     }
 }
