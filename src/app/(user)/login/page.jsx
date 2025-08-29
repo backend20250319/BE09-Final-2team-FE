@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import './login.css';
-import { useIsAuthenticated, useTempLogin } from '@/store/userStore'; // 🔥 개별 훅 사용
+import { useIsAuthenticated, useTempLogin } from '@/store/userStore'; // 개별 훅 사용
 
 export default function Login() {
     const router = useRouter();
     const isAuthenticated = useIsAuthenticated(); // 개별 훅 사용
     const tempLogin = useTempLogin(); // 로그인 함수만
 
-    const [userId, setUserId] = useState('');
+    const [loginId, setLoginId] = useState('');
     const [password, setPassword] = useState('');
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
@@ -22,19 +22,19 @@ export default function Login() {
         if (isAuthenticated) {
             router.push('/');
         }
-    }, [isAuthenticated]); // router는 Next.js에서 안정적이므로 생략 가능
+    }, [isAuthenticated, router]); // router는 Next.js에서 안정적이므로 생략 가능
 
     // 입력값에 따른 버튼 활성화/비활성화
     useEffect(() => {
-        if (userId.trim() !== '' && password.trim() !== '') {
+        if (loginId.trim() !== '' && password.trim() !== '') {
             setIsButtonDisabled(false);
         } else {
             setIsButtonDisabled(true);
         }
-    }, [userId, password]);
+    }, [loginId, password]);
 
     const handleUserIdChange = (e) => {
-        setUserId(e.target.value);
+        setLoginId(e.target.value);
         setErrorMessage('');
     };
 
@@ -48,7 +48,7 @@ export default function Login() {
         event.preventDefault();
 
         if (isButtonDisabled) {
-            alert("아이디와 비밀번호를 모두 입력해주세요");
+            setErrorMessage("아이디와 비밀번호를 모두 입력해주세요.");
             return;
         }
 
@@ -56,13 +56,15 @@ export default function Login() {
         setErrorMessage('');
 
         try {
-            const result = await tempLogin(userId, password);
+            const loginData = { loginId, password };
 
-            if (result.success) {
+            const success = await tempLogin(loginData)
+
+            if (success) {
                 console.log('✅ 로그인 성공, 메인 페이지로 이동');
                 router.push('/');
             } else {
-                setErrorMessage(result.message);
+                setErrorMessage('로그인 실패: 아이디 또는 비밀번호를 확인해주세요.');
             }
         } catch (error) {
             setErrorMessage('로그인 중 오류가 발생했습니다.');
@@ -116,7 +118,7 @@ export default function Login() {
                         className="login-input"
                         type="text"
                         placeholder="아이디를 입력해 주세요."
-                        value={userId}
+                        value={loginId}
                         onChange={handleUserIdChange}
                         disabled={isLoading}
                         required
