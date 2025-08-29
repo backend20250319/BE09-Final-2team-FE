@@ -2,7 +2,7 @@
 
 // 🔥 개별 상태 훅들 import
 import { useUser, useIsAuthenticated, useUserLoading, useLogout } from "@/store/userStore";
-import ChatListSidebar from '@/app/chat/components/ChatListSideBar';
+import ChatListSidebar from "@/app/chat/components/ChatListSideBar";
 import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
 import { Heart, Menu, MessageCircleMore, Search, ShoppingBag, User } from "lucide-react";
 import Image from "next/image";

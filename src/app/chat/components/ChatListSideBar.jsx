@@ -10,9 +10,9 @@ import ChatRoomCard from "./ChatRoomCard";
 import ChatListEmpty from "./ChatListEmpty";
 import ChatListHeader from "./ChatListHeader";
 import { useState, useEffect } from "react";
-import { chatAPI } from "../../../lib/api";
 import { useUser, useIsAuthenticated, useCheckAuthStatus } from "../../../store/userStore";
 import { useSidebar } from "../../../hooks/useSidebar";
+import { chatAPI } from "../api/chatApi";
 
 export default function ChatListSidebar({ trigger, children, sidebarKey = "chatList" }) {
   const [loading, setLoading] = useState(true); // 초기 로딩
