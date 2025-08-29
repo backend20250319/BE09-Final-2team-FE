@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
+import { useCategoryStore } from '@/store/categoryStore';
 import ProductCard from '../../../components/common/ProductCard';
 import AddressSearch from '../components/AddressSearch';
 import './search.css';
@@ -18,6 +19,8 @@ export default function Page() {
     const router = useRouter();
     const pathname = usePathname();
 
+    const categories = useCategoryStore((s) => s.categories);
+
     // 카테고리 관련 상태
     const [categoryPath, setCategoryPath] = useState(['전체']);
     const [selectedCategory, setSelectedCategory] = useState(null);
@@ -31,14 +34,14 @@ export default function Page() {
                 if (category.id.toString() === categoryId) {
                     return currentPath;
                 }
-                if (category.children) {
+                if (category.children?.length > 0) {
                     const found = searchInTree(category.children, currentPath);
                     if (found) return found;
                 }
             }
             return null;
         };
-        return searchInTree(babyCategoryTree);
+        return searchInTree(categories);
     };
 
     // URL 파라미터 확인
@@ -72,96 +75,19 @@ export default function Page() {
             // keyword 파라미터가 사라지면 빈값
             setSearchQuery('');
         }
-    }, [searchParams]);
+    }, [searchParams, categories]);
 
     // 카테고리 확장/축소 토글 함수
     const toggleCategoryExpansion = () => {
         setIsCategoryExpanded((prev) => !prev);
     };
 
-    // 카테고리 데이터 (트리 구조)
-    const babyCategoryTree = [
-        {
-            id: 1,
-            name: '출산/육아용품',
-            parentId: null,
-            children: [
-                { id: 102, name: '분유수유용품', parentId: 1, children: [] },
-                { id: 103, name: '튼살크림/스킨케어', parentId: 1, children: [] },
-                { id: 104, name: '임부복/수유복/언더웨어', parentId: 1, children: [] },
-                { id: 105, name: '물티슈/기저귀', parentId: 1, children: [] },
-                { id: 106, name: '분유/이유식', parentId: 1, children: [] },
-                { id: 107, name: '아기띠/기저귀가방', parentId: 1, children: [] },
-                { id: 108, name: '신생아/영유아의류', parentId: 1, children: [] },
-                { id: 109, name: '유아로션/목욕용품', parentId: 1, children: [] },
-                { id: 110, name: '유아건강/위생용품', parentId: 1, children: [] },
-                { id: 111, name: '유모차/웨건', parentId: 1, children: [] },
-            ],
-        },
-        {
-            id: 2,
-            name: '유아동의류',
-            parentId: null,
-            children: [
-                { id: 201, name: '유아용의류', parentId: 2, children: [] },
-                { id: 202, name: '아동용의류', parentId: 2, children: [] },
-                { id: 203, name: '내의/잠옷/속옷', parentId: 2, children: [] },
-                { id: 204, name: '패딩/자켓', parentId: 2, children: [] },
-                { id: 205, name: '한복/소품', parentId: 2, children: [] },
-            ],
-        },
-        {
-            id: 3,
-            name: '유아동잡화',
-            parentId: null,
-            children: [
-                { id: 301, name: '구두/운동화/샌들/부츠', parentId: 3, children: [] },
-                { id: 302, name: '장화/우비/우산', parentId: 3, children: [] },
-                { id: 303, name: '모자/장갑', parentId: 3, children: [] },
-                { id: 304, name: '책가방/여행가방', parentId: 3, children: [] },
-            ],
-        },
-        {
-            id: 4,
-            name: '유아동교구/완구',
-            parentId: null,
-            children: [
-                { id: 401, name: '신생아완구', parentId: 4, children: [] },
-                { id: 402, name: '원목교구', parentId: 4, children: [] },
-                { id: 403, name: '음악놀이/자석교구', parentId: 4, children: [] },
-                { id: 404, name: '전동차/핫휠', parentId: 4, children: [] },
-                { id: 405, name: '로봇', parentId: 4, children: [] },
-                { id: 406, name: '인형/디즈니의상', parentId: 4, children: [] },
-                { id: 407, name: '블록/레고', parentId: 4, children: [] },
-                { id: 408, name: '대형 완구용품', parentId: 4, children: [] },
-            ],
-        },
-        {
-            id: 5,
-            name: '유아동안전/실내용품',
-            parentId: null,
-            children: [{ id: 501, name: '카시트', parentId: 5, children: [] }],
-        },
-        {
-            id: 6,
-            name: '유아동가구',
-            parentId: null,
-            children: [{ id: 601, name: '침대/매트리스', parentId: 6, children: [] }],
-        },
-        {
-            id: 7,
-            name: '기타 유아동용품',
-            parentId: null,
-            children: [],
-        },
-    ];
-
     // 현재 표시할 카테고리 찾기
     const getCurrentCategory = () => {
         if (categoryPath.length === 1) return null; // 전체만 있는 경우
 
         // 동적으로 경로를 따라가면서 현재 카테고리 찾기
-        let currentCategory = babyCategoryTree.find((cat) => cat.name === categoryPath[1]);
+        let currentCategory = categories.find((cat) => cat.name === categoryPath[1]);
 
         for (let i = 2; i < categoryPath.length; i++) {
             if (currentCategory?.children) {
@@ -180,7 +106,7 @@ export default function Page() {
 
         if (categoryPath.length === 1) {
             // 메인 카테고리에서 첫 번째 클릭
-            clickedCategory = babyCategoryTree.find((cat) => cat.name === categoryName);
+            clickedCategory = categories.find((cat) => cat.name === categoryName);
         } else {
             // 하위 카테고리에서 클릭
             const currentCategory = getCurrentCategory();
@@ -223,10 +149,10 @@ export default function Page() {
 
             if (newPath.length === 2) {
                 // 메인 카테고리
-                targetCategory = babyCategoryTree.find((cat) => cat.name === targetCategoryName);
+                targetCategory = categories.find((cat) => cat.name === targetCategoryName);
             } else {
                 // 하위 카테고리 - 경로를 따라가면서 찾기
-                let currentCategory = babyCategoryTree.find((cat) => cat.name === newPath[1]);
+                let currentCategory = categories.find((cat) => cat.name === newPath[1]);
 
                 for (let i = 2; i < newPath.length - 1; i++) {
                     if (currentCategory?.children) {
@@ -352,7 +278,7 @@ export default function Page() {
 
                 {/* 세부 카테고리 */}
                 {isCategoryExpanded &&
-                    ((categoryPath.length === 1 && babyCategoryTree.length > 0) ||
+                    ((categoryPath.length === 1 && categories.length > 0) ||
                         (categoryPath.length > 1 && getCurrentCategory()?.children?.length > 0)) && (
                         <div className='search-filter-section expanded'>
                             <div className='search-filter-header'>
@@ -362,7 +288,7 @@ export default function Page() {
                                 <div className='search-category-grid'>
                                     {categoryPath.length === 1 ? (
                                         // 메인 카테고리 뷰
-                                        babyCategoryTree.map((category) => (
+                                        categories.map((category) => (
                                             <div key={category.id} className='search-category-item'>
                                                 <span
                                                     className={selectedCategory === category.name ? 'selected' : ''}

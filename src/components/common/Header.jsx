@@ -2,6 +2,7 @@
 
 // 🔥 개별 상태 훅들 import
 import { useUser, useIsAuthenticated, useUserLoading, useLogout } from "@/store/userStore";
+import { useCategoryStore } from "@/store/categoryStore";
 import ChatListSidebar from "@/app/chat/components/ChatListSideBar";
 import { groupCategoryWithColumn } from "@/utils/groupCategoryData";
 import { Heart, Menu, MessageCircleMore, Search, ShoppingBag, User } from "lucide-react";
@@ -12,11 +13,13 @@ import { useEffect, useState } from "react";
 import { Button } from "../ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../ui/dropdown-menu";
 import WishlistSidebar from "./WishlistSidebar";
-import { mockCategoryData } from "./data/haderCategoryData";
 
 export default function Header() {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [categoryColumns, setCategoryColumns] = useState({});
+
+  // zustand에서 카테고리 가져오기
+  const categories = useCategoryStore((s) => s.categories);
 
   // 개별 훅 사용 (무한 루프 방지)
   const user = useUser();
@@ -72,11 +75,16 @@ export default function Header() {
     router.push("/login");
   };
 
+  // 카테고리 데이터 가공 (3열로 분리)
   useEffect(() => {
-    // mount 시 mock 데이터를 컬럼별 구조로 가공 (기존 그대로)
-    const grouped = groupCategoryWithColumn(mockCategoryData);
-    setCategoryColumns(grouped);
-  }, []);
+    console.log("🚀 zustand categories:", categories);
+
+    if (categories.length > 0) {
+      const grouped = groupCategoryWithColumn(categories);
+      console.log("✅ grouped columns:", grouped);
+      setCategoryColumns(grouped);
+    }
+  }, [categories]);
 
   return (
     <header className="w-full border-b border-[#ddd] fixed bg-white z-50">
@@ -130,23 +138,21 @@ export default function Header() {
                             {/* 3열 그리드 구성 */}
                             <div className="grid grid-cols-3">
                               {[0, 1, 2].map((colIndex) => {
-                                const startIndex = Math.floor((mockCategoryData.length * colIndex) / 3);
-                                const endIndex = Math.floor((mockCategoryData.length * (colIndex + 1)) / 3);
-                                const columnCategories = mockCategoryData.slice(startIndex, endIndex);
-
+                                const col = categoryColumns[colIndex] || [];
+                                console.log(`🔍 colIndex=${colIndex}`, col); // ✅ 여기도 찍어보기
                                 return (
                                   <div
                                     key={colIndex}
                                     className={`space-y-6 py-6 ${colIndex % 2 === 0 ? "bg-[#F4F4F4]" : ""}`}
                                   >
-                                    {columnCategories.map((category) => (
+                                    {col.map((category) => (
                                       <div key={category.id}>
                                         <Link href={`/product/search?category=${category.id}`}>
                                           <h3 className="block text-body text-sm py-1.5 text-heading font-semibold px-5 xl:px-8 2xl:px-10 hover:text-heading hover:bg-gray-300">
                                             {category.name}
                                           </h3>
                                         </Link>
-                                        {category.children.length > 0 && (
+                                        {category.children?.length > 0 && (
                                           <ul>
                                             {category.children.map((child) => (
                                               <li key={child.id}>
