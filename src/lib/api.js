@@ -1,9 +1,9 @@
-import axios from "axios";
-import { useUserStore } from "@/store/userStore";
-import { TradeStatus } from "@/enums/tradeStatus";
+import axios from 'axios';
+import { useUserStore } from '@/store/userStore';
+import { TradeStatus } from '@/enums/tradeStatus';
 
 // 환경변수에서 API URL 가져오기
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1";
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000/api/v1';
 const CHAT_API_URL = process.env.NEXT_PUBLIC_CHAT_API_URL || `${API_BASE_URL}/chat-service`;
 const USER_API_URL = process.env.NEXT_PUBLIC_USER_API_URL || `${API_BASE_URL}/user-service`;
 const PRODUCT_URL = `/product-service`;
@@ -42,6 +42,21 @@ api.interceptors.response.use(
     }
 );
 
+// File Service API 함수들
+export const fileAPI = {
+    // 파일 업로드
+    upload: (files) => {
+        const formData = new FormData();
+        files.forEach((file) => formData.append('imageFiles', file)); // ✅ key는 Postman에서 본 그대로
+
+        return api.post('/file-service/files', formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+};
+
 // User Service API 함수들
 export const userAPI = {
     // 인증 관련
@@ -71,12 +86,14 @@ export const userAPI = {
     getOtherUserProfile: (userId) => api.get(`user-service/users/${userId}/profile-page`),
 
     // 거래 지역 관리
-    searchTradeLocations: (keyword) => api.get(`user-service/users/search-areas?keyword=${encodeURIComponent(keyword)}`),
+    searchTradeLocations: (keyword) =>
+        api.get(`user-service/users/search-areas?keyword=${encodeURIComponent(keyword)}`),
     updateTradeLocations: (data) => api.put('user-service/users/me/trade-locations', data),
     getMyTradeLocations: (userId) => api.get(`user-service/users/${userId}/my-trade-locations`),
 
     // 중복 확인
-    checkDuplicate: (type, value) => api.get(`user-service/users/check?type=${type}&value=${encodeURIComponent(value)}`),
+    checkDuplicate: (type, value) =>
+        api.get(`user-service/users/check?type=${type}&value=${encodeURIComponent(value)}`),
 
     // 다른 서비스용
     getBasicInfo: (userId) => api.get(`/user-service/users/${userId}/basic`),

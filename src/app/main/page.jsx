@@ -57,7 +57,7 @@ export default function MainPage() {
             rank: 1,
             nickname: 'rank111',
             profileImage:
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
+                'https://cdn.discordapp.com/attachments/1389474412801298547/1410893672714866729/raw.png?ex=68b2aca0&is=68b15b20&hm=2cb2ed7b5681e41264e0e9c16fcfdff9cde07509f290834c3db8a201208b7ca5&',
             weeklyReviews: 11,
             averageRating: 4.8,
         },
