@@ -6,10 +6,13 @@ import { X } from 'lucide-react';
 import './AddressSearch.css';
 
 // TODO 지역 검색 API 손봐야함 > 구의동 검색시 오류
-const AddressSearch = () => {
+const AddressSearch = ({ onChange }) => {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // 선택된 주소
     const [selectedAddresses, setSelectedAddresses] = useState([]);
+
     const [showWarning, setShowWarning] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
     const [searchResults, setSearchResults] = useState([]);
@@ -86,6 +89,7 @@ const AddressSearch = () => {
         if (!selectedAddresses.find((a) => a.id === address.id)) {
             const updated = [...selectedAddresses, address];
             setSelectedAddresses(updated);
+            onChange?.(updated);
 
             console.log('✅ 현재 선택된 주소 리스트:', updated); // 👈 여기!
         }
@@ -98,6 +102,7 @@ const AddressSearch = () => {
     const handleAddressRemove = (id) => {
         const updated = selectedAddresses.filter((address) => address.id !== id);
         setSelectedAddresses(updated);
+        onChange?.(updated);
     };
 
     // 검색어 변경
