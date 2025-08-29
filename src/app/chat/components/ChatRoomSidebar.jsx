@@ -11,12 +11,12 @@ import { formatDateToString, formatStringToDate } from "@/utils/format";
 import { useRouter } from "next/navigation";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { useWebSocketManager } from "../hooks/useWebSocketManager";
-import { chatAPI } from "../../../lib/api";
 import { useUser } from "../../../store/userStore";
 import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import ChatProductInfo from "./ChatProductInfo";
 import ChatActionMenu from "./ChatActionMenu";
+import { chatAPI } from "../api/chatApi";
 
 export default function ChatRoomSidebar({ chat, onClose }) {
   // chat: 채팅방 정보를 담고 있는 객체 (id, name, message, productId, productName, productPrice, productImg, avatar, date, userId 등)
