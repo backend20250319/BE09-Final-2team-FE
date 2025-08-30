@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+
 import { productAPI } from '@/lib/api';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { useCategoryStore } from '@/store/categoryStore';
@@ -15,7 +16,7 @@ import './search.css';
 export default function Page() {
     const [loading, setLoading] = useState(false);
 
-    const [searchQuery, setSearchQuery] = useState(''); // 검색ㅓ
+    const [searchQuery, setSearchQuery] = useState(''); // 검색
     const [selectedAgeGroups, setSelectedAgeGroups] = useState(Object.values(AgeGroup)); // 연령대
 
     // 가격
@@ -35,6 +36,12 @@ export default function Page() {
 
     // 상품 리스트
     const [products, setProducts] = useState([]);
+
+    // 무한스크롤 (페이징)
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+
+    const observerRef = useRef(null);
 
     const [isFromCategory, setIsFromCategory] = useState(true);
     const searchParams = useSearchParams();
@@ -127,26 +134,14 @@ export default function Page() {
     };
 
     // 카테고리 클릭
-    const handleCategoryClick = (categoryName) => {
-        let clickedCategory;
-
-        if (categoryPath.length === 1) {
-            clickedCategory = categories.find((cat) => cat.name === categoryName);
-        } else {
-            const currentCategory = getCurrentCategory();
-            clickedCategory = currentCategory?.children?.find((cat) => cat.name === categoryName);
-        }
-
-        const newPath = categoryPath.slice(1).concat(categoryName);
+    const handleCategoryClick = (category) => {
+        setSelectedCategory(category); // ✅ 객체 통째로 저장
+        const newPath = categoryPath.slice(1).concat(category.name);
         setCategoryPath(['전체', ...newPath]);
 
-        if (clickedCategory) {
-            setSelectedCategory(clickedCategory); // ✅ 객체 통째로 저장
-
-            const params = new URLSearchParams(searchParams);
-            params.set('category', clickedCategory.id.toString());
-            router.push(`${pathname}?${params.toString()}`);
-        }
+        const params = new URLSearchParams(searchParams);
+        params.set('category', category.id.toString());
+        router.push(`${pathname}?${params.toString()}`);
     };
 
     // 브레드크럼 클릭
@@ -180,6 +175,7 @@ export default function Page() {
             }
 
             if (targetCategory) {
+                setSelectedCategory(targetCategory); // ✅ 객체 저장
                 const params = new URLSearchParams(searchParams);
                 params.set('category', targetCategory.id.toString());
                 router.push(`${pathname}?${params.toString()}`);
@@ -214,20 +210,23 @@ export default function Page() {
     const toggleExcludeSoldOut = () => setExcludeSoldOut((prev) => !prev);
 
     // ✅ 검색 API 호출 함수
-    const fetchProducts = async () => {
+    const fetchProducts = async (pageNumber = 0, append = false) => {
         setLoading(true);
+
+        console.log('selectedCategory', selectedCategory);
+
         try {
             const searchRequest = {
                 query: searchQuery || null,
-                categoryId: selectedCategory ? selectedCategory.id : null, // ✅ ID는 여기서 뽑음
+                categoryId: selectedCategory.id,
                 ageGroups: selectedAgeGroups,
-                priceMin: appliedPriceRange.min ? Number(appliedPriceRange.min) : null, // ✅ 여기
-                priceMax: appliedPriceRange.max ? Number(appliedPriceRange.max) : null, // ✅ 여기
+                priceMin: appliedPriceRange.min ? Number(appliedPriceRange.min) : null,
+                priceMax: appliedPriceRange.max ? Number(appliedPriceRange.max) : null,
                 areaIds: selectedAddresses.map((a) => a.id),
                 excludeSoldOut,
                 statuses: selectedStatuses,
                 sort: sortBy,
-                page: 0,
+                page: pageNumber,
                 size: 20,
             };
 
@@ -236,7 +235,9 @@ export default function Page() {
             const { data } = await productAPI.searchProducts(searchRequest);
 
             if (data.success) {
-                setProducts(data.data.content);
+                const content = data.data.content;
+                setProducts((prev) => (append ? [...prev, ...content] : content));
+                setHasMore(!data.data.last); // 마지막 페이지 여부
             }
         } catch (err) {
             console.error('상품 검색 실패:', err);
@@ -247,7 +248,8 @@ export default function Page() {
 
     // ✅ 필터 바뀔 때마다 자동 호출 (가격은 제외!)
     useEffect(() => {
-        fetchProducts();
+        setPage(0);
+        fetchProducts(0, false); // 새 검색은 append 안 함
     }, [
         searchQuery,
         selectedCategory,
@@ -258,6 +260,30 @@ export default function Page() {
         sortBy,
         appliedPriceRange, // ✅ "적용된 가격"만 의존성에 포함
     ]);
+
+    // ✅ 무한 스크롤 옵저버
+    const lastProductRef = useCallback(
+        (node) => {
+            if (loading) return;
+            if (observerRef.current) observerRef.current.disconnect();
+
+            observerRef.current = new IntersectionObserver((entries) => {
+                if (entries[0].isIntersecting && hasMore) {
+                    setPage((prev) => prev + 1);
+                }
+            });
+
+            if (node) observerRef.current.observe(node);
+        },
+        [loading, hasMore]
+    );
+
+    // ✅ 페이지 번호 바뀔 때 추가 로드
+    useEffect(() => {
+        if (page > 0) {
+            fetchProducts(page, true); // append 모드
+        }
+    }, [page]);
 
     return (
         <div className='search-product-search-page'>
@@ -320,7 +346,7 @@ export default function Page() {
                                             <div key={category.id} className='search-category-item'>
                                                 <span
                                                     className={selectedCategory === category.name ? 'selected' : ''}
-                                                    onClick={() => handleCategoryClick(category.name)}
+                                                    onClick={() => handleCategoryClick(category)}
                                                 >
                                                     {category.name}
                                                 </span>
@@ -334,7 +360,7 @@ export default function Page() {
                                                         className={`search-sub-category-item ${
                                                             selectedCategory === subCategory.name ? 'selected' : ''
                                                         }`}
-                                                        onClick={() => handleCategoryClick(subCategory.name)}
+                                                        onClick={() => handleCategoryClick(subCategory)}
                                                     >
                                                         {subCategory.name}
                                                     </span>
@@ -468,10 +494,19 @@ export default function Page() {
             {/* 상품 섹션 */}
             <section className='search-products-section'>
                 <div className='search-products-grid'>
-                    {products.map((product) => (
-                        <ProductCard key={product.id} product={product} size='size3' />
-                    ))}
+                    {products.map((product, index) => {
+                        if (index === products.length - 1) {
+                            return (
+                                <div ref={lastProductRef} key={product.id}>
+                                    <ProductCard product={product} size='size3' />
+                                </div>
+                            );
+                        } else {
+                            return <ProductCard key={product.id} product={product} size='size3' />;
+                        }
+                    })}
                 </div>
+                {loading && <div className='loading-spinner'>로딩중...</div>}
             </section>
         </div>
     );

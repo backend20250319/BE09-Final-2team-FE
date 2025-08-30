@@ -1,6 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
+import { productAPI } from '@/lib/api';
+
 import { useRouter } from 'next/navigation';
 import { TradeStatus, getTradeStatusText } from '@/enums/tradeStatus';
 import { ProductStatus, getProductStatusText } from '@/enums/productStatus';
@@ -30,7 +32,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
         showReviewButton,
     } = product;
 
-    const [isWishlisted, setIsWishlisted] = useState(false);
+    const [isWishlisted, setIsWishlisted] = useState(inWishlist);
     const [showReviewForm, setShowReviewForm] = useState(false);
     const cardWidth = CARD_SIZES[size] || CARD_SIZES.size1;
     const router = useRouter();
@@ -42,8 +44,27 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     // 상품 등록 시간
     const timeAgoText = timeAgo(createdAt);
 
-    const handleWishlistClick = () => {
-        setIsWishlisted((prev) => !prev);
+    // ✅ 찜하기 / 찜취소
+    const handleWishlistClick = async (e) => {
+        e.stopPropagation();
+
+        try {
+            if (isWishlisted) {
+                await productAPI.removeWishlist(id);
+                setIsWishlisted(false);
+
+                // ✅ 부모에 알리기 (wishlist 모드일 때만)
+                if (variant === 'wishlist' && onRemoveFromWishlist) {
+                    onRemoveFromWishlist(id);
+                }
+            } else {
+                await productAPI.addWishlist(id);
+                setIsWishlisted(true);
+            }
+        } catch (err) {
+            console.error('찜 처리 에러:', err);
+            // TODO: 토스트나 알림 추가 가능
+        }
     };
 
     const handleRemoveFromWishlist = (e) => {
@@ -101,14 +122,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                     )}
 
                     {/* 찜하기 버튼 */}
-                    <div
-                        className='wishlist-button active'
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveFromWishlist(e);
-                        }}
-                        title='찜한 상품에서 제거'
-                    >
+                    <div className='wishlist-button active' onClick={handleWishlistClick} title='찜한 상품에서 제거'>
                         <img src='/images/product/wishlist-on.svg' alt='찜하기됨' width={24} height={24} />
                     </div>
                 </div>
@@ -120,7 +134,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                             {name}
                         </h3>
                         <div className='product-price'>
-                            <span className='price'>{price}</span>
+                            <span className='price'>{price.toLocaleString()}원</span>
                         </div>
                         <div className='product-location'>
                             <span className='location-time'>
@@ -165,10 +179,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
 
                     <div
                         className={`product-card-wishlist-button${isWishlisted ? ' wishlisted' : ''}`}
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            handleWishlistClick();
-                        }}
+                        onClick={handleWishlistClick}
                     >
                         <img
                             src={isWishlisted ? '/images/product/wishlist-on.svg' : '/images/product/wishlist-off.svg'}
@@ -184,7 +195,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
                 </div>
 
                 <div className='product-card-price-container'>
-                    <span className='product-card-price'>{price}</span>
+                    <span className='product-card-price'>{price.toLocaleString()}원</span>
                 </div>
 
                 <div className='product-card-location-container'>

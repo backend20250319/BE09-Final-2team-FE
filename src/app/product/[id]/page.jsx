@@ -15,10 +15,6 @@ import './detail.css';
 import ChatListSidebar from '@/app/chat/components/ChatListSideBar';
 import { useCategoryStore } from '@/store/categoryStore';
 
-// TODO
-// sellerRecentProducts - name null
-// currentProduct - inWishList null
-
 const ProductDetail = () => {
     // TODO 관련상품리스트 조회 API 필요
 
@@ -81,20 +77,18 @@ const ProductDetail = () => {
                 // 상품 거래 상태
                 setCurrentStatus(product.tradeStatus);
 
+                // 찜 여부/개수 초기화
+                setIsWishlisted(product.inWishlist);
+
                 // 로그인 유저 = 판매자 비교
-                if (user && user.id === product.sellerId) {
-                    setIsMyProduct(true);
-                } else {
-                    setIsMyProduct(false);
-                }
+                setIsMyProduct(user && user.id === product.sellerId);
 
                 console.log('product: ', product);
                 console.log('sellerInfo: ', sellerInfo);
                 console.log('sellerRecentProducts: ', sellerRecentProducts);
 
-                // TODO: category id 필요
                 if (categories.length > 0) {
-                    const path = findCategoryPath(12);
+                    const path = findCategoryPath(product.categoryId);
                     setCategoryPath(path || []);
                 }
             } catch (error) {
@@ -117,17 +111,27 @@ const ProductDetail = () => {
         }
     };
 
-    // 찜/찜취소 API
+    // TODO 찜/찜취소 API
     const handleToggleWishlist = async () => {
         try {
+            if (!product) return;
+
             if (isWishlisted) {
-                // 해제
-                // await productAPI.removeFromWishlist(product.id);
+                // 🔹 찜취소
+                await productAPI.removeWishlist(product.id);
                 setIsWishlisted(false);
+                setProduct({
+                    ...product,
+                    wishlistCount: product.wishlistCount - 1,
+                });
             } else {
-                // 추가
-                // await productAPI.addToWishlist(product.id);
+                // 🔹 찜하기
+                await productAPI.addWishlist(product.id);
                 setIsWishlisted(true);
+                setProduct({
+                    ...product,
+                    wishlistCount: product.wishlistCount + 1,
+                });
             }
         } catch (err) {
             console.error('찜하기 처리 실패:', err);
@@ -192,11 +196,6 @@ const ProductDetail = () => {
     };
 
     if (!product) return <div>상품 정보를 불러오는 중...</div>;
-
-    const getVisibleItems = (items, slideIndex) => {
-        const startIndex = slideIndex * itemsPerSlide;
-        return items.slice(startIndex, startIndex + itemsPerSlide);
-    };
 
     // 관련 상품
     const relatedProducts = [
@@ -447,13 +446,12 @@ const ProductDetail = () => {
                         </div>
 
                         <div className='product-detail-price'>
-                            <span>{product.price}</span>
+                            <span>{product.price.toLocaleString()}원</span>
                         </div>
 
                         <div className='product-detail-meta'>
-                            {/* TODO: 찜 수 필요 */}
                             <span>
-                                {timeAgo(product.createdAt)} · 조회 {product.viewCount} · 찜 0
+                                {timeAgo(product.createdAt)} · 조회 {product.viewCount} · 찜 {product.wishlistCount}
                             </span>
                         </div>
 

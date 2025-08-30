@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { productAPI } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import ProductCard from '@/components/common/ProductCard';
 import Sidebar from '@/components/common/Sidebar';
@@ -16,8 +17,9 @@ const WishlistSidebar = ({ trigger }) => {
     const [isFocused, setIsFocused] = useState(false);
     const router = useRouter();
     const closeSidebar = useSidebarStore((state) => state.closeAll);
+    const isOpen = useSidebarStore((state) => state.isOpen('wishlist')(state));
 
-    /**
+    /**x
      * 백엔드 API에서 위시리스트 데이터를 가져오는 함수
      * 컴포넌트 마운트 시 자동으로 호출됨
      */
@@ -26,54 +28,15 @@ const WishlistSidebar = ({ trigger }) => {
         setError(null);
 
         try {
-            // 개발용 더미 데이터 (API 에러 시)
-            const dummyData = [
-                {
-                    id: 1,
-                    productName: '상품명',
-                    price: '5,000원',
-                    location: '송림 1동',
-                    timeAgo: '9시간 전',
-                    imageUrl:
-                        'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-                    trade_status: 'ON_SALE',
-                    status: 'NEW',
-                    hasWrittenReview: false,
-                    showReviewButton: false,
-                },
-                {
-                    id: 2,
-                    productName: '상품명2',
-                    price: '10,000원',
-                    location: '송림 2동',
-                    timeAgo: '5시간 전',
-                    imageUrl:
-                        'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-                    trade_status: 'ON_SALE',
-                    status: 'USED',
-                    hasWrittenReview: false,
-                    showReviewButton: false,
-                },
-                {
-                    id: 3,
-                    productName: '상품명3',
-                    price: '15,000원',
-                    location: '송림 3동',
-                    timeAgo: '3시간 전',
-                    imageUrl:
-                        'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-                    trade_status: 'SOLD',
-                    status: 'NEW',
-                    hasWrittenReview: false,
-                    showReviewButton: false,
-                },
-            ];
+            const { data } = await productAPI.getMyWishlist();
 
-            // API 호출 시뮬레이션을 위한 지연
-            await new Promise((resolve) => setTimeout(resolve, 500));
-
-            setWishlistProducts(dummyData);
-            setFilteredProducts(dummyData);
+            if (data.success) {
+                // 변환 없이 그대로 넣기
+                setWishlistProducts(data.data);
+                setFilteredProducts(data.data);
+            } else {
+                throw new Error(data.message || '찜목록 조회 실패');
+            }
         } catch (err) {
             console.error('위시리스트 로딩 에러:', err);
             setError(err.message);
@@ -87,8 +50,10 @@ const WishlistSidebar = ({ trigger }) => {
      * 빈 배열 []을 의존성으로 사용하여 마운트 시에만 실행
      */
     React.useEffect(() => {
-        fetchWishlistProducts();
-    }, []);
+        if (isOpen) {
+            fetchWishlistProducts();
+        }
+    }, [isOpen]);
 
     /**
      * 검색어에 따라 상품 목록을 필터링하는 함수
@@ -98,8 +63,8 @@ const WishlistSidebar = ({ trigger }) => {
         if (!searchTerm.trim()) {
             setFilteredProducts(wishlistProducts);
         } else {
-            const filtered = wishlistProducts.filter((product) =>
-                product.productName.toLowerCase().includes(searchTerm.toLowerCase())
+            const filtered = wishlistProducts.filter(
+                (product) => product.name.toLowerCase().includes(searchTerm.toLowerCase()) // ✅ name으로 검색
             );
             setFilteredProducts(filtered);
         }
@@ -165,9 +130,11 @@ const WishlistSidebar = ({ trigger }) => {
      * wishlistProducts가 변경될 때 filteredProducts를 동기화하는 함수
      * 상품이 추가/제거될 때 검색 결과도 함께 업데이트
      */
-    React.useEffect(() => {
-        setFilteredProducts(wishlistProducts);
-    }, [wishlistProducts]);
+    useEffect(() => {
+        if (isOpen) {
+            fetchWishlistProducts();
+        }
+    }, [isOpen]);
 
     /**
      * 위시리스트에서 상품을 제거하는 함수
@@ -261,8 +228,10 @@ const WishlistSidebar = ({ trigger }) => {
                             key={product.id}
                             product={product}
                             variant='wishlist'
-                            onRemoveFromWishlist={handleRemoveFromWishlist}
-                            onProductClick={handleProductClick}
+                            onRemoveFromWishlist={(id) => {
+                                setWishlistProducts((prev) => prev.filter((p) => p.id !== id));
+                                setFilteredProducts((prev) => prev.filter((p) => p.id !== id));
+                            }}
                         />
                     ))
                 )}
