@@ -165,6 +165,15 @@ export const productAPI = {
 
     // 상품 검색
     searchProducts: (searchRequest) => api.post('/product-service/products/search', searchRequest),
+
+    // ✅ 찜하기
+    addWishlist: (productId) => api.post(`/product-service/products/${productId}/wishlist`),
+
+    // ✅ 찜취소
+    removeWishlist: (productId) => api.delete(`/product-service/products/${productId}/wishlist`),
+
+    // ✅ 내 찜한 상품 조회
+    getMyWishlist: () => api.get('/product-service/products/me/wishlist'),
 };
 
 export default api;

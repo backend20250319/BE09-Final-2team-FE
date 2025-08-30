@@ -36,6 +36,9 @@ const ProductForm = () => {
     const [selectedSubCategory, setSelectedSubCategory] = useState(null);
     const [showHashtagWarning, setShowHashtagWarning] = useState(false);
 
+    // 지역 선택 값 상태
+    const [selectedAddresses, setSelectedAddresses] = useState([]);
+
     // 수정/등록 여부
     const isModifyMode = type === 'modify';
 
@@ -219,17 +222,17 @@ const ProductForm = () => {
             tradeStatus: TradeStatus.ON_SALE,
             recommendedAge: formData.ageRange,
             imageFileIds: imageFileIds, // formData.images 순서 그대로
-            areaIds: formData.locations.map((l) => l.id),
+            areaIds: selectedAddresses.map((l) => l.id),
             hashtags: formData.hashtags.map((h) => h.replace('#', '')),
         };
 
         console.log('submitData: ', submitData);
 
-        // if (isModifyMode) {
-        //     await productAPI.updateProduct(productId, submitData);
-        // } else {
-        //     await productAPI.createProduct(submitData);
-        // }
+        if (isModifyMode) {
+            await productAPI.updateProduct(productId, submitData);
+        } else {
+            await productAPI.createProduct(submitData);
+        }
     };
 
     // 메인 카테고리 변경
@@ -493,7 +496,7 @@ const ProductForm = () => {
                 {/* 거래지역 */}
                 <div className='form-field'>
                     <h3 className='field-title'>거래지역</h3>
-                    <AddressSearch />
+                    <AddressSearch onChange={setSelectedAddresses} />
                 </div>
 
                 <div className='divider'></div>
