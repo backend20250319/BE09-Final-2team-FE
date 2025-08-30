@@ -16,7 +16,7 @@ import ChatMessageList from "./ChatMessageList";
 import ChatInput from "./ChatInput";
 import ChatProductInfo from "./ChatProductInfo";
 import ChatActionMenu from "./ChatActionMenu";
-import { chatAPI } from "../api/chatApi";
+import { chatApi } from "../api/chatApi";
 
 export default function ChatRoomSidebar({ chat, onClose }) {
   // chat: 채팅방 정보를 담고 있는 객체 (id, name, message, productId, productName, productPrice, productImg, avatar, date, userId 등)
@@ -77,27 +77,34 @@ export default function ChatRoomSidebar({ chat, onClose }) {
 
   // WebSocket 훅 사용 (chat 객체에서 전달받은 사용자 ID 우선 사용)
   const roomId = chat.roomId || chat.id;
-  const userId = chat.currentUserId || user?.id;
   const {
     isConnected,
     error: wsError,
     sendMessage,
     joinRoom,
     markAsRead,
-  } = useWebSocketManager(roomId, userId, handleMessageReceived);
+  } = useWebSocketManager(roomId, handleMessageReceived);
+
+  // WebSocket 연결 상태 로깅
+  console.log("ChatRoomSidebar WebSocket 상태:", {
+    roomId,
+    isConnected,
+    wsError,
+    userId: user?.id,
+  });
 
   // 채팅방 참여자 정보 로드 (상대방 이름 가져오기)
   useEffect(() => {
     const loadParticipants = async () => {
-      if (!roomId || !userId) return;
+      if (!roomId) return;
 
       try {
-        const response = await chatAPI.getRoomParticipants(roomId);
+        const response = await chatApi.getRoomParticipants(roomId);
         if (response.data.success) {
           const participants = response.data.data || [];
 
           // 현재 사용자가 아닌 다른 참여자를 찾아서 이름 설정
-          const otherUser = participants.find((p) => p.userId !== userId);
+          const otherUser = participants.find((p) => p.userId !== user?.id);
           if (otherUser) {
             // 백엔드에서 제공하는 닉네임 정보 사용
             const nickname = otherUser.nickname || "상대방";
@@ -115,20 +122,27 @@ export default function ChatRoomSidebar({ chat, onClose }) {
     };
 
     loadParticipants();
-  }, [roomId, userId, chat]);
+  }, [roomId, user?.id, chat]);
 
   // 기존 메시지 로드
   useEffect(() => {
     const loadMessages = async () => {
-      if (!roomId || !userId) {
+      console.log("loadMessages 호출됨 - roomId:", roomId);
+
+      if (!roomId) {
+        console.log("roomId가 없어서 메시지 로드 중단");
         setLoading(false);
         return;
       }
 
       try {
-        const response = await chatAPI.getMessages(roomId, 0, 50);
+        console.log("getMessages API 호출 시작:", roomId);
+        const response = await chatApi.getMessages(roomId, 0, 50);
+        console.log("getMessages API 응답:", response);
+
         if (response.data.success) {
           const loadedMessages = response.data.data.content || [];
+          console.log("로드된 메시지 개수:", loadedMessages.length);
 
           // 읽지 않은 메시지 ID들을 수집
           const unreadIds = new Set();
@@ -161,7 +175,7 @@ export default function ChatRoomSidebar({ chat, onClose }) {
     };
 
     loadMessages();
-  }, [roomId, userId, senderName, chat.otherUserNickname, chat.message, user?.id]);
+  }, [roomId]); // roomId만 의존성으로 설정 (userId는 JWT 토큰에서 자동 추출됨)
 
   // 스크롤을 최하단으로 이동하는 함수
   const scrollToBottom = useCallback((delay = 100) => {
@@ -183,11 +197,18 @@ export default function ChatRoomSidebar({ chat, onClose }) {
 
   // WebSocket 연결 시 자동으로 방 입장
   useEffect(() => {
+    console.log("WebSocket 방 입장 조건 확인:", { isConnected, senderName });
     if (isConnected && senderName) {
+      console.log("WebSocket 방 입장 실행");
       joinRoom(senderName);
 
       // WebSocket 연결 후 스크롤을 최하단으로 이동
       scrollToBottom(100);
+    } else {
+      console.log("WebSocket 방 입장 조건 불만족:", {
+        isConnected,
+        senderName: !!senderName,
+      });
     }
   }, [isConnected, senderName, joinRoom, messages.length]);
 
@@ -280,19 +301,33 @@ export default function ChatRoomSidebar({ chat, onClose }) {
   const scrollRef = useRef(null);
   const router = useRouter();
 
-  // 메시지 전송 함수 (현재 판매 상태를 메시지에 함께 기록)
-  const handleSendMessage = () => {
+  // 메시지 전송 함수 (HTTP API 사용)
+  const handleSendMessage = async () => {
     if (!text.trim()) return;
-    if (!userId) {
-      console.error("사용자 정보가 없습니다.");
-      return;
-    }
 
-    if (sendMessage(text, senderName)) {
-      setText("");
+    try {
+      console.log("메시지 전송 시작:", { roomId, text, senderName });
 
-      // 스크롤 맨 아래로 (DOM 업데이트 후 실행)
-      scrollToBottom(100);
+      // HTTP API를 통해 메시지 전송
+      const response = await chatApi.sendMessage(roomId, {
+        senderId: user?.id,
+        senderName: senderName,
+        message: text,
+      });
+
+      console.log("메시지 전송 응답:", response);
+
+      if (response.data.success) {
+        // 전송 성공 시 입력창 초기화
+        setText("");
+
+        // 스크롤 맨 아래로 (DOM 업데이트 후 실행)
+        scrollToBottom(100);
+      } else {
+        console.error("메시지 전송 실패:", response.data.message);
+      }
+    } catch (error) {
+      console.error("메시지 전송 오류:", error);
     }
   };
 
