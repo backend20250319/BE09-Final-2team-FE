@@ -14,7 +14,12 @@ import MyReviewList from "@/app/review/components/MyReviewList";
 import UserReviewList from "@/app/review/components/UserReviewList";
 import { useUser, useIsAuthenticated, useUserLoading, useCheckAuthStatus } from '@/store/userStore'; // 개별 훅 사용
 import { useRouter } from 'next/navigation';
-import {useProfileInfo, useFetchProfileInfo} from "@/store/mypageStore";
+import {
+    useProfileInfo,
+    useChildrenList,
+    useTradingSummary,
+    useGetMypageDashboard,
+} from "@/store/mypageStore";
 
 const MyPage = () => {
   const router = useRouter();
@@ -23,9 +28,11 @@ const MyPage = () => {
   const loading = useUserLoading();
   const checkAuthStatus = useCheckAuthStatus();
 
-  // myPageStore의 훅 사용
+    // myPageStore의 훅 사용
     const profileInfo = useProfileInfo();
-    const fetchProfileInfo = useFetchProfileInfo();
+    const childrenList = useChildrenList();
+    const tradingSummary = useTradingSummary();
+    const getMypageDashboard = useGetMypageDashboard();
 
   const [activeTab, setActiveTab] = useState("");
   const [dashboardTab, setDashboardTab] = useState("purchase");
@@ -39,41 +46,62 @@ const MyPage = () => {
   const [userReviewOpen, setUserReviewOpen] = useState(false);
 
     useEffect(() => {
-        const initAuth = async () => {
-            try {
-                if (loading) return;
+        let mounted = true;
 
-                if (isAuthenticated && user) {
-                    // 인증된 상태일 때 프로필 정보 가져오기
-                    fetchProfileInfo();
+        const initializeAuth = async () => {
+            try {
+                console.log('인증 상태 확인 시작');
+
+                // 이미 인증된 상태인지 확인
+                if (isAuthenticated && user?.id) {
+                    console.log('이미 인증됨, 대시보드 로드');
+                    if (mounted) {
+                        await getMypageDashboard(user.id);
+                    }
                     return;
                 }
 
-                const isAuth = await checkAuthStatus();
-                console.log('🔍 인증 상태 체크 결과:', isAuth);
+                // 인증 상태 재확인
+                const authResult = await checkAuthStatus();
 
-                if (isAuth) {
-                    // 인증 성공 시 프로필 정보 가져오기
-                    fetchProfileInfo();
+                if (!mounted) return;
+
+                if (authResult) {
+                    console.log('인증 확인됨');
+                    const currentUser = useUser.getState ? useUser.getState() : user;
+                    if (currentUser?.id) {
+                        await getMypageDashboard(currentUser.id);
+                    }
                 } else {
-                    console.log('❌ 인증 실패 - 로그인 페이지로 이동');
+                    console.log('인증 실패 - 로그인 페이지로 이동');
                     router.replace('/login');
                 }
             } catch (error) {
-                console.error('인증 체크 에러:', error);
-                router.replace('/login');
+                console.error('인증 초기화 중 오류:', error);
+                if (mounted) {
+                    router.replace('/login');
+                }
             }
         };
 
-        void initAuth();
-    }, [isAuthenticated, loading]);
+        initializeAuth();
 
+        return () => {
+            mounted = false;
+        };
+    }, [checkAuthStatus, getMypageDashboard, router, isAuthenticated, user]);
 
-  // 더미 데이터들 그대로 유지
-  const dummyChildren = [
-    { id: 1, nickname: '첫째', birthDate: '2023-06-30', age: 2 },
-    { id: 2, nickname: '둘째', birthDate: '2025-03-19', age: 0 }
-  ];
+// 로딩 중이면 로딩 화면 표시
+    if (loading || !user) {
+        return (
+            <div className="mypage-container">
+                <div className="loading-container">
+                    <div>로딩 중...</div>
+                </div>
+            </div>
+        );
+    }
+
 
   const dummyPurchases = [
     {
@@ -122,11 +150,6 @@ const MyPage = () => {
       status: "USED",
     },
   ];
-  const dummyReviews = [
-    { id: 1, content: "좋은 거래였습니다" },
-    { id: 2, content: "상품 상태 좋아요" },
-    { id: 3, content: "친절하게 거래해주셨어요" },
-  ];
 
   const renderProfileSection = () => (
       <div className="profile-section">
@@ -136,15 +159,28 @@ const MyPage = () => {
             <div className="profile-avatar"></div>
             <h2 className="profile-name">{profileInfo?.nickname || '사용자'}</h2>
             <div className="rating">
-              <span className="stars">⭐⭐⭐⭐⭐</span>
-              <span className="rating-score">(4.8)</span>
+              <span className="stars">
+                  ⭐⭐⭐⭐⭐
+                  {/* 평점 데이터가 있다면 동적으로 표시 */}
+                  {/*{'⭐'.repeat(Math.round(profileInfo?.rating || 0))}*/}
+              </span>
+              <span className="rating-score">
+                  (4.8)
+                  {/*<span className="rating-score">({profileInfo?.rating?.toFixed(1) || '0.0'})</span>*/}
+              </span>
             </div>
             <div className="location-info">
               <span className="location-label">거래 지역:</span>
               <div className="location-tags">
-                <span className="location-tag">서초동</span>
-                <span className="location-tag">양재동</span>
-                <span className="location-tag">반포동</span>
+                  {profileInfo?.tradeLocations && profileInfo.tradeLocations.length > 0 ? (
+                      profileInfo.tradeLocations.map((location, index) => (
+                          <span key={`location-${index}`} className="location-tag">
+                                    {location}
+                                </span>
+                      ))
+                  ) : (
+                      <span className="location-tag">지역 없음</span>
+                  )}
               </div>
             </div>
           </div>
@@ -154,7 +190,7 @@ const MyPage = () => {
           <div className="child-card">
             <h3 className="card-title">자녀 정보</h3>
             <div className="child-content">
-              {dummyChildren.length === 0 ? (
+              {childrenList.length === 0 ? (
                   <p className="no-child-info">
                     등록된 자녀정보가
                     <br />
@@ -162,14 +198,16 @@ const MyPage = () => {
                   </p>
               ) : (
                   <div className="children-display">
-                    {dummyChildren.map(child => (
-                        <div key={child.id} className="child-info-card">
-                          <div className="child-header">
-                            <span className="child-emoji">👶</span>
-                            <span className="child-nickname">{child.nickname}</span>
-                          </div>
+                      {childrenList.map((child, index) => (
+                          <div key={`child-${child.id || index}`} className="child-info-card">
+                              <div className="child-header">
+                                  <span className="child-emoji">👶</span>
+                                  <span className="child-nickname">{child.nickname}</span>
+                              </div>
                           <div className="child-birth-date">
-                            {new Date(child.birthDate).getFullYear()}년 {new Date(child.birthDate).getMonth() + 1}월 {new Date(child.birthDate).getDate()}일
+                              {new Date(child.birthDate).getFullYear()}년{' '}
+                              {new Date(child.birthDate).getMonth() + 1}월{' '}
+                              {new Date(child.birthDate).getDate()}일
                           </div>
                           <div className="child-current-age">{child.age}세</div>
                         </div>
@@ -180,24 +218,24 @@ const MyPage = () => {
           </div>
 
           <div className="transaction-card">
-            <h3 className="card-title">나의 거래 현황</h3>
-            <div className="transaction-content">
-              <div className="transaction-item">
-                <span className="transaction-label">총 구매</span>
-                <span className="transaction-value">{dummyPurchases.length}</span>
-                <span className="transaction-unit">건</span>
+              <h3 className="card-title">나의 거래 현황</h3>
+              <div className="transaction-content">
+                  <div className="transaction-item">
+                      <span className="transaction-label">총 구매</span>
+                      <span className="transaction-value">{tradingSummary?.purchaseCount || 0}</span>
+                      <span className="transaction-unit">건</span>
+                  </div>
+                  <div className="transaction-item">
+                      <span className="transaction-label">총 판매</span>
+                      <span className="transaction-value">{tradingSummary?.saleCount || 0}</span>
+                      <span className="transaction-unit">건</span>
+                  </div>
+                  <div className="transaction-item">
+                      <span className="transaction-label">작성 리뷰</span>
+                      <span className="transaction-value">{tradingSummary?.reviewCount || 0}</span>
+                      <span className="transaction-unit">개</span>
+                  </div>
               </div>
-              <div className="transaction-item">
-                <span className="transaction-label">총 판매</span>
-                <span className="transaction-value">{dummySales.length}</span>
-                <span className="transaction-unit">건</span>
-              </div>
-              <div className="transaction-item">
-                <span className="transaction-label">작성 리뷰</span>
-                <span className="transaction-value">{dummyReviews.length}</span>
-                <span className="transaction-unit">개</span>
-              </div>
-            </div>
           </div>
         </div>
       </div>
