@@ -45,8 +45,8 @@ export default function ChatProductInfo({ chat, isSale, onCompleteSale, onGoToRe
         </div>
       </div>
 
-      {/* 판매자가 아닌 경우에만 판매완료 버튼 표시 */}
-      {!isSeller && (
+      {/* 판매자인 경우에만 판매완료 버튼 표시 */}
+      {isSeller && (
         <Button className="cursor-pointer" onClick={onCompleteSale} disabled={isSale}>
           {isSale ? "판매완료됨" : "판매완료"}
         </Button>

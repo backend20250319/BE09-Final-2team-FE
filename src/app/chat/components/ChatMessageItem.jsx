@@ -58,11 +58,11 @@ export default function ChatMessageItem({ msg, idx, messages, isMine, otherUserN
               {formatTime(msg.sentAt || msg.timestamp)}
             </span>
           </div>
-          {isMine && (
+          {/* {isMine && (
             <div className="text-xs text-gray-600 mt-0.5">
               {msg.isTemp ? "전송 중..." : msg.read ? "읽음 ✅" : "전송됨"}
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
