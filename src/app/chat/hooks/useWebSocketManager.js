@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import websocketManager from "../../../lib/websocketManager";
 import { useUser } from "../../../store/userStore";
 
-export const useWebSocketManager = (roomId, userId, onMessageReceived) => {
+export const useWebSocketManager = (roomId, onMessageReceived) => {
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState(null);
   const user = useUser();
@@ -74,12 +74,12 @@ export const useWebSocketManager = (roomId, userId, onMessageReceived) => {
 
   // 채팅방 구독
   const subscribeToRoom = useCallback(() => {
-    if (!roomId || !userId) {
+    if (!roomId || !user?.id) {
       return false;
     }
 
     return websocketManager.subscribeToRoom(roomId, onMessageReceived);
-  }, [roomId, userId, onMessageReceived]);
+  }, [roomId, user?.id, onMessageReceived]);
 
   // 채팅방 구독 해제
   const unsubscribeFromRoom = useCallback(() => {
@@ -91,46 +91,48 @@ export const useWebSocketManager = (roomId, userId, onMessageReceived) => {
   // 메시지 전송
   const sendMessage = useCallback(
     (content, senderName) => {
-      if (!roomId || !userId) {
+      if (!roomId || !user?.id) {
         setError("채팅방 정보가 없습니다.");
         return false;
       }
 
-      return websocketManager.sendMessage(roomId, userId, senderName, content);
+      return websocketManager.sendMessage(roomId, user.id, senderName, content);
     },
-    [roomId, userId]
+    [roomId, user?.id]
   );
 
   // 방 입장
   const joinRoom = useCallback(
     (senderName) => {
-      if (!roomId || !userId) {
+      if (!roomId || !user?.id) {
         return false;
       }
 
-      return websocketManager.joinRoom(roomId, userId, senderName);
+      return websocketManager.joinRoom(roomId, user.id, senderName);
     },
-    [roomId, userId]
+    [roomId, user?.id]
   );
 
+  /*
   // 읽음 처리
   const markAsRead = useCallback(
     (messageIds) => {
-      if (!roomId || !userId) {
+      if (!roomId || !user?.id) {
         return false;
       }
 
-      return websocketManager.markAsRead(roomId, userId, messageIds);
+      return websocketManager.markAsRead(roomId, user.id, messageIds);
     },
-    [roomId, userId]
+    [roomId, user?.id]
   );
+  */
 
   // 컴포넌트 마운트 시 채팅방 구독
   useEffect(() => {
-    if (isConnected && roomId && userId) {
+    if (isConnected && roomId && user?.id) {
       subscribeToRoom();
     }
-  }, [isConnected, roomId, userId, subscribeToRoom]);
+  }, [isConnected, roomId, user?.id, subscribeToRoom]);
 
   // 컴포넌트 언마운트 시 채팅방 구독 해제
   useEffect(() => {
@@ -144,6 +146,6 @@ export const useWebSocketManager = (roomId, userId, onMessageReceived) => {
     error,
     sendMessage,
     joinRoom,
-    markAsRead,
+    // markAsRead,
   };
 };

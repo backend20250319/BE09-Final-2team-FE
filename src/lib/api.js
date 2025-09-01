@@ -24,16 +24,6 @@ api.interceptors.request.use(
     const token = state.accessToken;
     const user = state.user;
 
-    console.log("API 요청:", {
-      url: config.url,
-      method: config.method,
-      hasToken: !!token,
-      tokenPreview: token ? `${token.substring(0, 10)}...` : null,
-      hasUser: !!user,
-      userId: user?.id,
-      withCredentials: config.withCredentials,
-    });
-
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     } else {
@@ -51,11 +41,6 @@ api.interceptors.request.use(
 // 응답 인터셉터 - 에러 처리
 api.interceptors.response.use(
   (response) => {
-    console.log("API Response Success:", {
-      url: response.config.url,
-      status: response.status,
-      success: response.data?.success,
-    });
     return response;
   },
   (error) => {

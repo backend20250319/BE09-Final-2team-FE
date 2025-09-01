@@ -24,8 +24,10 @@ export const chatApi = {
   // 메시지 전송
   sendMessage: (roomId, data) => api.post(`/chat-service/rooms/${roomId}/messages`, data),
 
+  /*
   // 메시지 읽음 처리
   markAsRead: (roomId, data) => api.post(`/chat-service/rooms/${roomId}/messages/read`, data),
+  */
 
   // 읽지 않은 메시지 수 조회
   getUnreadCount: (roomId) => api.get(`/chat-service/unread/${roomId}`),

@@ -1,10 +1,5 @@
 "use client";
 
-/* 
-  2025-08-27
-  채팅방 사이드바 메인 컴포넌트
-*/
-
 import Sidebar from "@/components/common/Sidebar";
 import { useSidebar } from "@/hooks/useSidebar";
 import { formatDateToString, formatStringToDate } from "@/utils/format";
@@ -18,166 +13,167 @@ import ChatProductInfo from "./ChatProductInfo";
 import ChatActionMenu from "./ChatActionMenu";
 import { chatApi } from "../api/chatApi";
 
-export default function ChatRoomSidebar({ chat, onClose }) {
-  // chat: 채팅방 정보를 담고 있는 객체 (id, name, message, productId, productName, productPrice, productImg, avatar, date, userId 등)
+export default function ChatRoomSidebar({ chat = null, productId = null, onClose, trigger }) {
+  const { close, closeAll } = useSidebar("chatRoom");
+  const chatListSidebar = useSidebar("chatList");
 
-  const { close, closeAll } = useSidebar("chatRoom"); // 현재 채팅방 사이드바 제어
-  const chatListSidebar = useSidebar("chatList"); // 채팅 목록 사이드바 제어
-  const [text, setText] = useState(""); // 메시지 입력 텍스트
-  const [isSale, setIsSale] = useState(!!chat.isSale); // 판매 완료 상태 (로컬 관리)
-  const [isAddBtn, setIsAddBtn] = useState(false); // 더보기 버튼 메뉴 표시 여부
-  const [messages, setMessages] = useState([]); // 실제 메시지 목록
-  const [loading, setLoading] = useState(true); // 메시지 로딩 상태
-  const [otherUserName, setOtherUserName] = useState("상대방"); // 상대방 이름
-  const [otherUser, setOtherUser] = useState(null); // 상대방 정보
-  const user = useUser(); // 현재 사용자 정보
+  const [text, setText] = useState("");
+  const [isSale, setIsSale] = useState(false);
+  const [isAddBtn, setIsAddBtn] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [creatingRoom, setCreatingRoom] = useState(false);
+  const [otherUserName, setOtherUserName] = useState("상대방");
+  const [otherUser, setOtherUser] = useState(null);
+  const [currentChat, setCurrentChat] = useState(null);
 
-  // 사용자 이름 계산 (chat 객체에서 전달받은 사용자 정보 우선 사용)
-  const senderName =
-    chat.currentUserNickname || (user ? user.nickname || user.name || user.loginId || "사용자" : "사용자");
+  const user = useUser();
+  const scrollRef = useRef(null);
+  const router = useRouter();
 
-  // 읽음 처리할 메시지 ID들을 추적하는 상태
-  const [unreadMessageIds, setUnreadMessageIds] = useState(new Set());
-
-  // 메시지 수신 핸들러 (먼저 정의)
-  const handleMessageReceived = (message) => {
-    // 메시지에 고유 ID가 없으면 생성
-    if (!message.id) {
-      message.id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    }
-
-    // 읽음 처리 메시지인 경우
-    if (message.messageType === "READ") {
-      setMessages((prev) =>
-        prev.map((msg) => {
-          if (message.messageIds && message.messageIds.includes(msg.id)) {
-            return { ...msg, read: true };
+  // ✅ 채팅방 생성 or 기존 방 설정
+  useEffect(() => {
+    const initChatRoom = async () => {
+      try {
+        // 상품 상세 페이지 → productId로 새 채팅방 생성
+        if (productId && !chat && user?.id) {
+          setCreatingRoom(true);
+          const response = await chatApi.createRoom({
+            productId,
+            userId: user.id,
+          });
+          if (response.data.success) {
+            setCurrentChat(response.data.data);
+          } else {
+            console.error("채팅방 생성 실패:", response.data.message);
           }
-          return msg;
-        })
-      );
-      return;
-    }
+        }
+        // 목록에서 클릭 → chat(생성된 방의 데이터 (기존 방 입장 시 사용)) 기존 방 열기
+        else if (chat) {
+          setCurrentChat(chat);
+          if (chat.isSale) setIsSale(true);
+        }
+      } catch (err) {
+        console.error("채팅방 초기화 오류:", err);
+      } finally {
+        setCreatingRoom(false);
+      }
+    };
 
-    // 내가 보낸 메시지가 아니면 읽지 않은 메시지로 추가
-    if (message.senderId !== user?.id) {
-      setUnreadMessageIds((prev) => new Set([...prev, message.id]));
-    }
+    initChatRoom();
+  }, [productId, chat, user?.id]);
 
-    setMessages((prev) => {
-      const newMessages = [...prev, message];
-      // 시간순으로 정렬 (오래된 메시지가 위에, 최신 메시지가 아래에)
-      return newMessages.sort((a, b) => {
-        const timeA = new Date(a.sentAt || a.timestamp || 0).getTime();
-        const timeB = new Date(b.sentAt || b.timestamp || 0).getTime();
-        return timeA - timeB;
-      });
-    });
-  };
+  const roomId = currentChat?.roomId;
+  const isSeller = currentChat?.sellerId && currentChat.sellerId === user?.id;
 
-  // WebSocket 훅 사용 (chat 객체에서 전달받은 사용자 ID 우선 사용)
-  const roomId = chat.roomId || chat.id;
+  const senderName = currentChat?.currentUserNickname || user?.nickname || user?.name || user?.loginId || "사용자";
+
+  // const [unreadMessageIds, setUnreadMessageIds] = useState(new Set());
+
+  // ✅ WebSocket
   const {
     isConnected,
     error: wsError,
     sendMessage,
     joinRoom,
-    markAsRead,
-  } = useWebSocketManager(roomId, handleMessageReceived);
+    // markAsRead,
+  } = useWebSocketManager(roomId, (message) => {
+    if (!message.id) {
+      message.id = `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    }
+    /*
+    if (message.messageType === "READ") {
+      setMessages((prev) => prev.map((msg) => (message.messageIds?.includes(msg.id) ? { ...msg, read: true } : msg)));
+      return;
+    }
+    */
 
-  // WebSocket 연결 상태 로깅
-  console.log("ChatRoomSidebar WebSocket 상태:", {
-    roomId,
-    isConnected,
-    wsError,
-    userId: user?.id,
+    // 메시지 중복 방지: 이미 존재하는 메시지인지 확인
+    setMessages((prev) => {
+      const existingMessage = prev.find((msg) => msg.id === message.id);
+      if (existingMessage) {
+        console.log("중복 메시지 무시:", message.id);
+        return prev;
+      }
+
+      // 내가 보낸 메시지인 경우, 임시 메시지를 실제 메시지로 교체
+      if (message.senderId === user?.id) {
+        // 임시 메시지 제거하고 실제 메시지 추가
+        const filteredMessages = prev.filter((msg) => !msg.isTemp);
+        return [...filteredMessages, message].sort(
+          (a, b) => new Date(a.sentAt || a.timestamp || 0) - new Date(b.sentAt || b.timestamp || 0)
+        );
+      } else {
+        // 상대방 메시지인 경우
+        // console.log("상대방 메시지 수신:", message);
+        /*
+        if (message.senderId !== user?.id) {
+          setUnreadMessageIds((prev) => new Set([...prev, message.id]));
+        }
+        */
+        return [...prev, message].sort(
+          (a, b) => new Date(a.sentAt || a.timestamp || 0) - new Date(b.sentAt || b.timestamp || 0)
+        );
+      }
+    });
   });
 
-  // 채팅방 참여자 정보 로드 (상대방 이름 가져오기)
+  useEffect(() => {
+    if (isConnected && senderName && roomId) {
+      joinRoom(senderName);
+    }
+  }, [isConnected, senderName, roomId, joinRoom]);
+
+  // ✅ 참여자 로드
   useEffect(() => {
     const loadParticipants = async () => {
       if (!roomId) return;
-
       try {
         const response = await chatApi.getRoomParticipants(roomId);
         if (response.data.success) {
           const participants = response.data.data || [];
-
-          // 현재 사용자가 아닌 다른 참여자를 찾아서 이름 설정
-          const otherUser = participants.find((p) => p.userId !== user?.id);
-          if (otherUser) {
-            // 백엔드에서 제공하는 닉네임 정보 사용
-            const nickname = otherUser.nickname || "상대방";
-            setOtherUserName(nickname);
-            setOtherUser(otherUser); // 상대방 정보 저장
-
-            // chat 객체에 상대방 정보 추가
-            chat.otherUserId = otherUser.userId;
-            chat.otherUserNickname = nickname;
+          const other = participants.find((p) => p.userId !== user?.id);
+          if (other) {
+            setOtherUserName(other.nickname || "상대방");
+            setOtherUser(other);
+            setCurrentChat((prev) => ({
+              ...prev,
+              otherUserId: other.userId,
+              otherUserNickname: other.nickname,
+            }));
           }
         }
-      } catch (error) {
-        console.error("참여자 정보 로드 오류:", error);
+      } catch (err) {
+        console.error("참여자 로드 오류:", err);
       }
     };
-
     loadParticipants();
-  }, [roomId, user?.id, chat]);
+  }, [roomId, user?.id]);
 
-  // 기존 메시지 로드
+  // ✅ 메시지 로드
   useEffect(() => {
     const loadMessages = async () => {
-      console.log("loadMessages 호출됨 - roomId:", roomId);
-
       if (!roomId) {
-        console.log("roomId가 없어서 메시지 로드 중단");
-        setLoading(false);
         return;
       }
-
       try {
-        console.log("getMessages API 호출 시작:", roomId);
         const response = await chatApi.getMessages(roomId, 0, 50);
-        console.log("getMessages API 응답:", response);
-
         if (response.data.success) {
-          const loadedMessages = response.data.data.content || [];
-          console.log("로드된 메시지 개수:", loadedMessages.length);
-
-          // 읽지 않은 메시지 ID들을 수집
-          const unreadIds = new Set();
-          loadedMessages.forEach((msg) => {
-            if (msg.senderId !== user?.id && !msg.read) {
-              unreadIds.add(msg.id);
-            }
-          });
-
-          // 시간순으로 정렬 (오래된 메시지가 위에, 최신 메시지가 아래에)
-          const sortedMessages = loadedMessages.sort((a, b) => {
-            const timeA = new Date(a.sentAt || a.timestamp || 0).getTime();
-            const timeB = new Date(b.sentAt || b.timestamp || 0).getTime();
-            return timeA - timeB;
-          });
-
-          setUnreadMessageIds(unreadIds);
-          setMessages(sortedMessages);
-
-          // 메시지 로드 완료 후 스크롤을 최하단으로 이동
+          const loaded = response.data.data.content || [];
+          // const unread = new Set(loaded.filter((m) => m.senderId !== user?.id && !m.read).map((m) => m.id));
+          // setUnreadMessageIds(unread);
+          setMessages(
+            loaded.sort((a, b) => new Date(a.sentAt || a.timestamp || 0) - new Date(b.sentAt || b.timestamp || 0))
+          );
           scrollToBottom(100);
         }
-      } catch (error) {
-        console.error("메시지 로드 오류:", error);
-        // 에러 시 빈 메시지 배열로 설정
+      } catch (err) {
+        console.error("메시지 로드 오류:", err);
         setMessages([]);
-      } finally {
-        setLoading(false);
       }
     };
-
     loadMessages();
-  }, [roomId]); // roomId만 의존성으로 설정 (userId는 JWT 토큰에서 자동 추출됨)
+  }, [roomId]);
 
-  // 스크롤을 최하단으로 이동하는 함수
   const scrollToBottom = useCallback((delay = 100) => {
     setTimeout(() => {
       if (scrollRef.current) {
@@ -186,203 +182,32 @@ export default function ChatRoomSidebar({ chat, onClose }) {
     }, delay);
   }, []);
 
-  // 읽음 처리 함수
+  /*
   const handleMarkAsRead = useCallback(() => {
     if (unreadMessageIds.size > 0 && markAsRead) {
-      const messageIdsArray = Array.from(unreadMessageIds);
-      markAsRead(messageIdsArray);
-      setUnreadMessageIds(new Set()); // 읽음 처리 후 초기화
+      markAsRead(Array.from(unreadMessageIds));
+      setUnreadMessageIds(new Set());
     }
   }, [unreadMessageIds, markAsRead]);
 
-  // WebSocket 연결 시 자동으로 방 입장
-  useEffect(() => {
-    console.log("WebSocket 방 입장 조건 확인:", { isConnected, senderName });
-    if (isConnected && senderName) {
-      console.log("WebSocket 방 입장 실행");
-      joinRoom(senderName);
-
-      // WebSocket 연결 후 스크롤을 최하단으로 이동
-      scrollToBottom(100);
-    } else {
-      console.log("WebSocket 방 입장 조건 불만족:", {
-        isConnected,
-        senderName: !!senderName,
-      });
-    }
-  }, [isConnected, senderName, joinRoom, messages.length]);
-
-  // 채팅방이 활성화될 때 읽음 처리
   useEffect(() => {
     if (isConnected && unreadMessageIds.size > 0) {
-      // 약간의 지연을 두어 메시지 렌더링 완료 후 읽음 처리
-      const timer = setTimeout(() => {
-        handleMarkAsRead();
-      }, 500);
-
+      const timer = setTimeout(handleMarkAsRead, 500);
       return () => clearTimeout(timer);
     }
   }, [isConnected, handleMarkAsRead]);
+  */
 
-  // 메시지 목록 스크롤 시 읽음 처리 (Intersection Observer 사용)
-  useEffect(() => {
-    if (!scrollRef.current || unreadMessageIds.size === 0) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            // 메시지가 화면에 보이면 읽음 처리
-            handleMarkAsRead();
-          }
-        });
-      },
-      { threshold: 0.5 } // 50% 이상 보일 때 읽음 처리
-    );
-
-    // 마지막 메시지들을 관찰
-    const messageElements = scrollRef.current.querySelectorAll(".message-item");
-    const lastMessages = Array.from(messageElements).slice(-3); // 마지막 3개 메시지
-
-    lastMessages.forEach((element) => {
-      observer.observe(element);
-    });
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [messages, unreadMessageIds, handleMarkAsRead]);
-
-  // 새 메시지가 추가될 때마다 스크롤을 최하단으로 이동
   useEffect(() => {
     if (messages.length > 0 && scrollRef.current) {
-      // DOM 업데이트 후 스크롤 실행
       scrollToBottom(50);
     }
-  }, [messages.length, scrollToBottom]); // messages.length가 변경될 때만 실행
+  }, [messages.length, scrollToBottom]);
 
-  // 채팅방 입장 시 스크롤을 최하단으로 이동
-  useEffect(() => {
-    if (!loading && messages.length > 0 && scrollRef.current) {
-      // 로딩이 완료되고 메시지가 있을 때 스크롤을 최하단으로 이동
-      scrollToBottom(100);
-    }
-  }, [loading, messages.length, scrollToBottom]); // 로딩 상태와 메시지 개수가 변경될 때 실행
-
-  // ChatListSideBar에서 채팅방 클릭 시 스크롤 이벤트 감지
-  useEffect(() => {
-    const handleChatRoomOpened = (event) => {
-      const { roomId } = event.detail;
-      const currentRoomId = chat.roomId || chat.id;
-
-      // 현재 채팅방과 일치하는 경우에만 스크롤 실행
-      if (roomId === currentRoomId && scrollRef.current) {
-        scrollToBottom(100); // 약간 더 긴 지연으로 DOM 완전 로드 후 실행
-      }
-    };
-
-    // 커스텀 이벤트 리스너 등록
-    window.addEventListener("chatRoomOpened", handleChatRoomOpened);
-
-    // 컴포넌트 언마운트 시 이벤트 리스너 제거
-    return () => {
-      window.removeEventListener("chatRoomOpened", handleChatRoomOpened);
-    };
-  }, [chat.roomId, chat.id, scrollToBottom]);
-
-  // ChatRoomSidebar 마운트 시 스크롤 실행
-  useEffect(() => {
-    // 컴포넌트가 마운트되고 메시지가 로드된 후 스크롤 실행
-    if (messages.length > 0 && !loading) {
-      scrollToBottom(100); // 충분한 지연으로 모든 렌더링 완료 후 실행
-    }
-  }, []); // 컴포넌트 마운트 시 한 번만 실행
-
-  const scrollRef = useRef(null);
-  const router = useRouter();
-
-  // 메시지 전송 함수 (HTTP API 사용)
-  const handleSendMessage = async () => {
-    if (!text.trim()) return;
-
-    try {
-      console.log("메시지 전송 시작:", { roomId, text, senderName });
-
-      // HTTP API를 통해 메시지 전송
-      const response = await chatApi.sendMessage(roomId, {
-        senderId: user?.id,
-        senderName: senderName,
-        message: text,
-      });
-
-      console.log("메시지 전송 응답:", response);
-
-      if (response.data.success) {
-        // 전송 성공 시 입력창 초기화
-        setText("");
-
-        // 스크롤 맨 아래로 (DOM 업데이트 후 실행)
-        scrollToBottom(100);
-      } else {
-        console.error("메시지 전송 실패:", response.data.message);
-      }
-    } catch (error) {
-      console.error("메시지 전송 오류:", error);
-    }
-  };
-
-  // 시간 포맷팅 (HH:MM 형식)
-  const formatTime = (iso) => {
-    const date = new Date(iso);
-    return date.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
-  };
-
-  // 전체 날짜 포맷팅 (YYYY년 MM월 DD일 형식)
-  const formatFullDate = (timestamp) => {
-    const date = new Date(timestamp);
-    if (isNaN(date.getTime())) return "";
-    const dateString = formatDateToString(date);
-    return formatStringToDate(dateString);
-  };
-
-  // 상품 클릭 시 상품 상세 페이지로 이동
-  const handleGoToReview = () => {
-    try {
-      closeAll(); // 모든 사이드바 닫기
-      router.push(`/product/${chat.productId}`); // 상품 상세 페이지로 이동
-    } catch (err) {
-      const safeErr = err instanceof Error ? err : new Error(String(err));
-      console.error("페이지 이동 중 오류 발생:", safeErr);
-    }
-  };
-
-  // 유저 이름 클릭 시 해당 유저의 마이페이지로 이동
-  const handleGoToUserProfile = () => {
-    try {
-      closeAll(); // 모든 사이드바 닫기
-      // chat.otherUserId를 우선적으로 사용, 없으면 fallback
-      const targetUserId = chat.otherUserId || otherUser?.userId || "";
-      router.push(`/mypage/${targetUserId}`); // 유저 마이페이지로 이동
-    } catch (err) {
-      const safeErr = err instanceof Error ? err : new Error(String(err));
-      console.error("유저 페이지 이동 중 오류 발생:", safeErr);
-    }
-  };
-
-  // 현재 사용자가 판매자인지 확인
-  const isSeller = chat.sellerId === user?.id;
-
-  // 판매완료 처리: 상태 변경 + 시스템 메시지 추가 (구매자만 가능)
   const handleCompleteSale = () => {
-    // 판매자는 판매완료 처리할 수 없음
-    if (isSeller) {
-      console.log("판매자는 판매완료 처리를 할 수 없습니다.");
-      return;
-    }
-
+    if (isSeller) return;
     if (isSale) return;
     setIsSale(true);
-
     setMessages((prev) => [
       ...prev,
       {
@@ -393,68 +218,134 @@ export default function ChatRoomSidebar({ chat, onClose }) {
         isSale: true,
       },
     ]);
+  };
 
-    // 스크롤은 새 메시지 추가 useEffect에서 자동으로 처리됨
+  const handleSendMessage = async () => {
+    if (!text.trim()) return;
+
+    const messageContent = text.trim();
+    setText("");
+
+    // 임시 메시지 추가 (사용자에게 즉시 피드백 제공)
+    const tempMessage = {
+      id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      senderId: user?.id,
+      senderName: senderName,
+      content: messageContent,
+      sentAt: new Date().toISOString(),
+      isTemp: true,
+    };
+
+    setMessages((prev) => [...prev, tempMessage]);
+
+    try {
+      // WebSocket을 통한 메시지 전송 (실패해도 계속 진행)
+      const wsSuccess = sendMessage(messageContent, senderName);
+
+      // HTTP API 호출 (DB 저장용)
+      const response = await chatApi.sendMessage(roomId, {
+        senderId: user?.id,
+        senderName,
+        message: messageContent,
+      });
+
+      // HTTP API 응답에서 메시지 ID를 받아서 임시 메시지 교체
+      if (response.data.success && response.data.data) {
+        const savedMessage = response.data.data;
+
+        setMessages((prev) => {
+          const filteredMessages = prev.filter((msg) => !msg.isTemp);
+          return [...filteredMessages, savedMessage].sort(
+            (a, b) => new Date(a.sentAt || a.timestamp || 0) - new Date(b.sentAt || b.timestamp || 0)
+          );
+        });
+      }
+    } catch (err) {
+      console.error("메시지 전송 실패:", err);
+      // 실패 시 임시 메시지 제거
+      setMessages((prev) => prev.filter((m) => m.id !== tempMessage.id));
+      // 사용자에게 오류 알림
+      alert("메시지 전송에 실패했습니다. 다시 시도해주세요.");
+    }
   };
 
   return (
     <Sidebar
-      sidebarKey="chatRoom" // 채팅방 사이드바 키
-      title={chat.otherUserNickname || otherUserName || "상대방"} // 채팅방 제목 (상대방 이름)
-      titleClickable={true} // 제목 클릭 가능하게 설정
-      onTitleClick={handleGoToUserProfile} // 제목 클릭 시 유저 프로필로 이동
-      trigger={<div style={{ display: "none" }} />} // 숨겨진 트리거 (사이드바는 프로그래밍적으로 열림)
+      sidebarKey="chatRoom"
+      title={currentChat?.otherUserNickname || otherUserName}
+      titleClickable
+      onTitleClick={() => {
+        closeAll();
+        const targetUserId = currentChat?.otherUserId || otherUser?.userId || "";
+        if (targetUserId) router.push(`/mypage/${targetUserId}`);
+      }}
+      trigger={trigger || <div style={{ display: "none" }} />}
       onBack={() => {
-        if (onClose) {
-          onClose(); // 부모 컴포넌트에서 전달받은 닫기 함수 호출
-        } else {
-          close(); // 현재 채팅방 사이드바 닫기
-          chatListSidebar.open(); // 채팅 목록 사이드바 열기
+        if (onClose) onClose();
+        else {
+          close();
+          chatListSidebar.open();
         }
       }}
-      add={true} // 더보기 버튼 표시
-      onAdd={() => setIsAddBtn(!isAddBtn)} // 더보기 버튼 클릭 시 메뉴 토글
-      className="gap-0" // 사이드바 내부 간격 제거
+      add
+      onAdd={() => setIsAddBtn(!isAddBtn)}
+      className="gap-0"
     >
       <div>
-        {/* 신고하기, 차단하기 */}
         <ChatActionMenu isVisible={isAddBtn} />
 
-        {/* 상품 정보 + 판매완료 버튼 */}
-        <ChatProductInfo
-          chat={chat}
-          isSale={isSale}
-          onCompleteSale={handleCompleteSale}
-          onGoToReview={handleGoToReview}
-          isSeller={isSeller}
-        />
-
-        {/* 메시지 목록 */}
-        <div className="flex flex-col gap-2">
-          <ChatMessageList
-            messages={messages}
-            user={user}
-            otherUserName={otherUserName}
-            formatTime={formatTime}
-            formatFullDate={formatFullDate}
-            scrollRef={scrollRef}
-          />
-
-          <div className="bg-[#85B3EB] rounded p-1.5">
-            <p className="text-white text-sm">
-              아이 물품 거래, 안전이 먼저입니다. 판매자 정보와 상품 상태를 꼼꼼히 확인하세요.
-            </p>
+        {creatingRoom ? (
+          <div className="flex items-center justify-center p-8">
+            <p className="text-gray-600">채팅방을 생성하고 있습니다...</p>
           </div>
+        ) : currentChat ? (
+          <>
+            <ChatProductInfo
+              chat={currentChat}
+              isSale={isSale}
+              onCompleteSale={handleCompleteSale}
+              onGoToReview={() => {
+                closeAll();
+                router.push(`/product/${currentChat?.productId}`);
+              }}
+              isSeller={isSeller}
+            />
 
-          {/* 입력창 */}
-          <ChatInput
-            text={text}
-            setText={setText}
-            onSend={handleSendMessage}
-            isSale={isSale}
-            isConnected={isConnected}
-          />
-        </div>
+            <div className="flex flex-col gap-2">
+              <ChatMessageList
+                messages={messages}
+                user={user}
+                otherUserName={otherUserName}
+                formatTime={(iso) =>
+                  new Date(iso).toLocaleTimeString("ko-KR", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                }
+                formatFullDate={(ts) => formatStringToDate(formatDateToString(new Date(ts)))}
+                scrollRef={scrollRef}
+              />
+
+              <div className="bg-[#85B3EB] rounded p-1.5">
+                <p className="text-white text-sm">
+                  아이 물품 거래, 안전이 먼저입니다. 판매자 정보와 상품 상태를 꼼꼼히 확인하세요.
+                </p>
+              </div>
+
+              <ChatInput
+                text={text}
+                setText={setText}
+                onSend={handleSendMessage}
+                isSale={isSale}
+                isConnected={isConnected}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="flex items-center justify-center p-8">
+            <p className="text-gray-600">채팅방 정보를 불러올 수 없습니다.</p>
+          </div>
+        )}
       </div>
     </Sidebar>
   );

@@ -18,9 +18,9 @@ export default function ChatProductInfo({ chat, isSale, onCompleteSale, onGoToRe
   return (
     <div className="flex py-4">
       <div onClick={onGoToReview} className="flex items-center gap-4 w-full h-[40px] mb-3 cursor-pointer">
-        {chat.productImg ? (
+        {chat.productThumbnailUrl ? (
           <Image
-            src={chat.productImg}
+            src={chat.productThumbnailUrl}
             alt="product"
             width={40}
             height={40}

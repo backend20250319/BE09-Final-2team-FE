@@ -37,11 +37,20 @@ class WebSocketManager {
           }
         }
 
+        // 토큰 기반 인증을 위한 설정
+        const accessToken = localStorage.getItem("user-storage")
+          ? JSON.parse(localStorage.getItem("user-storage")).state?.accessToken
+          : null;
+
+        if (accessToken) {
+          connectHeaders["Authorization"] = `Bearer ${accessToken}`;
+        }
+        connectHeaders["X-Requested-With"] = "XMLHttpRequest";
+
         this.client = new Client({
           webSocketFactory: () => {
             return new SockJS(url, null, {
               transports: ["websocket", "xhr-streaming", "xhr-polling"],
-              withCredentials: true,
             });
           },
           connectHeaders: connectHeaders,
@@ -83,7 +92,6 @@ class WebSocketManager {
 
         this.client.activate();
       } catch (error) {
-        console.error("WebSocket 초기화 오류:", error);
         this.error = "WebSocket 초기화에 실패했습니다.";
         reject(error);
       }
@@ -125,7 +133,6 @@ class WebSocketManager {
           const messageData = JSON.parse(message.body);
           messageHandler(messageData);
         } catch (error) {
-          console.log("문자열 메시지 수신:", message.body);
           const stringMessage = {
             content: message.body,
             messageType: "SYSTEM",
@@ -174,9 +181,27 @@ class WebSocketManager {
         messageType: "TEXT",
       };
 
+      // ✅ 로컬스토리지에서 accessToken 가져오기
+      const accessToken = localStorage.getItem("user-storage")
+        ? JSON.parse(localStorage.getItem("user-storage")).state?.accessToken
+        : null;
+
+      // 사용자 정보를 헤더에 포함
+      const headers = {};
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+      if (senderId) {
+        headers["user-id"] = senderId.toString();
+      }
+      if (senderName) {
+        headers["user-name"] = senderName;
+      }
+
       this.client.publish({
         destination: "/app/chat.sendMessage",
         body: JSON.stringify(message),
+        headers: headers,
       });
 
       return true;
@@ -202,9 +227,27 @@ class WebSocketManager {
         messageType: "JOIN",
       };
 
+      // ✅ 로컬스토리지에서 accessToken 가져오기
+      const accessToken = localStorage.getItem("user-storage")
+        ? JSON.parse(localStorage.getItem("user-storage")).state?.accessToken
+        : null;
+
+      // 사용자 정보를 헤더에 포함
+      const headers = {};
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+      if (senderId) {
+        headers["user-id"] = senderId.toString();
+      }
+      if (senderName) {
+        headers["user-name"] = senderName;
+      }
+
       this.client.publish({
         destination: "/app/chat.addUser",
         body: JSON.stringify(joinMessage),
+        headers: headers,
       });
 
       return true;
@@ -214,6 +257,7 @@ class WebSocketManager {
     }
   }
 
+  /*
   // 읽음 처리
   markAsRead(roomId, userId, messageIds) {
     if (!this.isConnected || !this.client) {
@@ -240,6 +284,7 @@ class WebSocketManager {
       return false;
     }
   }
+  */
 
   // 기존 구독 복원 (재연결 시)
   restoreSubscriptions() {

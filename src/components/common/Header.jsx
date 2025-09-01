@@ -77,11 +77,8 @@ export default function Header() {
 
   // 카테고리 데이터 가공 (3열로 분리)
   useEffect(() => {
-    console.log("🚀 zustand categories:", categories);
-
     if (categories.length > 0) {
       const grouped = groupCategoryWithColumn(categories);
-      console.log("✅ grouped columns:", grouped);
       setCategoryColumns(grouped);
     }
   }, [categories]);
@@ -139,7 +136,6 @@ export default function Header() {
                             <div className="grid grid-cols-3">
                               {[0, 1, 2].map((colIndex) => {
                                 const col = categoryColumns[colIndex] || [];
-                                console.log(`🔍 colIndex=${colIndex}`, col); // ✅ 여기도 찍어보기
                                 return (
                                   <div
                                     key={colIndex}

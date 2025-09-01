@@ -26,33 +26,11 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
   const checkAuthStatus = useCheckAuthStatus();
   const chatRoomSidebar = useSidebar("chatRoom");
 
-  /** 채팅방 참여자 정보를 가져와서 otherUserNickname 설정 */
+  /** 채팅방 참여자 정보를 가져와서 otherUserNickname 설정 (백엔드에서 이미 제공하므로 제거 예정) */
   const loadParticipantNames = async (rooms, currentUserId) => {
-    const updatedRooms = await Promise.all(
-      rooms.map(async (room) => {
-        // 이미 otherUserNickname이 있으면 건너뛰기
-        if (room.otherUserNickname) return room;
-
-        try {
-          const response = await chatApi.getRoomParticipants(room.id || room.roomId);
-          if (response.data.success) {
-            const participants = response.data.data || [];
-            // 현재 사용자가 아닌 다른 참여자를 찾아서 이름 설정
-            const otherUser = participants.find((p) => p.userId !== currentUserId);
-            if (otherUser) {
-              return {
-                ...room,
-                otherUserNickname: otherUser.nickname || "상대방",
-              };
-            }
-          }
-        } catch (error) {
-          console.error(`채팅방 ${room.id} 참여자 정보 로드 오류:`, error);
-        }
-        return room;
-      })
-    );
-    return updatedRooms;
+    // 백엔드에서 이미 otherUserNickname과 otherUserProfileImageUrl을 제공하므로
+    // 추가 API 호출 없이 바로 반환
+    return rooms;
   };
 
   /** 채팅방 목록 조회 */
@@ -91,7 +69,6 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
   /** 수동 새로고침 */
   const handleRefresh = async () => {
     await fetchChatRooms(true);
-    console.log("클릭됨");
   };
 
   /** 초기화: 인증 확인 → userId 확보되면 fetch → 초기화 해제 */
@@ -132,7 +109,6 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
   /** 외부 새로고침 이벤트 */
   useEffect(() => {
     const handleRefreshChatRooms = () => {
-      console.log("채팅방 목록 새로고침 이벤트 수신");
       // if (isAuthenticated && user?.id) fetchChatRooms(false);
       if (user?.id) fetchChatRooms(false);
     };
@@ -145,23 +121,20 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
 
   /** 채팅방 클릭 핸들러 */
   const handleChatClick = (chat) => {
-    const chatId = chat.id ?? chat.roomId;
     const chatData = {
       ...chat,
-      id: chatId, // 선택 비교 안정화
+      roomId: chat.roomId, // roomId로 통일
       message: chat.lastMessage ?? chat.message,
       date: chat.lastSentAt ? new Date(chat.lastSentAt).toLocaleString() : chat.date ?? "",
       currentUserId: user?.id,
       currentUserNickname: user?.nickname || user?.name || user?.loginId || "사용자",
     };
 
-    console.log("chat ====> ", chat);
-
     setSelectedChat(chatData);
     chatRoomSidebar.open();
 
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("chatRoomOpened", { detail: { roomId: chatId } }));
+      window.dispatchEvent(new CustomEvent("chatRoomOpened", { detail: { roomId: chat.roomId } }));
     }, 150);
   };
 
@@ -200,12 +173,11 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
                 <ChatListHeader chatCount={chatRooms.length} onRefresh={handleRefresh} refreshing={refreshing} />
                 <div className="space-y-2">
                   {chatRooms.map((chat, index) => {
-                    const id = chat.id ?? chat.roomId ?? index;
                     return (
                       <ChatRoomCard
-                        key={`chat-${id}`}
-                        chat={{ ...chat, id }}
-                        isSelected={selectedChat?.id === id}
+                        key={`chat-${chat.roomId}`}
+                        chat={chat}
+                        isSelected={selectedChat?.roomId === chat.roomId}
                         onClick={handleChatClick}
                       />
                     );
