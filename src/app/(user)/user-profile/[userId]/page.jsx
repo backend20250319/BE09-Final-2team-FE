@@ -5,6 +5,7 @@ import './other-user-profile.css';
 import ProductCard from '@/components/common/ProductCard';
 import UserReviewList from '@/app/review/components/UserReviewList';
 import { userAPI } from '@/lib/api';
+import { getProfileImageUrl } from '@/utils/profileImageUtils';
 
 export default function UserProfilePage({ params }) {
     // Next.js 15+ 방식: React.use()로 params 언래핑
@@ -115,18 +116,9 @@ export default function UserProfilePage({ params }) {
                 <div className="profile-card">
                     <h3 className="card-title">프로필 정보</h3>
                     <div className="profile-content">
-                        <div
-                            className="profile-avatar"
-                            style={{
-                                backgroundImage: `url(${profileInfo?.profileImageUrl || 'https://via.placeholder.com/150'})`,
-                                backgroundSize: 'cover',
-                                backgroundPosition: 'center',
-                                width: '150px',
-                                height: '150px',
-                                borderRadius: '50%',
-                                backgroundColor: '#f0f0f0'
-                            }}
-                        ></div>
+                        <div className="profile-avatar" style={{
+                            backgroundImage: `url(${getProfileImageUrl(profileInfo?.profileImageUrl, profileInfo?.id)})`}}
+                        />
                         <h2 className="profile-name">{profileInfo?.nickname || '알 수 없는 사용자'}</h2>
                         <div className="rating">
                             <span className="stars">
