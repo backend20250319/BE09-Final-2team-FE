@@ -19,6 +19,11 @@ import {
     useChildrenList,
     useTradingSummary,
     useGetMypageDashboard,
+    usePurchasedProducts,
+    useGetPurchasedProducts,
+    useSoldProducts,
+    useGetSoldProducts,
+    useMyPageLoading,
 } from "@/store/mypageStore";
 
 const MyPage = () => {
@@ -33,9 +38,15 @@ const MyPage = () => {
     const childrenList = useChildrenList();
     const tradingSummary = useTradingSummary();
     const getMypageDashboard = useGetMypageDashboard();
+    const purchasedProducts = usePurchasedProducts();
+    const getPurchasedProducts = useGetPurchasedProducts();
+    const soldProducts = useSoldProducts();
+    const getSoldProducts = useGetSoldProducts();
+    const myPageLoading = useMyPageLoading();
 
   const [activeTab, setActiveTab] = useState("");
   const [dashboardTab, setDashboardTab] = useState("purchase");
+
   const { open: openProfileEditSidebar } = useSidebar("profile-edit");
   const { open: openPasswordChangeSidebar } = useSidebar("password-change");
   const { open: openLocationSidebar } = useSidebar("location-management");
@@ -91,7 +102,28 @@ const MyPage = () => {
         };
     }, [checkAuthStatus, getMypageDashboard, router, isAuthenticated, user]);
 
-// 로딩 중이면 로딩 화면 표시
+    // 탭 변경 시 해당 데이터 로딩
+    useEffect(() => {
+        if (!user?.id || !isAuthenticated) return;
+
+        const loadTabData = async () => {
+            try {
+                if (dashboardTab === "purchase" && purchasedProducts.length === 0) {
+                    console.log('구매 상품 데이터 로딩');
+                    await getPurchasedProducts();
+                } else if (dashboardTab === "sale" && soldProducts.length === 0) {
+                    console.log('판매 상품 데이터 로딩');
+                    await getSoldProducts();
+                }
+            } catch (error) {
+                console.error('탭 데이터 로딩 실패:', error);
+            }
+        };
+
+        loadTabData();
+    }, [dashboardTab, user?.id, isAuthenticated, purchasedProducts.length, soldProducts.length, getPurchasedProducts, getSoldProducts]);
+
+    // 로딩 중이면 로딩 화면 표시
     if (loading || !user) {
         return (
             <div className="mypage-container">
@@ -101,55 +133,6 @@ const MyPage = () => {
             </div>
         );
     }
-
-
-  const dummyPurchases = [
-    {
-      id: 1,
-      productName: "아기 옷 세트",
-      price: "15,000원",
-      location: "양재동",
-      timeAgo: "1주 전",
-      imageUrl: "https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg",
-      trade_status: "ON_SALE",
-      status: "NEW",
-      showReviewButton: true,
-    },
-    {
-      id: 2,
-      productName: "아기 옷 세트",
-      price: "15,000원",
-      location: "양재동",
-      timeAgo: "1주 전",
-      imageUrl: "https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg",
-      trade_status: "ON_SALE",
-      status: "NEW",
-      showReviewButton: true,
-    },
-  ];
-
-  const dummySales = [
-    {
-      id: 1,
-      productName: "유아 원목 블록 세트",
-      price: "25,000원",
-      location: "서초동",
-      timeAgo: "2일 전",
-      imageUrl: "https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg",
-      trade_status: "SOLD",
-      status: "USED",
-    },
-    {
-      id: 2,
-      productName: "유아 원목 블록 세트",
-      price: "25,000원",
-      location: "서초동",
-      timeAgo: "2일 전",
-      imageUrl: "https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg",
-      trade_status: "SOLD",
-      status: "USED",
-    },
-  ];
 
   const renderProfileSection = () => (
       <div className="profile-section">
@@ -264,33 +247,55 @@ const MyPage = () => {
         <div className="tab-content-area">
           {dashboardTab === "purchase" ? (
               <>
-                <div className="item-count">총 {dummyPurchases.length} 개</div>
-                {dummyPurchases.length === 0 ? (
-                    <div className="empty-state">
-                      <p>등록된 구매 상품이 없습니다.</p>
-                    </div>
-                ) : (
-                    <div className="products-grid">
-                      {dummyPurchases.map((product) => (
-                          <ProductCard key={product.id} product={product} size="size1" />
-                      ))}
-                    </div>
-                )}
+                <div className="item-count">총 {purchasedProducts.length || 0} 개</div>
+                  {myPageLoading.purchases ? (
+                      <div className="loading-state">
+                          <p>구매 상품을 불러오는 중...</p>
+                      </div>
+                  ) : purchasedProducts?.length === 0 ? (
+                      <div className="empty-state">
+                          <p>등록된 구매 상품이 없습니다.</p>
+                      </div>
+                  ) : (
+                      <div className="products-grid">
+                          {purchasedProducts?.map((product) => (
+                              <ProductCard
+                                  key={product.id}
+                                  product={{
+                                      ...product,
+                                      name: product.name || '상품명 없음' // name 필드가 없을 경우 기본값
+                                  }}
+                                  size="size1"
+                              />
+                          ))}
+                      </div>
+                  )}
               </>
           ) : (
               <>
-                <div className="item-count">총 {dummySales.length} 개</div>
-                {dummySales.length === 0 ? (
-                    <div className="empty-state">
-                      <p>등록된 판매 상품이 없습니다.</p>
-                    </div>
-                ) : (
-                    <div className="products-grid">
-                      {dummySales.map((product) => (
-                          <ProductCard key={product.id} product={product} size="size1" />
-                      ))}
-                    </div>
-                )}
+                  <div className="item-count">총 {soldProducts?.length || 0} 개</div>
+                  {myPageLoading.sales ? (
+                      <div className="loading-state">
+                          <p>판매 상품을 불러오는 중...</p>
+                      </div>
+                  ) : soldProducts?.length === 0 ? (
+                      <div className="empty-state">
+                          <p>등록된 판매 상품이 없습니다.</p>
+                      </div>
+                  ) : (
+                      <div className="products-grid">
+                          {soldProducts?.map((product) => (
+                              <ProductCard
+                                  key={product.id}
+                                  product={{
+                                      ...product,
+                                      name: product.name || '상품명 없음' // name 필드가 없을 경우 기본값
+                                  }}
+                                  size="size1"
+                              />
+                          ))}
+                      </div>
+                  )}
               </>
           )}
         </div>
