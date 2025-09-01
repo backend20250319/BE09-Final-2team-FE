@@ -18,7 +18,7 @@ export default function MyReviewList({ open, onClose, user }) {
                     const response = await fetch('http://localhost:8000/api/v1/review-service/reviews');
                     if (!response.ok) throw new Error('Failed to fetch reviews');
                     const data = await response.json();
-                    console.log('리뷰 데이터 구조:', data.data); // 데이터 구조 확인
+
                     setReviews(data.data);
                 } catch (error) {
                     console.error("Error fetching reviews:", error);
