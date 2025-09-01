@@ -5,7 +5,7 @@ import { Suspense, useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Header from '@/components/common/Header';
 import Footer from '@/components/common/Footer';
-import { useCheckAuthStatus, useIsAuthenticated, useUser } from '@/store/userStore';
+import { useCheckAuthStatusSilently, useIsAuthenticated, useUser } from '@/store/userStore';
 import { useCategoryStore } from '@/store/categoryStore'; // CategoryStore
 import websocketManager from '@/lib/websocketManager';
 
@@ -14,7 +14,7 @@ const noLayoutPaths = ['/login', '/signup', '/signup/complete', '/additional-inf
 function LayoutContent({ children }) {
     const pathname = usePathname();
     const isNoLayoutPage = pathname && noLayoutPaths.includes(pathname);
-    const checkAuthStatus = useCheckAuthStatus();
+    const checkAuthStatusSilently = useCheckAuthStatusSilently();
     const isAuthenticated = useIsAuthenticated();
     const user = useUser();
     const [authChecked, setAuthChecked] = useState(false);
@@ -37,7 +37,7 @@ function LayoutContent({ children }) {
             }
 
             try {
-                await checkAuthStatus();
+                await checkAuthStatusSilently(); // 변경 - 401 에러 없이 조용히 확인
                 setAuthChecked(true);
             } catch (error) {
                 console.error('전역 인증 체크 에러:', error);
@@ -51,7 +51,7 @@ function LayoutContent({ children }) {
         } else {
             setAuthChecked(true);
         }
-    }, [checkAuthStatus, isNoLayoutPage, authChecked]);
+    }, [checkAuthStatusSilently, isNoLayoutPage, authChecked]);
 
     // 인증된 사용자가 있을 때 WebSocket 연결 확인
     useEffect(() => {
