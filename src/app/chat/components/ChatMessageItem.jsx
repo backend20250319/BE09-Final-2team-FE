@@ -39,18 +39,30 @@ export default function ChatMessageItem({ msg, idx, messages, isMine, otherUserN
         <div className={`${isMine ? "text-right" : "text-left"}`}>
           {!isMine && <div className="text-sm text-gray-500 mb-1">{otherUserName}</div>}
           <div className={`flex items-end gap-2 ${isMine ? "flex-row-reverse" : "flex-row"}`}>
-            <div className={`p-3 rounded break-all max-w-[250px] ${isMine ? "bg-blue-300 text-left" : "bg-green-300"}`}>
+            <div
+              className={`p-3 rounded break-all max-w-[250px] ${isMine ? "bg-blue-300 text-left" : "bg-green-300"} ${
+                msg.isTemp ? "opacity-70" : ""
+              }`}
+            >
               {msg.text || msg.content || msg.message}
               {/* 이 메시지 전송 시점에 판매완료 상태였다면 작은 뱃지 표기 */}
               {msg.isSale && (
                 <div className="mt-1 text-[10px] inline-block bg-white/70 px-1.5 py-0.5 rounded">판매완료 시점</div>
+              )}
+              {/* 임시 메시지 표시 */}
+              {msg.isTemp && (
+                <div className="mt-1 text-[10px] inline-block bg-yellow-400/70 px-1.5 py-0.5 rounded">전송 중...</div>
               )}
             </div>
             <span className="text-[11px] text-gray-600 whitespace-nowrap">
               {formatTime(msg.sentAt || msg.timestamp)}
             </span>
           </div>
-          {isMine && <div className="text-xs text-gray-600 mt-0.5">{msg.read ? "읽음 ✅" : "전송됨"}</div>}
+          {/* {isMine && (
+            <div className="text-xs text-gray-600 mt-0.5">
+              {msg.isTemp ? "전송 중..." : msg.read ? "읽음 ✅" : "전송됨"}
+            </div>
+          )} */}
         </div>
       </div>
     </div>

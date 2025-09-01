@@ -18,9 +18,9 @@ export default function ChatProductInfo({ chat, isSale, onCompleteSale, onGoToRe
   return (
     <div className="flex py-4">
       <div onClick={onGoToReview} className="flex items-center gap-4 w-full h-[40px] mb-3 cursor-pointer">
-        {chat.productImg ? (
+        {chat.productThumbnailUrl ? (
           <Image
-            src={chat.productImg}
+            src={chat.productThumbnailUrl}
             alt="product"
             width={40}
             height={40}
@@ -45,8 +45,8 @@ export default function ChatProductInfo({ chat, isSale, onCompleteSale, onGoToRe
         </div>
       </div>
 
-      {/* 판매자가 아닌 경우에만 판매완료 버튼 표시 */}
-      {!isSeller && (
+      {/* 판매자인 경우에만 판매완료 버튼 표시 */}
+      {isSeller && (
         <Button className="cursor-pointer" onClick={onCompleteSale} disabled={isSale}>
           {isSale ? "판매완료됨" : "판매완료"}
         </Button>

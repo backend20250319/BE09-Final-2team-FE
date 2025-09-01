@@ -48,6 +48,7 @@ const ChatList = () => {
       const response = await chatAPI.createRoom(roomData);
       if (response.data.success) {
         // 새로 생성된 방으로 이동
+        console.log("chatList ==> 채팅방 생성");
         window.location.href = `/chat/${response.data.data.id}`;
       } else {
         setError("채팅방 생성에 실패했습니다.");

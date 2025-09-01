@@ -23,20 +23,20 @@ export default function ChatInput({ text, setText, onSend, isSale, isConnected }
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        disabled={isSale || !isConnected}
+        disabled={!isConnected}
         className="flex-1 border p-2 rounded resize-none"
         placeholder={
-          isSale
-            ? "판매가 완료되어 메시지를 보낼 수 없습니다."
-            : !isConnected
+          !isConnected
             ? "연결 중입니다..."
+            : isSale
+            ? "판매가 완료되었습니다. 추가 문의사항이 있으시면 말씀해주세요."
             : "메시지를 입력해주세요"
         }
         maxLength={1000}
       />
       <div className="flex items-end justify-between">
         <span className="text-sm leading-5 text-gray-400">{text.length} / 1000</span>
-        <button type="submit" className="w-6 h-6" disabled={!text.trim() || isSale || !isConnected}>
+        <button type="submit" className="w-6 h-6" disabled={!text.trim() || !isConnected}>
           <svg
             stroke="currentColor"
             fill="currentColor"
