@@ -213,7 +213,12 @@ export const useUserStore = create(
         {
             name: 'user-storage', // localStorage 키 이름
             partialize: (state) => {
-                // 로그인된 상태일 때만 저장 (null 값 방지)
+                console.log('partialize 실행:', {
+                    isAuthenticated: state.isAuthenticated,
+                    hasUser: !!state.user,
+                    hasAccessToken: !!state.accessToken
+                });
+
                 if (state.isAuthenticated && state.user && state.accessToken) {
                     return {
                         user: state.user,
@@ -222,7 +227,9 @@ export const useUserStore = create(
                         isAuthenticated: state.isAuthenticated,
                     };
                 }
+                return {}; // 빈 객체라도 반환
             },
+
             // 복원 시 로그 추가
             onRehydrateStorage: () => {
                 console.log('userStore 복원 시작');
