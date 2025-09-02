@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
+import { reviewAPI } from '@/lib/api';
 import '../css/MyReviewAddForm.css';
 
-const MyReviewAddForm = ({ onClose ,nickname }) => {
+const MyReviewAddForm = ({ onClose, pId, product, user }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
     const [rating, setRating] = useState(0);
     const [answers, setAnswers] = useState({
@@ -24,7 +25,31 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
         onCancel: () => {}, // onCancel 추가
     });
     const [isLoading, setIsLoading] = useState(false);
+    const [targetNickname, setTargetNickname] = useState('사용자');
+    const userId = user?.id || pId; // 현재 로그인한 유저 ID 사용
 
+    useEffect(() => {
+        console.log('----------------------->', pId);
+        if (!userId) return;
+
+        const fetchNickname = async () => {
+            try {
+                const res = await fetch(`http://localhost:8000/api/v1/user-service/users/${userId}`);
+                if (!res.ok) throw new Error('닉네임 불러오기 실패');
+                const data = await res.json();
+                if (data?.data?.nickname) {
+                    setTargetNickname(data.data.nickname);
+                } else {
+                    setTargetNickname(`사용자 ${userId}`);
+                }
+            } catch (err) {
+                console.error('닉네임 가져오기 실패', err);
+                setTargetNickname(`사용자 ${userId}`);
+            }
+        };
+
+        fetchNickname();
+    }, [userId]);
     const toggleAnswer = (key, value) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
     };
@@ -64,20 +89,18 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                 setModalOpen(false);
                 setIsLoading(true);
 
-                try {
-                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            rating,
-                            kind: answers.kind,
-                            promise: answers.promise,
-                            satisfaction: answers.satisfaction,
-                            content: reviewText,
-                        }),
-                    });
+                const reviewInfo = {
+                    rating,
+                    kind: answers.kind,
+                    promise: answers.promise,
+                    satisfaction: answers.satisfaction,
+                    content: reviewText,
+                }
 
-                    if (!response.ok) throw new Error('등록 실패');
+                try {
+                    const response = await reviewAPI.createReview(product.id, userId, reviewInfo);
+
+                    if (response.statusText != 'Created') throw new Error('등록 실패');
 
                     setModalConfig({
                         title: '등록 완료',
@@ -165,7 +188,7 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                                 <polyline points="15 18 9 12 15 6" />
                             </svg>
                         </button>
-                        <h1 className="sidebar-title">{nickname || '사용자'} 님과의 거래 리뷰 작성하기</h1>
+                        <h1 className="sidebar-title">{targetNickname || '사용자'} 님과의 거래 리뷰 작성하기</h1>
                     </div>
 
                     <div className="review-edit-content">
@@ -224,7 +247,6 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                                     placeholder="리뷰를 입력하세요"
                                     value={reviewText}
                                     onChange={(e) => setReviewText(e.target.value)}
-                                    // minLength={20}
                                 />
                                 <div className="character-count">{reviewText.length}/1000</div>
                             </div>
