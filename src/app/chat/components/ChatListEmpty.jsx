@@ -7,11 +7,13 @@ import { RefreshCw } from "lucide-react";
 
 export default function ChatListEmpty({ onRefresh, refreshing }) {
   return (
-    <div className="text-center py-8">
-      <p className="text-gray-500 mb-4">채팅방이 없습니다.</p>
-      <p className="text-sm text-gray-400 mb-2">상품 상세에서 채팅을 시작하거나</p>
-      <p className="text-sm text-gray-400">테스트 페이지에서 채팅방을 생성해보세요!</p>
+    <div className="text-center py-8 flex items-center justify-center h-screen flex-col">
+      <h2 className="text-gray-500 mb-4 text-2xl">채팅방이 없습니다.</h2>
+      <p className="text-sm text-gray-400 mb-2">상품 상세에서 채팅을 시작해주세요.</p>
       <div className="mt-4 space-y-2">
+        {/* <a href="/chat" className="text-blue-600 hover:text-blue-800 underline text-sm block">
+          상품 페이지로 이동
+        </a> */}
         <button
           onClick={onRefresh}
           disabled={refreshing}
@@ -20,9 +22,6 @@ export default function ChatListEmpty({ onRefresh, refreshing }) {
           <RefreshCw className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`} />
           새로고침
         </button>
-        <a href="/chat" className="text-blue-600 hover:text-blue-800 underline text-sm block">
-          테스트 페이지로 이동
-        </a>
       </div>
     </div>
   );
