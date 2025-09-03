@@ -8,16 +8,10 @@ import { createValidationSetter, createDuplicateCheckHandler } from '@/app/(user
 import { validateEmail } from '@/app/(user)/components/emailUtils';
 import { formatPhoneNumber, validatePhoneNumber } from '@/app/(user)/components/phoneUtils';
 import './profile-edit.css';
+import { userAPI } from '@/lib/api';
 
-const ProfileEdit = () => {
+const ProfileEdit = ({ currentUserInfo, onProfileUpdate }) => {
     const router = useRouter();
-
-    // 현재 사용자 정보 (실제로는 API에서 가져올 데이터)
-    const [currentUserInfo] = useState({
-        nickname: '멋진맘',
-        email: 'coolmom@example.com',
-        phone: '010-1234-5678'
-    });
 
     const [formData, setFormData] = useState({
         nickname: '',
@@ -40,33 +34,42 @@ const ProfileEdit = () => {
 
     const setValidationMessage = createValidationSetter(setValidationStates);
 
-    // 중복 확인 핸들러 생성 (기존 유틸리티 활용)
-    const handleDuplicateCheck = createDuplicateCheckHandler(
-        formData,
-        setValidationMessage,
-        {
-            nicknameEmptyMessage: '✅ 현재 닉네임을 유지합니다',
-            nicknameMinLength: 2,
-            nicknameMaxLength: 10
+    // 중복 확인 핸들러 생성
+    const handleDuplicateCheck = async (type) => {
+        try {
+            const response = await userAPI.checkDuplicate(type, formData[type]);
+            const isDuplicate = response.data.isDuplicate;
+
+            if (isDuplicate) {
+                setValidationMessage(type, 'error', '이미 사용 중입니다.');
+            } else {
+                setValidationMessage(type, 'success', '사용 가능합니다.', true);
+            }
+        } catch (error) {
+            setValidationMessage(type, 'error', '확인 중 오류가 발생했습니다.');
         }
-    );
+    };
 
     // 컴포넌트 마운트 시 현재 사용자 정보로 초기화
     useEffect(() => {
-        setFormData({
-            nickname: currentUserInfo.nickname,
-            email: currentUserInfo.email,
-            phone: currentUserInfo.phone
-        });
+        if (currentUserInfo) {
+            setFormData({
+                nickname: currentUserInfo.nickname || '',
+                email: currentUserInfo.email || '',
+                phone: currentUserInfo.phoneNumber || currentUserInfo.phone || ''
+            });
+        }
     }, [currentUserInfo]);
 
     // 변경사항 감지
     useEffect(() => {
-        const isChanged =
-            formData.nickname !== currentUserInfo.nickname ||
-            formData.email !== currentUserInfo.email ||
-            formData.phone !== currentUserInfo.phone;
-        setHasChanges(isChanged);
+        if (currentUserInfo) {
+            const isChanged =
+                formData.nickname !== (currentUserInfo.nickname || '') ||
+                formData.email !== (currentUserInfo.email || '') ||
+                formData.phone !== (currentUserInfo.phoneNumber || currentUserInfo.phone || '');
+            setHasChanges(isChanged);
+        }
     }, [formData, currentUserInfo]);
 
     const handleInputChange = (e) => {
@@ -121,15 +124,23 @@ const ProfileEdit = () => {
         setIsConfirmModalOpen(true);
     };
 
-    // 확인 모달에서 "저장" 클릭 시 - 실제 저장 실행
     const handleSaveConfirm = async () => {
         setIsConfirmModalOpen(false);
+        setIsLoading(true);
 
-        // 저장 로직 (실제로는 API 호출)
-        console.log('저장된 프로필 정보:', formData);
+        try {
+            // 부모에게 전달해서 실제 API 호출
+            if (onProfileUpdate) {
+                await onProfileUpdate(formData);
+            }
 
-        // 완료 모달 표시
-        setIsCompleteModalOpen(true);
+            setIsCompleteModalOpen(true);
+        } catch (error) {
+            console.error('프로필 수정 실패:', error);
+            // 에러 모달이나 알림 표시
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     // 확인 모달에서 "취소" 클릭 시
@@ -143,9 +154,9 @@ const ProfileEdit = () => {
     };
 
     // 저장 버튼 활성화 조건
-    const isSaveEnabled = hasChanges &&
-        (validationStates.nickname.checked || formData.nickname === currentUserInfo.nickname) &&
-        (validationStates.email.checked || formData.email === currentUserInfo.email) &&
+    const isSaveEnabled = hasChanges && currentUserInfo &&
+        (validationStates.nickname.checked || formData.nickname === (currentUserInfo.nickname || '')) &&
+        (validationStates.email.checked || formData.email === (currentUserInfo.email || '')) &&
         (validationStates.phone.status === 'success' || validationStates.phone.status === 'default');
 
     return (
