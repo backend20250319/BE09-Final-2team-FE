@@ -506,7 +506,7 @@ export default function Page() {
                         }
                     })}
                 </div>
-                {loading && <div className='loading-spinner'>로딩중...</div>}
+                {/* {loading && <div className='loading-spinner'>로딩중...</div>} */}
             </section>
         </div>
     );
