@@ -403,7 +403,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
       onTitleClick={() => {
         closeAll();
         const targetUserId = currentChat?.otherUserId || otherUser?.userId || "";
-        if (targetUserId) router.push(`/mypage/${targetUserId}`);
+        if (targetUserId) router.push(`/user-profile/${targetUserId}`);
       }}
       trigger={trigger || <div style={{ display: "none" }} />}
       onBack={() => {
