@@ -1,0 +1,573 @@
+.product-card-wrapper {
+    /* 래퍼 스타일 */
+}
+
+.product-card-container {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    background-color: #ffffff !important;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-bottom: 7px;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.product-card-image-container {
+    position: relative;
+    background-color: transparent;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.product-card-image {
+    margin-top: 0;
+}
+
+/* 상품 상태 오버레이 (판매보류, 판매완료, 예약중 등) */
+.product-card-status-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.product-card-status-text {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+    text-align: center;
+}
+
+.product-card-wishlist-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    z-index: 3;
+    background: none;
+    border: none;
+    padding: 0;
+}
+
+.product-card-wishlist-button:hover {
+    transform: scale(1.1);
+}
+
+.product-card-wishlist-button svg {
+    width: 18px;
+    height: 16px;
+}
+
+.product-card-wishlist-button.wishlisted svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+.product-card-info {
+    padding: 0;
+    height: 48px;
+    display: flex;
+    align-items: center;
+}
+
+.product-card-name {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #000000 !important;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.product-card-price-container {
+    padding: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+}
+
+.product-card-price {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.193359375em;
+    color: #000000 !important;
+}
+
+.product-card-location-container {
+    padding: 0;
+    height: 24px;
+    display: flex;
+    align-items: center;
+}
+
+.product-card-location-time {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #999999 !important;
+    margin-top: 3.5px;
+}
+
+.product-card-tags-container {
+    padding: 0;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.product-card-tag {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 1.193359375em;
+    padding: 2px 9px;
+    border-radius: 1.25px;
+    display: inline-block;
+    background-color: #f4f6f7;
+    color: #85b3eb;
+}
+
+.product-card-review-section {
+    padding: 0;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.product-card-review-button {
+    background-color: #65a2ee;
+    border: none;
+    border-radius: 3px;
+    padding: 5.5px 12px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+    width: 100%;
+    justify-content: center;
+}
+
+.product-card-review-button:hover:not(:disabled) {
+    background-color: #5a91d8;
+}
+
+.product-card-review-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.product-card-review-button span {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+}
+
+/* 판매보류 상태일 때 추가 스타일 */
+.product-card-container.statused .product-card-image {
+    filter: grayscale(30%);
+}
+
+.product-card-container.statused .product-card-status-overlay {
+    opacity: 1;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .product-card-container {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* 접근성 개선 */
+.product-card-wishlist-button:focus,
+.product-card-review-button:focus {
+    outline: 2px solid #65a2ee;
+    outline-offset: 2px;
+}
+
+/* 애니메이션 */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.product-card-container {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* Wishlist Product Card Styles */
+.wishlist-product-card {
+    display: flex;
+    background-color: #ffffff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-bottom: 0;
+}
+
+.wishlist-product-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.wishlist-product-card:active {
+    transform: translateY(0);
+}
+
+/* 이미지 영역 */
+.wishlist-product-card .product-image-container {
+    position: relative;
+    width: 176px;
+    height: 176px;
+    background-color: #e3e3e3;
+    border-radius: 6px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.wishlist-product-card .product-image {
+    width: 100%;
+    height: 235px;
+    object-fit: cover;
+    object-position: center;
+    margin-top: -39px;
+}
+
+/* 상품 상태 오버레이 (판매보류, 판매완료, 예약중 등) */
+.wishlist-product-card .product-status-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2;
+}
+
+.wishlist-product-card .product-status-text {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #ffffff;
+    text-align: center;
+}
+
+/* 판매보류 상태일 때 추가 스타일 */
+.wishlist-product-card .product-image-container:has(.product-status-overlay) .product-image {
+    filter: grayscale(30%);
+}
+
+.wishlist-product-card .product-status-overlay {
+    opacity: 1;
+}
+
+/* 찜하기 버튼 */
+.wishlist-product-card .wishlist-button {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    background: none;
+    border: none;
+    padding: 0;
+    z-index: 3;
+}
+
+.wishlist-product-card .wishlist-button:hover {
+    transform: scale(1.1);
+}
+
+.wishlist-product-card .wishlist-button svg {
+    width: 18px;
+    height: 16px;
+}
+
+.wishlist-product-card .wishlist-button.active svg {
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.2));
+}
+
+/* 상품 정보 */
+.wishlist-product-card .product-info {
+    flex: 1;
+    padding: 16px 20px;
+    min-height: 176px;
+    display: flex;
+    align-items: center;
+}
+
+.wishlist-product-card .product-details {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    padding-top: 8px;
+    width: 100%;
+}
+
+.wishlist-product-card .product-name {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #000000;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    word-break: break-word;
+    cursor: pointer;
+}
+
+.wishlist-product-card .product-name:hover {
+    color: #65a2ee;
+}
+
+.wishlist-product-card .product-price {
+    margin-top: 8px;
+}
+
+.wishlist-product-card .price {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.193359375em;
+    color: #000000;
+}
+
+.wishlist-product-card .product-location {
+    margin-top: 8px;
+}
+
+.wishlist-product-card .location-time {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193359375em;
+    color: #999999;
+    margin-top: 3.5px;
+}
+
+.wishlist-product-card .product-tags {
+    margin-top: 8px;
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    height: 16px;
+    align-items: center;
+}
+
+.wishlist-product-card .tag {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 10px;
+    line-height: 1.193359375em;
+    padding: 2px 9px;
+    border-radius: 1.25px;
+    display: inline-block;
+    white-space: nowrap;
+    background-color: #f4f6f7;
+    color: #85b3eb;
+}
+
+.wishlist-product-card .new-product {
+    background-color: #f4f6f7;
+    color: #85b3eb;
+}
+
+.wishlist-product-card .used-product {
+    background-color: #f4f6f7;
+    color: #85b3eb;
+}
+
+/* 접근성 개선 */
+.wishlist-product-card .wishlist-button:focus {
+    outline: 2px solid #65a2ee;
+    outline-offset: 2px;
+}
+
+.wishlist-product-card:focus-within {
+    outline: 2px solid #65a2ee;
+    outline-offset: 2px;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .wishlist-product-card {
+        flex-direction: column;
+    }
+
+    .wishlist-product-card .product-image-container {
+        width: 100%;
+        height: 200px;
+    }
+
+    .wishlist-product-card .product-image {
+        height: 260px;
+        margin-top: -30px;
+    }
+
+    .wishlist-product-card .product-info {
+        padding: 12px 15px;
+        min-height: auto;
+    }
+
+    .wishlist-product-card .product-details {
+        padding-top: 0;
+    }
+
+    .wishlist-product-card .wishlist-button {
+        top: 156px;
+        right: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .wishlist-product-card .product-image-container {
+        height: 160px;
+    }
+
+    .wishlist-product-card .product-image {
+        height: 220px;
+        margin-top: -25px;
+    }
+
+    .wishlist-product-card .wishlist-button {
+        top: 116px;
+        right: 10px;
+    }
+
+    .wishlist-product-card .product-info {
+        padding: 10px 12px;
+    }
+
+    .wishlist-product-card .product-name {
+        font-size: 14px;
+    }
+
+    .wishlist-product-card .price {
+        font-size: 16px;
+    }
+
+    .wishlist-product-card .location-time {
+        font-size: 12px;
+    }
+}
+
+/* 다크 모드 지원 */
+@media (prefers-color-scheme: dark) {
+    .wishlist-product-card {
+        background-color: #2a2a2a;
+    }
+
+    .wishlist-product-card .product-name,
+    .wishlist-product-card .price {
+        color: #ffffff;
+    }
+
+    .wishlist-product-card .location-time {
+        color: #cccccc;
+    }
+
+    .wishlist-product-card .new-product,
+    .wishlist-product-card .used-product {
+        background-color: #3a3a3a;
+    }
+
+    .wishlist-product-card .new-product {
+        color: #85b3eb;
+    }
+
+    .wishlist-product-card .used-product {
+        color: #85b3eb;
+    }
+
+    .wishlist-product-card .wishlist-button:hover {
+        background-color: rgba(42, 42, 42, 0.9);
+    }
+}
+
+/* 로딩 상태 */
+.wishlist-product-card.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.wishlist-product-card.loading .product-image {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading 1.5s infinite;
+}
+
+/* 선택 상태 */
+.wishlist-product-card.selected {
+    border: 2px solid #65a2ee;
+    box-shadow: 0 0 0 2px rgba(101, 162, 238, 0.2);
+}
+
+/* 비활성화 상태 */
+.wishlist-product-card.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.wishlist-product-card.disabled .wishlist-button {
+    opacity: 0.3;
+}

@@ -1,0 +1,249 @@
+.wishlist-sidebar .wishlist-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.wishlist-sidebar .wishlist-search-section {
+    padding: 0;
+    border-bottom: 1px solid #f1f4f6;
+}
+
+.wishlist-sidebar .wishlist-product-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 검색 카드 (WishlistProductCard와 동일한 구조) */
+.wishlist-sidebar .wishlist-search-card {
+    display: flex;
+    background-color: #ffffff;
+    border-radius: 6px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    transition: all 0.2s ease;
+    margin-bottom: 0;
+    border-bottom: 1px solid #f1f4f6;
+}
+
+/* 검색 미리보기 컨테이너 */
+.wishlist-sidebar .search-preview-container {
+    width: 176px;
+    height: 176px;
+    flex-shrink: 0;
+    position: relative;
+    background-color: #e3e3e3;
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.wishlist-sidebar .search-preview-image {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wishlist-sidebar .preview-image {
+    width: 100%;
+    height: 235px;
+    object-fit: cover;
+    object-position: center;
+    margin-top: -39px;
+}
+
+/* 검색 정보 컨테이너 */
+.wishlist-sidebar .search-info-container {
+    flex: 1;
+    padding: 16px 20px;
+    min-height: 176px;
+    display: flex;
+    align-items: center;
+}
+
+/* 검색 컨테이너 */
+.wishlist-sidebar .wishlist-search-container {
+    position: relative;
+    background-color: #f1f4f6;
+    border-radius: 6px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    height: 44px;
+    transition: all 0.2s ease;
+    width: 100%;
+}
+
+.wishlist-sidebar .wishlist-search-container.focused {
+    background-color: #ffffff;
+    box-shadow: 0 0 0 2px rgba(101, 162, 238, 0.2);
+}
+
+/* 검색 아이콘 */
+.wishlist-sidebar .wishlist-search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    pointer-events: none;
+}
+
+.wishlist-sidebar .wishlist-search-icon svg {
+    width: 20px;
+    height: 20px;
+    transition: stroke 0.2s ease;
+}
+
+.wishlist-sidebar .wishlist-search-icon svg circle {
+    stroke: #5a5a5a;
+    stroke-width: 1.4;
+}
+
+.wishlist-sidebar .wishlist-search-icon svg path {
+    stroke: #5a5a5a;
+    stroke-width: 1.4;
+    stroke-linecap: round;
+}
+
+.wishlist-sidebar .wishlist-search-container.focused .wishlist-search-icon svg {
+    stroke: #65a2ee;
+}
+
+/* 검색 입력 필드 */
+.wishlist-sidebar .wishlist-search-input {
+    flex: 1;
+    border: none;
+    background: none;
+    padding: 12px 10px 12px 40px;
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.193359375em;
+    color: #000000;
+    outline: none;
+    width: 100%;
+    transition: color 0.2s ease;
+}
+
+.wishlist-sidebar .wishlist-search-input::placeholder {
+    color: #999999;
+    transition: color 0.2s ease;
+}
+
+.wishlist-sidebar .wishlist-search-input:focus::placeholder {
+    color: #cccccc;
+}
+
+/* 지우기 버튼 */
+.wishlist-sidebar .clear-button {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    z-index: 3;
+}
+
+.wishlist-sidebar .clear-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.wishlist-sidebar .clear-button:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+.wishlist-sidebar .clear-button svg {
+    width: 16px;
+    height: 16px;
+    transition: stroke 0.2s ease;
+}
+
+.wishlist-sidebar .clear-button svg path {
+    stroke: #999999;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.wishlist-sidebar .clear-button:hover svg {
+    stroke: #666666;
+}
+
+.wishlist-sidebar .wishlist-empty {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.wishlist-sidebar .wishlist-empty p {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #999999;
+    margin: 0;
+}
+
+.wishlist-sidebar .wishlist-loading {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.wishlist-sidebar .wishlist-loading p {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #666666;
+    margin: 0;
+}
+
+.wishlist-sidebar .wishlist-error {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.wishlist-sidebar .wishlist-error p {
+    font-family: 'Pretendard', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    color: #e53e3e;
+    margin: 0;
+}
+
+/* SVG 기본 속성 설정 */
+.wishlist-sidebar .wishlist-search-icon svg {
+    width: 20px;
+    height: 20px;
+    transition: stroke 0.2s ease;
+    fill: none;
+}
+
+.wishlist-sidebar .clear-button svg {
+    width: 16px;
+    height: 16px;
+    transition: stroke 0.2s ease;
+    fill: none;
+}

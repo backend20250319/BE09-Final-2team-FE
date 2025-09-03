@@ -1,0 +1,487 @@
+/* MyReviewMainPage.css */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap');
+
+body {
+    font-family: 'Pretendard', 'Inter', sans-serif;
+    background-color: #FFFFFF;
+    color: #000000;
+    line-height: 1.193359375em;
+    overflow-x: hidden;
+}
+.review-bottom-line {
+    width: 100%;
+    height: 1px;
+    background-color: #E0E0E0; /* 피그마 기준 회색 */
+    margin-top: 1px;
+}
+
+
+.page-container {
+    width: 100%;
+    height: 100vh;
+    position: relative;
+}
+
+/* Search Bar */
+.search-container {
+    flex: 1;
+    max-width: 612px;
+    margin: 0 20px;
+}
+
+.search-bar {
+    width: 100%;
+    height: 44px;
+    background-color: #F1F4F6;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 10px 16px;
+    gap: 10px;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: none;
+    font-family: 'Pretendard Variable', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #999999;
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: #999999;
+}
+
+.search-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+/* Category Navigation */
+.category-nav {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.category-item {
+    width: 110px;
+    height: 44px;
+    background-color: #85B3EB;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.category-item:hover {
+    background-color: #6B9CD8;
+}
+
+.category-item.active {
+    background-color: #85B3EB;
+}
+
+.category-item span {
+    font-family: 'Pretendard Variable', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #FFFFFF;
+}
+
+.category-icon {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+}
+
+/* Right Menu */
+.right-menu {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 5px;
+    transition: all 0.2s ease;
+}
+
+.menu-item:hover {
+    opacity: 0.7;
+}
+
+.menu-item span {
+    font-family: 'Pretendard Variable', sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: #000000;
+}
+
+.menu-icon {
+    width: 24px;
+    height: 24px;
+    flex-shrink: 0;
+}
+
+.divider {
+    width: 1px;
+    height: 17.81px;
+    background-color: #DADEE5;
+}
+
+/* Overlay Background */
+.overlay-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 20;
+}
+
+/* Overlay Background */
+.overlay-background {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 50; /* 헤더보다 높게, 모달보다 낮게 */
+}
+
+/* Review Sidebar */
+.review-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 599px;
+    height: 100vh;
+    background-color: #FFFFFF;
+    z-index: 50; /* 모달보다 낮게, 헤더보다 높게 */
+    overflow-y: auto;
+}
+
+
+.back-button {
+    position: absolute;
+    left: 18px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+}
+
+.sidebar-title {
+    font-family: 'Pretendard', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    color: #000000;
+    text-align: center;
+}
+.review-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+.review-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* 긍정 옵션 뱃지 색상 */
+.kind-badge {
+    background-color: #e0f7fa;
+    color: #00796b;
+}
+
+.promise-badge {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.satisfaction-badge {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* 부정 옵션 뱃지 색상 */
+.unkind-badge, .unpromised-badge, .unsatisfaction-badge {
+    background-color: #ffebee;
+    color: #c62828;
+}
+/* Review List */
+.review-list {
+    padding: 20px;
+}
+/* empty-state 클래스가 있을 때만 내용을 중앙 정렬합니다. */
+.review-list.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+}
+
+/* 리뷰가 없을 때 표시되는 <p> 태그의 스타일 */
+.review-list.empty-state p {
+    font-size: 1.2rem;
+    color: #999;
+}
+.review-item {
+    display: flex;
+    gap: 20px;
+    padding: 20px 0;
+    border-bottom: 1px solid #DDDDDD;
+    cursor: pointer;
+}
+
+.review-item:hover {
+    background-color: #f8f8f8;
+}
+
+.review-item:active {
+    background-color: #f0f0f0;
+}
+
+.review-item:last-child {
+    border-bottom: none;
+}
+
+.review-image {
+    width: 144.84px;
+    height: 127px;
+    flex-shrink: 0;
+}
+
+.product-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 6px;
+}
+
+.review-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.product-title {
+    font-family: 'Pretendard', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    color: #000000;
+    margin: 0;
+}
+
+.review-stars {
+    display: flex;
+    gap: 2px;
+}
+
+.star-wrapper {
+    position: relative;
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    font-size: 24px;
+}
+
+.star-background {
+    color: #DDDDDD;
+}
+
+.star-foreground.full {
+    color: #F9E000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.star-foreground.half {
+    color: #F9E000;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 50%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.review-date {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #999999;
+    margin: 0;
+}
+
+.review-detail-link {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 400;
+    color: #999999;
+    align-self: flex-end;
+    transition: color 0.2s ease;
+    text-decoration: underline;
+}
+
+.review-detail-link:hover {
+    color: #000000;
+}
+
+/* Responsive Design */
+@media (max-width: 1440px) {
+    .header-content {
+        padding: 0 10px;
+    }
+
+    .category-nav {
+        gap: 10px;
+    }
+
+    .category-item {
+        width: 100px;
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .category-nav {
+        display: none;
+    }
+
+    .search-container {
+        margin: 0 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .review-sidebar {
+        width: 100%;
+    }
+
+    .right-menu {
+        gap: 8px;
+    }
+
+    .menu-item span {
+        display: none;
+    }
+
+    .logo {
+        width: 100px;
+        height: 100px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header-content {
+        flex-direction: column;
+        gap: 10px;
+        padding: 10px;
+    }
+
+    .search-container {
+        order: 2;
+        margin: 0;
+    }
+
+    .right-menu {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .review-item {
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .review-image {
+        width: 100%;
+        height: 200px;
+    }
+}
+
+/* Animation for interactive elements */
+.category-item:active {
+    transform: scale(0.95);
+}
+
+.menu-item:active {
+    transform: scale(0.95);
+}
+
+.back-button:active {
+    transform: translateY(-50%) scale(0.9);
+}
+
+/* Custom scrollbar for sidebar */
+.review-sidebar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.review-sidebar::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+.review-sidebar::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
+}
+
+.review-sidebar::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-out {
+    animation: slideOut 0.3s ease-in forwards;
+}

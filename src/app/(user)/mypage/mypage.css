@@ -1,0 +1,428 @@
+.mypage-container {
+    max-width: 1440px;
+    width: 1091px;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+}
+
+/* Main Layout */
+.main-content {
+    display: flex;
+    gap: 40px;
+    padding: 40px 0;
+    align-items: flex-start;
+}
+
+/* Left Sidebar */
+.sidebar {
+    width: fit-content;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.menu-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.menu-title {
+    font-weight: 600;
+    font-size: 18px;
+    line-height: 1.33;
+    color: #000000;
+    margin: 0;
+}
+
+.menu-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-left: 0;
+    align-items: flex-start;
+}
+
+.menu-item {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666666;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    padding: 4px 0;
+    cursor: pointer;
+}
+
+.menu-item:hover {
+    color: #6B9AFF;
+}
+
+.menu-divider {
+    width: 100%;
+    height: 1px;
+    background-color: #E5E5E5;
+    margin: 15px 0;
+}
+
+/* Right Content Area */
+.content-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Profile Section - 핵심 높이 맞추기 */
+.profile-section {
+    display: flex;
+    gap: 30px;
+    align-items: stretch; /* 높이 맞추기의 핵심 */
+}
+
+/* Profile Card */
+.profile-card {
+    background: #FFFFFF;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    padding: 30px 20px;
+    position: relative;
+    width: 350px;
+    flex-shrink: 0;
+    min-height: 280px; /* 최소 높이 설정 */
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    background: #FFFFFF;
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.3;
+    color: #212529;
+    margin: 0;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    justify-content: center;
+}
+
+.profile-avatar {
+    width: 80px;
+    height: 80px;
+    background-color: #E9ECEF;
+    border-radius: 50%;
+    margin-bottom: 15px;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 1.33;
+    color: #212529;
+    margin: 0 0 8px 0;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.stars {
+    font-size: 12px;
+    color: #FFC107;
+}
+
+.rating-score {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+}
+
+.location-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.location-label {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #212529;
+}
+
+.location-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.location-tag {
+    background-color: #85B3EB;
+    color: #FFFFFF;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.33;
+    text-align: center;
+}
+
+/* Right Cards Container */
+.right-cards {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    min-height: 280px; /* profile-card와 동일한 최소 높이 */
+    background: #FFFFFF;
+    overflow: hidden; /* 경계선이 깔끔하게 보이도록 */
+}
+
+/* Child Card */
+.child-card {
+    background: #FFFFFF;
+    border-radius: 12px 0 0 12px;
+    padding: 40px 20px 20px 20px; /* 위쪽 패딩 추가 */
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 자녀 정보 표시 */
+.children-display {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    width: 100%;
+    height: 100%;           /* 부모 높이에 맞춤 */
+    justify-content: center; /* 세로 중앙 정렬 */
+    padding: 16px;          /* 내부 여백 */
+    box-sizing: border-box; /* 패딩 포함 계산 */
+}
+
+.child-info-card {
+    width: 100%;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.child-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 12px;
+}
+
+.child-emoji {
+    font-size: 20px;
+}
+
+.child-nickname {
+    font-weight: 600;
+    font-size: 18px;
+    color: #000000;
+}
+
+.child-birth-date {
+    font-size: 14px;
+    color: #666666;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.child-current-age {
+    font-size: 16px;
+    font-weight: 600;
+    color: #6B9AFF;
+    align-items: center;
+    text-align: center;
+}
+
+/* Transaction Card */
+.transaction-card {
+    background: #FFFFFF;
+    border-radius: 0 12px 12px 0;
+    padding: 40px 20px 20px 20px; /* 위쪽 패딩 추가 */
+    position: relative;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.child-content {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex: 1; /* 핵심: 부모의 남은 공간 모두 차지 */
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+    background-color: #FFFFFF;
+    min-height: 140px; /* transaction-content와 동일한 높이 */
+}
+
+.no-child-info {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.4;
+    color: #6C757D;
+    text-align: center;
+    margin: 0;
+}
+
+.transaction-content {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #FFFFFF;
+    flex: 1; /* 핵심: 부모의 남은 공간 모두 차지 */
+    justify-content: center; /* 내용을 세로 중앙 정렬 */
+    /*align-items: center; !* 가로 중앙 정렬 추가 *!*/
+    min-height: 140px; /* child-content와 동일한 높이 */
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%; /* 전체 너비 사용 */
+    justify-content: flex-start; /* 왼쪽부터 차례로 배치 */
+}
+
+.transaction-label {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+    min-width: 60px;
+    text-align: left;
+}
+
+.transaction-value {
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.33;
+    color: #6B9AFF;
+    text-align: right;
+    margin-left: auto; /* 숫자만 오른쪽 */
+}
+
+.transaction-unit {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+    text-align: right;
+}
+
+/* Tab Section */
+.tab-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #E5E5E5;
+}
+
+.tab-list {
+    display: flex;
+    gap: 0;
+}
+
+.tab-item {
+    padding: 12px 40px;
+    background: none;
+    border: none;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+}
+
+.tab-item.active {
+    color: #000000;
+    border-bottom-color: #000000;
+}
+
+.tab-item:hover {
+    color: #000000;
+}
+
+.item-count {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666666;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 0;
+}
+
+.empty-state p {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+    text-align: center;
+}
+
+/* 상품 목록 그리드 */
+.tab-content-area {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.item-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.products-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
+    justify-content: flex-start;
+    max-width: calc(5 * 157px + 4 * 16px); /* 5개 카드 + 간격 */
+    margin: 0 auto; /* 전체 그리드를 중앙 정렬 */
+}
+
+.empty-state {
+    text-align: center;
+    color: #999;
+    padding: 40px 0;
+}

@@ -1,0 +1,243 @@
+/* Myreviewedit.css - 피그마 스타일 반영 + 중첩 사이드바 애니메이션 */
+
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+.review-edit-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 599px;
+    height: 100vh;
+    background-color: #FFFFFF;
+    z-index: 50;
+    overflow-y: auto;
+}
+
+/* 애니메이션 */
+@keyframes slideIn {
+    from { transform: translateX(100%); }
+    to { transform: translateX(0%); }
+}
+
+@keyframes slideOut {
+    from { transform: translateX(0%); }
+    to { transform: translateX(100%); }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-out {
+    animation: slideOut 0.3s ease-in forwards;
+}
+
+.sidebar-header {
+    position: sticky;         /* ← 변경: relative → sticky */
+    top: 0;
+    z-index: 10;              /* 헤더가 다른 요소 위에 오도록 설정 */
+    background-color: #fff;   /* 배경색 필요 (스크롤 시 겹침 방지) */
+    padding: 17px 20px;
+    border-bottom: 1px solid #DDDDDD;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.back-button {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.sidebar-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #000;
+}
+
+.review-edit-content {
+    padding: 20px;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
+    margin: 12px 0 12px;
+    text-align: center;
+}
+
+.star-container {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+}
+
+.star-wrapper {
+    position: relative;
+    width: 30px;          /* 고정 너비 설정 */
+    height: 30px;         /* 고정 높이 설정 */
+    font-size: 30px;
+    cursor: pointer;
+    color: #ccc;
+    display: inline-block;
+    line-height: 30px;    /* 줄 높이 추가 */
+    text-align: center;   /* 가운데 정렬 */
+}
+
+.star-background,
+.star-foreground {
+    display: block;
+    width: 100%;
+    height: 100%;
+    line-height: 30px;    /* 줄 높이 동일하게 */
+    text-align: center;
+}
+
+.star-foreground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    overflow: hidden;
+    color: #F9E000;
+    z-index: 1;
+    pointer-events: none;
+}
+.star-foreground.full {
+    width: 100%;
+}
+
+.star-foreground.half {
+    width: 50%;
+}
+.question-section {
+    margin-bottom: 20px;
+}
+
+.option-container {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.option-button {
+    width: 145px;            /* 버튼 가로 고정 */
+    height: 44px;            /* 버튼 세로 고정 */
+    display: flex;           /* 가운데 정렬을 위해 flex 사용 */
+    align-items: center;     /* 세로 가운데 정렬 */
+    justify-content: center; /* 가로 가운데 정렬 */
+    border: 1px solid #000;
+    border-radius: 25px;
+    background-color: #fff;
+    color: #999;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.option-button.active {
+    background-color: #85B3EB;
+    color: #fff;
+    border-color: transparent;
+}
+
+
+.review-detail-section {
+    margin-bottom: 20px;
+}
+
+.text-area-container {
+    position: relative;
+    margin-top: 10px;
+}
+
+.review-textarea {
+    width: 100%;
+    height: 145px;
+    padding: 20px;
+    border: 1px solid #999;
+    border-radius: 20px;
+    font-size: 14px;
+    resize: none;
+    outline: none;
+    font-family: 'Pretendard', sans-serif;
+}
+
+.character-count {
+    position: absolute;
+    bottom: 10px;
+    right: 20px;
+    font-size: 12px;
+    color: #ccc;
+}
+
+.submit-container {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+}
+
+.submit-button {
+    width: 200px;
+    height: 44px;
+    background-color: #fff;
+    border: 1px solid #000;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.submit-button:hover {
+    background-color: #85B3EB;
+    color: #fff;
+}
+
+/* 수정 중 모달용 오버레이 */
+.custom-loading-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4); /* 반투명 배경 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50; /* ← 기존 ConfirmModal 과 동일한 수준 유지 */
+}
+
+/* 모달 박스 */
+.custom-loading-modal .modal-content {
+    background: #fff;
+    padding: 30px 40px;
+    border-radius: 16px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* 스피너 애니메이션 */
+.spinner {
+    width: 32px;
+    height: 32px;
+    border: 4px solid #eee;
+    border-top: 4px solid #85B3EB; /* 메인 포인트 색상 */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px; /* 가운데 배치 + 텍스트와 간격 */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

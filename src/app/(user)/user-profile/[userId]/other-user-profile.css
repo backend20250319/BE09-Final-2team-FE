@@ -1,0 +1,370 @@
+/* 기본 컨테이너 - 마이페이지보다 넓게 */
+.other-user-profile-container {
+    max-width: 1440px;
+    width: 100%;
+    margin: 0 auto;
+    background-color: #FFFFFF;
+    padding: 0 40px; /* 좌우 패딩 추가 */
+}
+
+/* Main Layout - 사이드바 없이 전체 너비 사용 */
+.main-content {
+    display: flex;
+    padding: 40px 0;
+    justify-content: center; /* 중앙 정렬 */
+}
+
+/* Content Area - 전체 너비 사용 */
+.content-area {
+    width: 100%;
+    max-width: 1000px; /* 최대 너비 제한 */
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Profile Section - 자녀 정보 카드 제거 */
+.profile-section {
+    display: flex;
+    gap: 30px;
+    align-items: stretch;
+    justify-content: center; /* 중앙 정렬 추가 */
+}
+
+/* Profile Card - 기존과 동일 */
+.profile-card {
+    background: #FFFFFF;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    padding: 30px 20px;
+    position: relative;
+    width: 350px;
+    flex-shrink: 0;
+    min-height: 280px;
+    display: flex;
+    flex-direction: column;
+}
+
+.card-title {
+    position: absolute;
+    top: 12px;
+    left: 20px;
+    background: #FFFFFF;
+    padding: 0 8px;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.3;
+    color: #212529;
+    margin: 0;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    flex: 1;
+    justify-content: center;
+}
+
+.profile-avatar {
+    width: 130px;
+    height: 130px;
+    background-color: #f0f0f0;
+    border-radius: 50%;
+    margin-bottom: 15px;
+    background-size: cover;
+    background-position: center;
+}
+
+.profile-name {
+    font-weight: 600;
+    font-size: 20px;
+    line-height: 1.33;
+    color: #212529;
+    margin: 0 0 8px 0;
+}
+
+.rating {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+.stars {
+    font-size: 12px;
+    color: #FFC107;
+}
+
+.rating-score {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+}
+
+.location-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.location-label {
+    font-weight: 500;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #212529;
+}
+
+.location-tags {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.location-tag {
+    background-color: #85B3EB;
+    color: #FFFFFF;
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-weight: 400;
+    font-size: 12px;
+    line-height: 1.33;
+    text-align: center;
+}
+
+/* Transaction Summary Card */
+.transaction-summary-card {
+    background: #FFFFFF;
+    border: 1px solid #E9ECEF;
+    border-radius: 12px;
+    padding: 40px 20px 20px 20px;
+    position: relative;
+    width: 340px; /* 고정 너비로 변경 */
+    flex-shrink: 0; /* 줄어들지 않도록 */
+    display: flex;
+    flex-direction: column;
+    min-height: 280px;
+}
+
+.transaction-summary-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+    padding: 20px;
+    background-color: #FFFFFF;
+    flex: 1;
+    justify-content: center;
+    min-height: 140px;
+}
+
+.transaction-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 8px 4px;
+}
+
+.transaction-item.clickable {
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.transaction-item.clickable:active {
+    background-color: #F8F9FA;
+}
+
+.transaction-label {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+    flex-shrink: 0;
+}
+
+/* 오른쪽 값들을 묶어서 처리 */
+.transaction-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.transaction-value {
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.33;
+    color: #6B9AFF;
+    text-align: right;
+    min-width: 20px; /* 최소 너비로 정렬 도움 */
+}
+
+.transaction-unit {
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.33;
+    color: #6C757D;
+    margin-left: 4px;
+    width: 20px; /* 고정 너비로 정렬 */
+}
+
+.transaction-arrow-space {
+    width: 20px; /* 화살표 공간과 동일한 너비 */
+    margin-left: 8px;
+}
+
+.transaction-arrow {
+    font-size: 16px;
+    color: #6C757D;
+    margin-left: 8px;
+    width: 20px;
+    text-align: center;
+    font-weight: 700;
+}
+
+
+/* Tab Section */
+.tab-section {
+    display: flex;
+    justify-content: flex-start; /* 왼쪽 정렬 */
+    align-items: center;
+    border-bottom: 2px solid #E5E5E5;
+}
+
+.tab-list {
+    display: flex;
+    gap: 0;
+}
+
+.tab-item {
+    padding: 12px 40px;
+    background: none;
+    border: none;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #9CA3AF;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border-bottom: 2px solid transparent;
+    position: relative;
+}
+
+.tab-item.active {
+    color: #000000;
+    border-bottom-color: #000000;
+}
+
+.tab-item:hover {
+    color: #000000;
+}
+
+/* Tab Content Area */
+.tab-content-area {
+    width: 100%;
+    padding: 20px 0;
+}
+
+.item-count {
+    font-size: 16px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 16px;
+}
+
+.products-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    width: 100%;
+    justify-content: flex-start;
+}
+
+/* Reviews Section */
+.reviews-section {
+    width: 100%;
+}
+
+.reviews-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.review-item {
+    background: #FFFFFF;
+    border: 1px solid #E9ECEF;
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.review-product {
+    font-weight: 600;
+    font-size: 16px;
+    color: #212529;
+}
+
+.review-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.review-rating {
+    font-size: 14px;
+    color: #FFC107;
+}
+
+.review-time {
+    font-size: 12px;
+    color: #6C757D;
+}
+
+.review-comment {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #F8F9FA;
+    padding: 12px;
+    border-radius: 6px;
+}
+
+.review-reviewer {
+    font-size: 12px;
+    color: #6C757D;
+    text-align: right;
+}
+
+/* Empty State */
+.empty-state {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 60px 0;
+}
+
+.empty-state p {
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.5;
+    color: #666666;
+    text-align: center;
+}

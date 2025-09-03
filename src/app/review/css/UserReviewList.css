@@ -1,0 +1,413 @@
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+
+/* 애니메이션 */
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0%);
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateX(0%);
+    }
+    to {
+        transform: translateX(100%);
+    }
+}
+
+.animate-slide-in {
+    animation: slideIn 0.3s ease-out forwards;
+}
+
+.animate-slide-out {
+    animation: slideOut 0.3s ease-in forwards;
+}
+
+/* 사이드바 기본 레이아웃 */
+.user-review-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 50;
+}
+
+.user-review-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 599px;
+    height: 100%;
+    background-color: #fff;
+    z-index: 50;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Top Bar */
+.user-review-top {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+    background-color: #fff;
+    z-index: 10;
+}
+
+.back-button {
+    position: absolute;
+    left: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.review-title {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* 평균 별점 박스 */
+.average-rating-box {
+    margin: 20px;
+    padding: 20px;
+    border: 1px solid #eee;
+    border-radius: 12px;
+    text-align: center;
+    position: relative;
+}
+
+.average-rating-box p {
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 10px;
+}
+
+.review-summary-icons {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* 평균 별점 스타일 */
+.big-stars {
+    font-size: 32px;
+    color: #FFD600;
+    margin: 12px 0;
+}
+
+/* 추가된 평균 별점(big-stars) 스타일 */
+.average-rating-box .big-stars {
+    display: flex;
+    justify-content: center;
+    gap: 8px; /* 별 사이 간격 */
+    line-height: 1;
+}
+
+.average-rating-box .big-star-wrapper {
+    position: relative;
+    width: 32px; /* 큰 별 크기 */
+    height: 32px;
+    font-size: 32px;
+    display: inline-block;
+}
+
+.average-rating-box .big-star-background,
+.average-rating-box .big-star-foreground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    line-height: 32px;
+    text-align: center;
+}
+
+.average-rating-box .big-star-background {
+    color: #ddd; /* 회색 별 */
+    z-index: 1;
+}
+
+.average-rating-box .big-star-foreground {
+    color: #FFD600; /* 채워진 별 (노란색) */
+    z-index: 2;
+    overflow: hidden;
+}
+
+.average-rating-box .big-star-foreground.full {
+    width: 100%;
+}
+
+.average-rating-box .big-star-foreground.half {
+    width: 50%;
+}
+
+.rating-summary {
+    font-size: 16px;
+    color: #444;
+}
+
+/* 긍정/부정 리뷰 박스 */
+.positive-negative-reviews {
+    margin: 0 20px 20px;
+    display: flex;
+    gap: 10px;
+}
+
+.review-category-card {
+    flex: 1;
+    padding: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+}
+
+.category-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 8px;
+}
+
+.category-title.positive {
+    color: #007bff;
+}
+
+.category-title.negative {
+    color: #dc3545;
+}
+
+.category-content {
+    font-size: 12px;
+    color: #666;
+    line-height: 1.5;
+}
+
+/* 필터링 버튼 영역 */
+.review-filters-container {
+    padding: 10px 20px;
+    display: flex;
+    justify-content: flex-end;
+    border-bottom: 1px solid #eee;
+    background-color: #fff;
+    position: static;
+}
+
+.review-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #f0f0f0;
+    border-radius: 20px;
+    padding: 2px;
+}
+
+.filter-icon {
+    font-size: 18px;
+    color: #777;
+    margin-left: 8px;
+}
+
+.filter-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px 16px;
+    font-size: 14px;
+    color: #555;
+    transition: all 0.2s ease;
+    border-radius: 20px;
+}
+
+.filter-button.active {
+    background-color: #fff;
+    color: #000;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.filter-button:not(.active):hover {
+    background-color: #e0e0e0;
+}
+.review-options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 5px;
+}
+
+.review-badge {
+    padding: 3px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+/* 긍정 옵션 뱃지 색상 */
+.kind-badge {
+    background-color: #e0f7fa; /* 연한 파란색 배경 */
+    color: #00796b; /* 글자색 */
+}
+
+.promise-badge {
+    background-color: #fce4ec;
+    color: #ad1457;
+}
+
+.satisfaction-badge {
+    background-color: #f1f8e9;
+    color: #33691e;
+}
+
+/* 부정 옵션 뱃지 색상 */
+.unkind-badge, .unpromised-badge, .unsatisfaction-badge {
+    background-color: #ffebee; /* 연한 빨간색 배경 */
+    color: #c62828; /* 글자색 */
+}
+/* 리뷰 리스트 */
+.review-list {
+    padding: 10px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+/* empty-state 클래스가 있을 때만 Flexbox를 적용하여 내용을 중앙 정렬합니다. */
+.review-list.empty-state {
+    display: flex;
+    justify-content: center; /* 수평 중앙 정렬 */
+    align-items: center;     /* 수직 중앙 정렬 */
+    min-height: 150px;       /* 최소 높이를 설정하여 중앙 정렬 공간 확보 */
+}
+/* 리뷰가 없을 때 표시되는 <p> 태그의 스타일 */
+.review-list.empty-state p {
+    font-size: 1.2rem; /* 글자 크기를 키웁니다. */
+    color: #999;
+}
+/* 개별 리뷰 카드 */
+.review-card {
+    display: flex;
+    gap: 16px;
+    padding: 12px;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #eee;
+    position: relative;
+}
+
+.product-thumb {
+    width: 72px;
+    height: 72px;
+    border-radius: 6px;
+    object-fit: cover;
+}
+
+.review-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.review-info-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.product-title {
+    font-size: 15px;
+    font-weight: bold;
+    margin-bottom: 4px;
+}
+
+.review-date {
+    font-size: 13px;
+    color: #999;
+    margin-bottom: 6px;
+}
+
+/* 0.5점 단위 별점 스타일 */
+.review-card .review-stars {
+    display: flex;
+    gap: 2px; /* 별 사이 간격 */
+    line-height: 1; /* 별점 전체 라인의 높이를 1로 설정 */
+}
+
+.review-card .star-wrapper {
+    position: relative;
+    width: 15px; /* 별 크기 */
+    height: 15px;
+    font-size: 15px;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.review-card .star-background,
+.review-card .star-foreground {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    line-height: 15px; /* 별 폰트 크기와 동일하게 설정 */
+    text-align: center;
+}
+
+.review-card .star-background {
+    color: #ddd; /* 회색 별 */
+    z-index: 1;
+}
+
+.review-card .star-foreground {
+    color: #FFD600; /* 채워진 별 (노란색) */
+    z-index: 2;
+    overflow: hidden;
+}
+
+.review-card .star-foreground.full {
+    width: 100%;
+}
+
+.review-card .star-foreground.half {
+    width: 50%;
+}
+
+/* 텍스트 박스 스타일 */
+.comment-text-box {
+    border: 1px solid #000000;
+    border-radius: 6px;
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%; /* 부모 너비에 맞춤 */
+    box-sizing: border-box; /* padding과 border가 width에 포함되도록 */
+}
+
+.review-comment {
+    font-size: 14px;
+    color: #000000;
+    line-height: 1.5;
+    margin-bottom: 0; /* 내부 p 태그 margin 제거 */
+}
+
+.userreview-detail-link {
+    font-size: 12px;
+    color: #000000;
+    text-decoration: none;
+    cursor: pointer;
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    solid-color: #000000;
+    text-decoration: underline;
+}

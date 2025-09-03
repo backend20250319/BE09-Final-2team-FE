@@ -1,0 +1,519 @@
+/* 상품 검색 페이지 스타일 */
+.search-product-search-page {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0px 191px 30px;
+  width: 1440px;
+  margin: 0 auto;
+  background-color: #ffffff;
+}
+
+/* 검색&필터 섹션 */
+.search-search-filter-section {
+  display: flex;
+  flex-direction: column;
+  padding: 70px 0 0;
+  width: 1058px;
+  margin: 0 auto;
+  background-color: #ffffff;
+}
+
+/* 검색 결과 헤더 */
+.search-search-result-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0px;
+  width: 100%;
+}
+
+.search-search-query {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  line-height: 1.193359375em;
+  color: #000000;
+  margin: 0;
+}
+
+.search-search-result-text {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 28px;
+  line-height: 1.193359375em;
+  color: #000000;
+}
+
+.search-total-count {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.193359375em;
+  color: #999999;
+}
+
+/* 구분선 */
+.search-divider-line {
+  width: 100%;
+  height: 2px;
+  background-color: #000000;
+  margin: 10px 0px 0px;
+}
+
+/* 필터 섹션 */
+.search-filter-section {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  border-bottom: 0.5px solid #999999;
+  min-height: 56px;
+}
+
+.search-filter-section.expanded {
+  align-items: flex-start;
+  min-height: auto;
+}
+
+.search-filter-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px 16px 24px;
+  width: 144px;
+  background-color: #f8f9fa;
+  /* min-height: 56px; */
+  align-self: stretch;
+}
+
+.search-filter-header h3 {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.193359375em;
+  color: #000000;
+  margin: 0;
+}
+
+.search-expand-icon {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: #666666;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-filter-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #f8f9fa;
+}
+
+.search-filter-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  flex: 1;
+}
+
+.search-filter-section.expanded .search-filter-content {
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 8px 24px;
+}
+
+/* 브레드크럼 */
+.search-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-breadcrumb span {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: 16px;
+  line-height: 1.193359375em;
+  color: #000000;
+}
+
+.search-separator {
+  color: #999999 !important;
+}
+
+/* 카테고리 그리드 */
+.search-category-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0px;
+  width: 100%;
+}
+
+.search-category-item-container {
+  display: flex;
+  flex-direction: column;
+  width: 139px;
+}
+
+.search-category-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 8px 8px 0px;
+  width: 139px;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #5a5a5a;
+  cursor: pointer;
+}
+
+.search-category-item span {
+  cursor: pointer;
+}
+
+.search-category-item span:hover {
+  color: #000000;
+}
+
+.search-sub-category-item {
+  font-weight: 400;
+  color: #5a5a5a;
+  cursor: pointer;
+}
+
+.search-sub-category-item:hover {
+  color: #000000;
+}
+
+.search-sub-category-item.selected {
+  font-weight: 700;
+  color: #000000;
+}
+
+.search-sub-categories-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+/* 체크박스 그룹 */
+.search-checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.search-checkbox-item {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  height: 24px;
+  cursor: pointer;
+}
+
+.search-checkbox-input {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  border: 1px solid #000;
+  border-radius: 2px;
+  background-color: #ffffff;
+  position: relative;
+}
+
+.search-checkbox-input:checked {
+  background-color: #85b3eb;
+  border-color: #85b3eb;
+}
+
+.search-checkbox-input:checked::after {
+  content: "✓";
+  position: absolute;
+  top: -3px;
+  left: 1px;
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.search-checkbox-text {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #000000;
+}
+
+/* 가격 범위 */
+.search-price-range {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-price-input {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  width: 152px;
+  border: 0.5px solid #999999;
+  border-radius: 6px;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #000000; /* 입력 텍스트 색상을 검정으로 변경 */
+  background-color: #ffffff;
+}
+
+.search-price-input::placeholder {
+  color: #999999; /* 플레이스홀더는 회색 유지 */
+}
+
+.search-price-separator {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 600;
+  font-size: 18px;
+  line-height: 1.193359375em;
+  color: #999999;
+}
+
+.search-apply-button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  width: 60px;
+  background-color: #000000;
+  border: 0.5px solid #999999;
+  border-radius: 6px;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.search-apply-button:hover {
+  background-color: #333333;
+}
+
+/* 지역 검색 */
+.search-region-search {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+}
+
+.search-region-input {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  width: 336px;
+  border: 0.5px solid #999999;
+  border-radius: 6px;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #999999;
+  background-color: #ffffff;
+}
+
+.search-region-input::placeholder {
+  color: #999999;
+}
+
+.search-region-hint {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  text-align: center;
+  color: #999999;
+}
+
+/* 선택된 지역 태그 */
+.search-selected-regions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+
+.search-region-tag {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 9px;
+  width: 75px;
+  height: 32px;
+  background-color: #d2e6ff;
+  border-radius: 4px;
+}
+
+.search-region-tag span {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 400;
+  font-size: 13px;
+  line-height: 1.193359375em;
+  color: #000000;
+}
+
+.search-remove-button {
+  width: 14px;
+  height: 14px;
+  background: none;
+  border: none;
+  color: #747474;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-remove-button:hover {
+  color: #000000;
+}
+
+/* 정렬 섹션 */
+.search-sort-section {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+  gap: 10px;
+  padding: 50px 10px 20px;
+}
+
+.search-sort-options {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.search-sort-option {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  background: none;
+  border: none;
+  font-family: "Pretendard", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #b0b2b7;
+  cursor: pointer;
+  padding: 5px 10px;
+}
+
+.search-sort-option.active {
+  color: #000000;
+}
+
+.search-sort-option:hover {
+  color: #000000;
+}
+
+.search-sort-separator {
+  font-family: "Pretendard", sans-serif;
+  font-weight: 500;
+  font-size: 14px;
+  line-height: 1.193359375em;
+  color: #b0b2b7;
+}
+
+/* 상품 섹션 */
+.search-products-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+  padding: 0px 0px 32px;
+  width: 1058px;
+}
+
+.search-products-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 39px 39px;
+  width: 100%;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 1080px) {
+  .search-product-search-page {
+    width: 100%;
+    padding: 0px 20px 30px;
+  }
+
+  .search-search-filter-section,
+  .search-products-section {
+    width: 100%;
+    max-width: 1058px;
+  }
+}
+
+@media (max-width: 768px) {
+  .search-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+
+  .search-filter-section {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-filter-header {
+    width: 100%;
+  }
+
+  .search-price-range {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .search-price-input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .search-products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .search-search-result-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .search-checkbox-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

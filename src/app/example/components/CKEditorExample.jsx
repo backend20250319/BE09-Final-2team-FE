@@ -1,15 +1,30 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { CKEditor } from "@ckeditor/ckeditor5-react";
-import ClassicEditor from "@ckeditor/ckeditor5-build-classic";
+import dynamic from "next/dynamic";
 import "./css/editor.css";
+
+// CKEditor를 동적으로 import하여 SSR 문제 해결
+const CKEditor = dynamic(() => import("@ckeditor/ckeditor5-react").then((mod) => mod.CKEditor), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center">에디터 로딩 중...</div>,
+});
+
+const ClassicEditor = dynamic(() => import("@ckeditor/ckeditor5-build-classic"), {
+  ssr: false,
+  loading: () => <div className="p-4 text-center">에디터 빌드 로딩 중...</div>,
+});
 
 export default function CKEditorExample() {
   const [editorData, setEditorData] = useState("<p>기본 에디터 내용입니다.</p>");
   const [customEditorData, setCustomEditorData] = useState("<p>커스텀 에디터 내용입니다.</p>");
   const [readOnlyData, setReadOnlyData] = useState("<p>읽기 전용 에디터입니다. 편집할 수 없습니다.</p>");
   const [outputData, setOutputData] = useState("");
+  const [isEditorLoaded, setIsEditorLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsEditorLoaded(true);
+  }, []);
 
   // 기본 에디터 설정 (수정된 구성)
   const editorConfiguration = {
@@ -90,6 +105,34 @@ export default function CKEditorExample() {
     });
   };
 
+  // 에디터 로딩 상태 확인 및 에러 처리
+  if (!isEditorLoaded) {
+    return (
+      <div className="space-y-8">
+        <div className="border rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">📝 CKEditor 로딩 중...</h3>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-gray-500">에디터를 불러오는 중입니다...</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // CKEditor 컴포넌트가 로드되지 않은 경우 처리
+  if (typeof window !== "undefined" && (!CKEditor || !ClassicEditor)) {
+    return (
+      <div className="space-y-8">
+        <div className="border rounded-lg p-6">
+          <h3 className="text-lg font-semibold mb-4">⚠️ CKEditor 로드 실패</h3>
+          <div className="flex items-center justify-center h-32">
+            <div className="text-red-500">에디터를 불러오는데 실패했습니다. 페이지를 새로고침해주세요.</div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       {/* 기본 에디터 */}
@@ -99,27 +142,31 @@ export default function CKEditorExample() {
           기본적인 CKEditor5 에디터입니다. 모든 기본 기능을 사용할 수 있습니다.
         </p>
         <div className="border rounded">
-          <CKEditor
-            editor={ClassicEditor}
-            config={editorConfiguration}
-            data={editorData}
-            onReady={(editor) => {
-              console.log("Editor is ready to use!", editor);
-              // 에디터가 준비되면 포커스 설정
-              editor.focus();
-            }}
-            onChange={(event, editor) => {
-              const data = editor.getData();
-              setEditorData(data);
-              console.log("Editor data changed:", data);
-            }}
-            onBlur={(event, editor) => {
-              console.log("Blur.", editor);
-            }}
-            onFocus={(event, editor) => {
-              console.log("Focus.", editor);
-            }}
-          />
+          {CKEditor && ClassicEditor ? (
+            <CKEditor
+              editor={ClassicEditor}
+              config={editorConfiguration}
+              data={editorData}
+              onReady={(editor) => {
+                console.log("Editor is ready to use!", editor);
+                // 에디터가 준비되면 포커스 설정
+                editor.focus();
+              }}
+              onChange={(event, editor) => {
+                const data = editor.getData();
+                setEditorData(data);
+                console.log("Editor data changed:", data);
+              }}
+              onBlur={(event, editor) => {
+                console.log("Blur.", editor);
+              }}
+              onFocus={(event, editor) => {
+                console.log("Focus.", editor);
+              }}
+            />
+          ) : (
+            <div className="p-4 text-center text-gray-500">에디터를 로드하는 중입니다...</div>
+          )}
         </div>
         <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
           <strong>현재 에디터 내용:</strong>
@@ -134,18 +181,22 @@ export default function CKEditorExample() {
           제한된 툴바를 가진 커스텀 에디터입니다. 기본적인 텍스트 서식만 사용 가능합니다.
         </p>
         <div className="border rounded">
-          <CKEditor
-            editor={ClassicEditor}
-            config={customEditorConfiguration}
-            data={customEditorData}
-            onReady={(editor) => {
-              console.log("Custom editor is ready!", editor);
-            }}
-            onChange={(event, editor) => {
-              const data = editor.getData();
-              setCustomEditorData(data);
-            }}
-          />
+          {CKEditor && ClassicEditor ? (
+            <CKEditor
+              editor={ClassicEditor}
+              config={customEditorConfiguration}
+              data={customEditorData}
+              onReady={(editor) => {
+                console.log("Custom editor is ready!", editor);
+              }}
+              onChange={(event, editor) => {
+                const data = editor.getData();
+                setCustomEditorData(data);
+              }}
+            />
+          ) : (
+            <div className="p-4 text-center text-gray-500">에디터를 로드하는 중입니다...</div>
+          )}
         </div>
         <div className="mt-4 p-3 bg-gray-50 rounded text-sm">
           <strong>현재 에디터 내용:</strong>
@@ -250,7 +301,17 @@ export default function CKEditorExample() {
             </ul>
           </div>
           <div>
-            <strong>4. 일반적인 해결 방법:</strong>
+            <strong>4. EditorWatchdog 오류 해결:</strong>
+            <ul className="list-disc list-inside ml-4 space-y-1 mt-2">
+              <li>CKEditor 버전 호환성 문제일 수 있음</li>
+              <li>브라우저 캐시 완전 삭제 후 새로고침</li>
+              <li>node_modules 삭제 후 npm install 재실행</li>
+              <li>CKEditor 패키지 버전 업데이트</li>
+              <li>Next.js dynamic import 사용 확인</li>
+            </ul>
+          </div>
+          <div>
+            <strong>5. 일반적인 해결 방법:</strong>
             <ul className="list-disc list-inside ml-4 space-y-1 mt-2">
               <li>브라우저 캐시 삭제 후 새로고침</li>
               <li>개발자 도구에서 콘솔 에러 확인</li>

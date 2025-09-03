@@ -1,0 +1,315 @@
+.signup-root {
+    min-height: 100vh;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.signup-card {
+    width: 640px;
+    background: #fff;
+    border-radius: 8px;
+    border: 1px solid #E5E5E5;
+    padding: 64px 131px;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 20px;
+    position: relative;
+}
+
+.signup-image {
+    width: 174px;
+    height: 129px;
+    margin: 0 auto 24px auto;
+    border-radius: 8px;
+}
+
+.signup-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.signup-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+}
+
+.signup-input-container {
+    position: relative;
+    flex: 1;
+}
+
+.signup-input {
+    width: 100%;
+    height: 45px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    padding: 0 16px;
+    padding-right: 100px; /* 버튼 공간 확보 */
+    box-sizing: border-box;
+    font-family: 'Pretendard Variable', 'Inter', sans-serif;
+    font-size: 14px;
+    color: #222;
+    background: #fff;
+    transition: border-color 0.3s ease;
+}
+
+.signup-input::placeholder {
+    color: #94A3B8;
+}
+
+/* 상태별 input 스타일 */
+.signup-input.success {
+    border-color: #10B981;
+}
+
+.signup-input.error {
+    border-color: #EF4444;
+}
+
+.signup-input.loading {
+    border-color: #85B3EB;
+}
+
+.signup-input:focus {
+    outline: none;
+    border-color: #85B3EB;
+}
+
+.signup-input.has-address {
+    padding-right: 16px;
+}
+
+.signup-check-btn {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    min-width: 80px;
+    background: #85B3EB;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 12px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+.signup-check-btn:hover:not(:disabled) {
+    background: #6B9AFF;
+}
+
+.signup-check-btn:disabled {
+    background: #CBD5E1;
+    cursor: not-allowed;
+}
+
+.signup-agree {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0;
+    font-size: 14px;
+    color: #475569;
+}
+
+.signup-agree label {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    line-height: 1.4;
+    gap: 8px;
+    position: relative;
+}
+
+.signup-agree input[type="checkbox"] {
+    appearance: none;
+    width: 16px;
+    height: 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 3px;
+    background: white;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin: 0;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.signup-agree input[type="checkbox"]:checked {
+    background: #85B3EB;
+    border-color: #85B3EB;
+}
+
+.signup-agree input[type="checkbox"]:checked::after {
+    content: '✓';
+    color: white;
+    font-size: 10px;
+    font-weight: bold;
+    line-height: 1;
+}
+
+.agreement-link {
+    color: #85B3EB;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-left: auto;
+    font-size: 12px;
+}
+
+.agreement-link:hover {
+    color: #6B9AFF;
+}
+
+.signup-btn {
+    width: 100%;
+    height: 48px;
+    background: #DDDDDD;
+    color: #999999;
+    border: none;
+    border-radius: 8px;
+    font-family: 'Pretendard', 'Inter', sans-serif;
+    font-size: 16px;
+    font-weight: 600;
+    margin-top: 20px;
+    cursor: not-allowed;
+    transition: all 0.3s ease;
+}
+
+/* 활성화된 회원가입 버튼 */
+.signup-btn.active {
+    background: #85B3EB;
+    color: white;
+    cursor: pointer;
+}
+
+.signup-btn.active:hover {
+    background: #6B9AFF;
+}
+
+/* 검증 메시지 스타일 */
+.validation-message {
+    font-size: 12px;
+    margin-top: 3px;
+    margin-bottom: 3px;
+    padding-left: 8px;
+    transition: color 0.3s ease;
+}
+
+.validation-message.default {
+    color: #94A3B8;
+}
+
+.validation-message.success {
+    color: #10B981;
+}
+
+.validation-message.error {
+    color: #EF4444;
+}
+
+.validation-message.loading {
+    color: #85B3EB;
+}
+
+/* 우편번호 검색 모달 오버레이 */
+.postcode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+/* 우편번호 검색 모달 */
+.postcode-modal {
+    background: white;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+/* 모달 헤더 */
+.postcode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #E5E5E5;
+    background-color: #F8F9FA;
+}
+
+.postcode-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #333;
+}
+
+/* 닫기 버튼 */
+.postcode-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #666;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: background-color 0.2s ease;
+}
+
+.postcode-close:hover {
+    background-color: #E5E5E5;
+    color: #333;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 900px) {
+    .signup-card {
+        width: 100%;
+        padding: 32px 16px;
+        min-width: 0;
+        margin: 20px;
+        border: 1px solid #E5E5E5;
+    }
+}
+
+@media (max-width: 600px) {
+    .signup-card {
+        padding: 16px 12px;
+        margin: 10px;
+    }
+
+    .signup-image {
+        width: 120px;
+        height: 90px;
+    }
+
+    .signup-input {
+        padding-right: 90px;
+    }
+
+    .signup-check-btn {
+        min-width: 70px;
+        font-size: 11px;
+    }
+}

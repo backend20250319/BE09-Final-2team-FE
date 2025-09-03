@@ -1,0 +1,449 @@
+/* 전체 컨테이너 */
+.additional-info-container {
+    width: 100vw;
+    height: 100vh;
+    background-color: #FFFFFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+/* 메인 카드 */
+.additional-info-card {
+    width: 640px;
+    height: 790px;
+    background-color: #FFFFFF;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* 카드 내용 */
+.card-content {
+    width: 100%;
+    height: 100%;
+    padding: 64px 131px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+
+/* 이미지 컨테이너 */
+.image-container {
+    position: absolute;
+    top: 103px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 174px;
+    height: 129px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* 로고 이미지 */
+.logo-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* 페이지 제목 */
+.page-title {
+    position: absolute;
+    top: 264px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 290px;
+    height: 38px;
+    font-family: 'Pretendard Variable', sans-serif;
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.193;
+    text-align: center;
+    color: #000000;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 환영 메시지 컨테이너 */
+.welcome-message-container {
+    position: absolute;
+    top: 335px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    height: auto;
+    font-family: 'Pretendard Variable', sans-serif;
+    font-weight: 500;
+    text-align: center;
+    color: #000000;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.5;
+}
+
+.welcome-nickname {
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.welcome-subtitle {
+    font-size: 14px;
+    font-weight: 400;
+    color: #4a5568;
+}
+
+/* 폼 컨테이너 */
+.form-container {
+    position: absolute;
+    top: 380px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 360px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* 입력 그룹 */
+.input-group {
+    width: 100%;
+    height: 45px;
+    position: relative;
+    margin-bottom: 5px;
+}
+
+/* 입력 필드 */
+.input-field {
+    width: 100%;
+    height: 45px;
+    padding: 12px 120px 12px 16px;
+    border: 1px solid #CBD5E1;
+    border-radius: 8px;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193;
+    color: #000000;
+    background-color: #FFFFFF;
+    box-sizing: border-box;
+}
+
+.input-field::placeholder {
+    color: #94A3B8;
+}
+
+.input-field:focus {
+    outline: none;
+    border-color: #85B3EB;
+}
+
+/* 검증 상태별 스타일 */
+.input-field.error {
+    border-color: #ef4444;
+}
+
+.input-field.success {
+    border-color: #22c55e;
+}
+
+.input-field.loading {
+    border-color: #85B3EB;
+}
+
+.input-help {
+    font-size: 12px;
+    margin-top: 5px;
+    margin-bottom: 15px;
+    text-align: left;
+    color: #666;
+}
+
+.input-help.error {
+    color: #ef4444;
+}
+
+.input-help.success {
+    color: #22c55e;
+}
+
+/* 중복 확인 버튼 */
+.duplicate-check-btn {
+    position: absolute;
+    right: 16px;
+    top: 7px;
+    width: 101px;
+    height: 32px;
+    background-color: #85B3EB;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.714;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.duplicate-check-btn:hover:not(:disabled) {
+    background-color: #6B9CD8;
+}
+
+.duplicate-check-btn:disabled {
+    background-color: #94A3B8;
+    cursor: not-allowed;
+}
+
+/* 주소 검색 버튼 */
+.address-search-btn {
+    position: absolute;
+    right: 16px;
+    top: 7px;
+    width: 101px;
+    height: 32px;
+    background-color: #85B3EB;
+    border: none;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.714;
+    color: #FFFFFF;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.address-search-btn:hover {
+    background-color: #6B9CD8;
+}
+
+/* 검증 메시지 */
+.validation-message {
+    font-size: 12px;
+    margin-top: 2px;
+    margin-bottom: 5px;
+    padding-left: 5px;
+}
+
+.validation-message.error {
+    color: #ef4444;
+}
+
+.validation-message.success {
+    color: #22c55e;
+}
+
+.validation-message.default {
+    color: #64748b;
+}
+
+/* 개인정보 동의 컨테이너 */
+.agreement-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 15px;
+    margin-bottom: 15px;
+}
+
+/* 체크박스 라벨 */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+/* 체크박스 입력 */
+.checkbox-input {
+    display: none;
+}
+
+/* 커스텀 체크박스 */
+.checkbox-custom {
+    width: 16px;
+    height: 16px;
+    border: 2px solid #CBD5E1;
+    border-radius: 4px;
+    background-color: #FFFFFF;
+    position: relative;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.checkbox-input:checked + .checkbox-custom {
+    background-color: #85B3EB;
+    border-color: #85B3EB;
+}
+
+.checkmark {
+    color: #FFFFFF;
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* 동의 텍스트 */
+.agreement-text {
+    font-family: 'Pretendard Variable', sans-serif;
+    font-weight: 400;
+    font-size: 14px;
+    line-height: 1.193;
+    color: #000000;
+}
+
+/* 제출 버튼 */
+.submit-button {
+    width: 376px;
+    height: 48px;
+    background-color: #CBD5E1;
+    border: none;
+    border-radius: 10px;
+    font-family: 'Pretendard Variable', sans-serif;
+    font-weight: 500;
+    font-size: 16px;
+    line-height: 1.193;
+    color: #FFFFFF;
+    cursor: not-allowed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+    align-self: center;
+    margin-top: 10px;
+}
+
+.submit-button.active {
+    background-color: #85B3EB;
+    cursor: pointer;
+}
+
+.submit-button.active:hover {
+    background-color: #6B9CD8;
+}
+
+/* 우편번호 검색 모달 */
+.postcode-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.postcode-modal {
+    background: white;
+    border-radius: 12px;
+    width: 500px;
+    max-width: 90vw;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.postcode-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e2e8f0;
+    background-color: #f8fafc;
+}
+
+.postcode-header h3 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.postcode-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.postcode-close:hover {
+    background-color: #e2e8f0;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+    .additional-info-card {
+        width: 90%;
+        max-width: 400px;
+        height: auto;
+        min-height: 700px;
+    }
+
+    .card-content {
+        padding: 40px 20px;
+    }
+
+    .image-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin-bottom: 30px;
+    }
+
+    .page-title {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin-bottom: 20px;
+    }
+
+    .welcome-message-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin-bottom: 30px;
+        width: 100%;
+    }
+
+    .form-container {
+        position: relative;
+        top: 0;
+        left: 0;
+        transform: none;
+        margin-bottom: 30px;
+        width: 100%;
+    }
+}
