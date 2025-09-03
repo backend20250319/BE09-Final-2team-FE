@@ -32,21 +32,22 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
 
   const user = useUser();
   const scrollRef = useRef(null);
+  const chatInputRef = useRef(null);
   const router = useRouter();
 
-  // ✅ 채팅방 생성 or 기존 방 설정
+  // 채팅방 생성 or 기존 방 설정
   const [roomCreated, setRoomCreated] = useState(false);
-  const initRef = useRef(false); // ✅ useRef로 중복 실행 방지
+  const initRef = useRef(false); // useRef로 중복 실행 방지
 
-  // ✅ 채팅방 초기화 함수를 useCallback으로 메모이제이션
+  // 채팅방 초기화 함수를 useCallback으로 메모이제이션
   const initChatRoom = useCallback(async () => {
-    // ✅ 이미 초기화가 완료되었거나 진행 중인 경우 중단
+    // 이미 초기화가 완료되었거나 진행 중인 경우 중단
     if (initRef.current || roomCreated) return;
 
     if (productId && !chat && user?.id) {
-      initRef.current = true; // ✅ 초기화 시작 표시
+      initRef.current = true; // 초기화 시작 표시
       setCreatingRoom(true);
-      setRoomCreated(true); // ✅ 중복 실행 방지
+      setRoomCreated(true); // 중복 실행 방지
 
       try {
         const response = await chatApi.createRoom({
@@ -69,7 +70,10 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     } else if (chat) {
       setCurrentChat(chat);
       if (chat.isSale) setIsSale(true);
-      setRoomCreated(true); // ✅ 기존 채팅방도 처리 완료 표시
+      setRoomCreated(true); // 기존 채팅방도 처리 완료 표시
+
+      // 기존 채팅방인 경우 입력창 비우기
+      setText("");
     }
   }, [productId, chat, user?.id, roomCreated]);
 
@@ -77,7 +81,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     initChatRoom();
   }, [initChatRoom]);
 
-  // ✅ 상품 상태 확인 및 동기화
+  // 상품 상태 확인 및 동기화
   useEffect(() => {
     const checkProductStatus = async () => {
       if (!currentChat?.productId) return;
@@ -106,7 +110,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
 
   // const [unreadMessageIds, setUnreadMessageIds] = useState(new Set());
 
-  // ✅ WebSocket
+  // WebSocket
   const {
     isConnected,
     error: wsError,
@@ -124,7 +128,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     }
     */
 
-    // ✅ 메시지 중복 방지 및 임시 메시지 처리 (강화된 로직)
+    // 메시지 중복 방지 및 임시 메시지 처리 (강화된 로직)
     setMessages((prev) => {
       // ID로 중복 체크 (가장 정확한 방법)
       const existingMessageById = prev.find((msg) => msg.id === message.id);
@@ -175,7 +179,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     }
   }, [isConnected, senderName, roomId, joinRoom]);
 
-  // ✅ 참여자 로드
+  // 참여자 로드
   useEffect(() => {
     const loadParticipants = async () => {
       if (!roomId) return;
@@ -201,39 +205,26 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     loadParticipants();
   }, [roomId, user?.id]);
 
-  // ✅ 초기 메시지 전송 (새 채팅방 생성 시)
+  // 초기 메시지 입력창에 미리 작성 (새 채팅방 생성 시에만)
   useEffect(() => {
-    const sendInitialMessage = async () => {
-      // 새로 생성된 채팅방이고, WebSocket이 연결되었고, 구매자인 경우에만 초기 메시지 전송
-      if (shouldSendInitialMessage && isConnected && !isSeller && roomId && senderName && !isSendingMessage) {
-        try {
-          setIsSendingMessage(true);
-          const initialMessage = "안녕하세요! 이 상품에 관심이 있어서 문의드립니다.";
+    // 새 채팅방 생성 시에만 초기 메시지 설정 (기존 채팅방에서는 제외)
+    if (shouldSendInitialMessage && !isSeller && roomId && senderName && productId && !chat) {
+      // 초기 메시지를 입력창에 미리 작성
+      const initialMessage = "안녕하세요! 이 상품에 관심이 있어서 문의드립니다.";
+      setText(initialMessage);
+      setShouldSendInitialMessage(false);
 
-          // ✅ WebSocket을 통한 실시간 메시지 전송만 사용 (백엔드에서 DB 저장 처리)
-          const success = sendMessage(initialMessage, senderName);
-
-          if (!success) {
-            throw new Error("초기 메시지 WebSocket 전송 실패");
-          }
-
-          console.log("초기 메시지 전송 완료");
-
-          // 초기 메시지 전송 완료 후 플래그 초기화
-          setShouldSendInitialMessage(false);
-        } catch (error) {
-          console.error("초기 메시지 전송 실패:", error);
-          setShouldSendInitialMessage(false);
-        } finally {
-          setIsSendingMessage(false);
+      // 입력창에 포커스 주기
+      setTimeout(() => {
+        if (chatInputRef.current) {
+          chatInputRef.current.focus();
+          chatInputRef.current.select(); // 텍스트 전체 선택
         }
-      }
-    };
+      }, 100);
+    }
+  }, [shouldSendInitialMessage, isSeller, roomId, senderName, productId, chat]);
 
-    sendInitialMessage();
-  }, [shouldSendInitialMessage, isConnected, isSeller, roomId, senderName, user?.id, isSendingMessage]);
-
-  // ✅ 메시지 로드
+  // 메시지 로드
   useEffect(() => {
     const loadMessages = async () => {
       if (!roomId) {
@@ -323,7 +314,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
       const completionMessage = "상품 거래가 완료되었습니다. 감사합니다!";
 
       try {
-        // ✅ WebSocket을 통한 실시간 메시지 전송만 사용 (백엔드에서 DB 저장 처리)
+        // WebSocket을 통한 실시간 메시지 전송만 사용 (백엔드에서 DB 저장 처리)
         const success = sendMessage(completionMessage, senderName);
 
         if (!success) {
@@ -375,14 +366,14 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     setMessages((prev) => [...prev, tempMessage]);
 
     try {
-      // ✅ WebSocket을 통한 실시간 메시지 전송만 사용 (백엔드에서 DB 저장 처리)
+      // WebSocket을 통한 실시간 메시지 전송만 사용 (백엔드에서 DB 저장 처리)
       const success = sendMessage(messageContent, senderName);
 
       if (!success) {
         throw new Error("WebSocket 메시지 전송 실패");
       }
 
-      // ✅ HTTP API 호출 제거 - WebSocket에서 DB 저장을 처리하므로 중복 방지
+      // HTTP API 호출 제거 - WebSocket에서 DB 저장을 처리하므로 중복 방지
       // 임시 메시지는 WebSocket 응답으로 실제 메시지로 교체됨
     } catch (err) {
       console.error("메시지 전송 실패:", err);
@@ -459,6 +450,7 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
               </div>
 
               <ChatInput
+                ref={chatInputRef}
                 text={text}
                 setText={setText}
                 onSend={handleSendMessage}
