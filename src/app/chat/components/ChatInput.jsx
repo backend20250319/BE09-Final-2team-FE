@@ -3,7 +3,9 @@
   채팅방 채팅(메시지) 입력 폼 컴포넌트
 */
 
-export default function ChatInput({ text, setText, onSend, isSale, isConnected }) {
+import { forwardRef } from "react";
+
+const ChatInput = forwardRef(({ text, setText, onSend, isSale, isConnected }, ref) => {
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -20,6 +22,7 @@ export default function ChatInput({ text, setText, onSend, isSale, isConnected }
       className="flex flex-col gap-1"
     >
       <textarea
+        ref={ref}
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
@@ -53,4 +56,6 @@ export default function ChatInput({ text, setText, onSend, isSale, isConnected }
       </div>
     </form>
   );
-}
+});
+
+export default ChatInput;
