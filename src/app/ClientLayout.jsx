@@ -1,5 +1,3 @@
-// app/ClientLayout.jsx
-"use client";
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
@@ -9,6 +7,7 @@ import Footer from "@/components/common/Footer";
 import { useCheckAuthStatusSilently, useIsAuthenticated, useUser } from "@/store/userStore";
 import { useCategoryStore } from "@/store/categoryStore"; // CategoryStore
 import websocketManager from "@/lib/websocketManager";
+import Loading from "./loading/loading";
 
 const noLayoutPaths = ["/login", "/signup", "/signup/complete", "/additional-info", "/find-account"]; // 필요 경로 추가
 
@@ -87,7 +86,8 @@ function LoadingFallback() {
     <>
       <Header />
       <main className="pt-[144px] min-h-screen">
-        <div className="flex items-center justify-center min-h-screen">로딩 중...</div>
+        {/* <div className="flex items-center justify-center min-h-screen">로딩 중...</div> */}
+        <Loading />
       </main>
       <Footer />
     </>

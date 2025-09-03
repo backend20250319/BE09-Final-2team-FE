@@ -24,6 +24,9 @@ export const chatApi = {
   // 메시지 전송
   sendMessage: (roomId, data) => api.post(`/chat-service/rooms/${roomId}/messages`, data),
 
+  // 메시지 전송 시 자동 채팅방 생성
+  sendMessageWithAutoRoom: (data) => api.post(`/chat-service/rooms/0/messages/send-with-room`, data),
+
   /*
   // 메시지 읽음 처리
   markAsRead: (roomId, data) => api.post(`/chat-service/rooms/${roomId}/messages/read`, data),

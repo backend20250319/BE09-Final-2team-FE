@@ -1,4 +1,5 @@
 "use client";
+
 import Sidebar from "@/components/common/Sidebar";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
@@ -23,7 +24,7 @@ const checkboxStyles = `
   }
 `;
 
-export default function WithdrawlSidebar() {
+export default function WithdrawlSidebar(props) {
   const [agree1, setAgree1] = useState(false);
   const [agree2, setAgree2] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -69,10 +70,11 @@ export default function WithdrawlSidebar() {
       <style dangerouslySetInnerHTML={{ __html: checkboxStyles }} />
       <Sidebar
         sidebarKey="withdrawal"
-        trigger={<div>탈퇴하기</div>}
+        trigger={props.trigger}
         title={"회원 탈퇴"}
         onBack
         onCloseCallback={resetCheckboxes}
+        footerBorder={false}
         footer={
           <div className="flex justify-center gap-9">
             <Button
