@@ -26,7 +26,7 @@ const MyReviewAddForm = ({ onClose, pId, product, user }) => {
     });
     const [isLoading, setIsLoading] = useState(false);
     const [targetNickname, setTargetNickname] = useState('사용자');
-    const userId = user?.id || pId; // 현재 로그인한 유저 ID 사용
+    const userId = user?.id; // 항상 로그인한 유저 ID만 사용
 
     useEffect(() => {
         console.log('----------------------->', pId);
@@ -79,6 +79,19 @@ const MyReviewAddForm = ({ onClose, pId, product, user }) => {
             return;
         }
 
+        // 기본 유효성 검사
+        if (!userId || !product?.id) {
+            setModalConfig({
+                title: '오류',
+                message: !userId ? '로그인 정보가 없습니다.' : '상품 정보가 없습니다.',
+                type: MODAL_TYPES.CONFIRM_ONLY,
+                confirmText: '확인',
+                onConfirm: () => setModalOpen(false),
+            });
+            setModalOpen(true);
+            return;
+        }
+
         setModalConfig({
             title: '리뷰 등록',
             message: '리뷰를 등록하시겠습니까?',
@@ -100,7 +113,7 @@ const MyReviewAddForm = ({ onClose, pId, product, user }) => {
                 try {
                     const response = await reviewAPI.createReview(product.id, userId, reviewInfo);
 
-                    if (response.statusText != 'Created') throw new Error('등록 실패');
+                    if (response.status !== 201) throw new Error('등록 실패');
 
                     setModalConfig({
                         title: '등록 완료',
