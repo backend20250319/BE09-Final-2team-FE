@@ -39,6 +39,23 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
   const [roomCreated, setRoomCreated] = useState(false);
   const initRef = useRef(false); // useRef로 중복 실행 방지
 
+  // 채팅방 변경 시 상태 초기화
+  useEffect(() => {
+    // 채팅방이 변경되면 모든 상태를 초기화
+    if (chat || productId) {
+      setText("");
+      setIsSale(false);
+      setIsAddBtn(false);
+      setMessages([]);
+      setOtherUserName("상대방");
+      setOtherUser(null);
+      setRoomCreated(false);
+      setShouldSendInitialMessage(false);
+      setIsSendingMessage(false);
+      initRef.current = false;
+    }
+  }, [chat?.roomId, productId]); // roomId나 productId가 변경될 때마다 초기화
+
   // 채팅방 초기화 함수를 useCallback으로 메모이제이션
   const initChatRoom = useCallback(async () => {
     // 이미 초기화가 완료되었거나 진행 중인 경우 중단
@@ -275,6 +292,27 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
     }
   }, [messages.length, scrollToBottom]);
 
+  // 채팅방 변경 시 스크롤을 최하단으로 강제 이동 (상태 초기화 후 실행)
+  useEffect(() => {
+    if (roomId && messages.length > 0 && !initRef.current) {
+      // 상태 초기화가 완료된 후 스크롤 실행
+      const attemptScroll = () => {
+        if (scrollRef.current) {
+          const container = scrollRef.current;
+
+          if (container.scrollHeight > container.clientHeight) {
+            container.scrollTop = container.scrollHeight;
+          }
+        }
+      };
+
+      // 상태 초기화 완료 후 스크롤 시도
+      setTimeout(() => attemptScroll(1), 200);
+      setTimeout(() => attemptScroll(2), 400);
+      setTimeout(() => attemptScroll(3), 600);
+    }
+  }, [roomId, messages.length]);
+
   const handleCompleteSale = async () => {
     if (!isSeller) return; // 판매자가 아닌 경우 처리하지 않음
     if (isSale) return;
@@ -416,12 +454,15 @@ export default function ChatRoomSidebar({ chat = null, productId = null, onClose
         if (targetUserId) router.push(`/user-profile/${targetUserId}`);
       }}
       trigger={trigger || <div style={{ display: "none" }} />}
-      onBack={() => {
-        if (onClose) onClose();
-        else {
-          close();
+      onBack={true}
+      onCloseCallback={() => {
+        if (onClose) {
+          onClose();
+        } else {
           chatListSidebar.open();
         }
+        // 채팅방 목록 새로고침 이벤트 발생
+        window.dispatchEvent(new CustomEvent("refreshChatRooms"));
       }}
       add
       onAdd={() => setIsAddBtn(!isAddBtn)}
