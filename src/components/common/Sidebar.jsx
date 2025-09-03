@@ -14,6 +14,7 @@ export default function Sidebar({
   titleStyle = {}, // 제목의 인라인 스타일
   titleProps = {}, // 제목 요소에 전달할 추가 props
   footer, // 사이드바 하단에 표시될 푸터 요소
+  footerBorder = true, // footer 위에 테두리 선을 표시할지 여부
   onBack = false, // 뒤로가기 버튼 표시 여부
   onClose = false, // 닫기 버튼 표시 여부
   onCloseCallback, // 사이드바가 닫힐 때 실행할 콜백 함수
@@ -93,7 +94,9 @@ export default function Sidebar({
 
           <div className="flex-1 overflow-y-auto px-5">{children}</div>
 
-          {footer && <div className="border-t p-4 mt-4">{footer}</div>}
+          {footer && <div className={`${footerBorder ? "border-t" : ""} p-4 mt-4`}>
+            {footer}
+          </div>}
         </SheetContent>
       </Sheet>
     </>

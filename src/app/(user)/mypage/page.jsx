@@ -249,9 +249,9 @@ const MyPage = () => {
                                         product={{
                                             ...product,
                                             name: product.name,
-                                            showReviewButton: true,
                                         }}
                                         size="size1"
+                                        showReviewButton={true}
                                     />
                                 ))}
                             </div>
