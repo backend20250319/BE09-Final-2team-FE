@@ -180,6 +180,11 @@ export const productAPI = {
 
   // 내 찜한 상품 조회
   getMyWishlist: () => api.get("/product-service/products/me/wishlist"),
+
+  // 유사 상품 리스트 조회
+  getSimilarProducts: (keyword) => api.get(`/product-service/products/similar`, {
+    params: { keyword },
+  }),
 };
 
 export default api;
