@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { productAPI } from '@/lib/api';
 
 import { useRouter } from 'next/navigation';
+import { useIsAuthenticated } from '@/store/userStore';
 import { TradeStatus, getTradeStatusText } from '@/enums/tradeStatus';
 import { ProductStatus, getProductStatusText } from '@/enums/productStatus';
 import { timeAgo } from '@/utils/format';
@@ -43,6 +44,9 @@ const ProductCard = ({
     const cardWidth = CARD_SIZES[size] || CARD_SIZES.size1;
     const router = useRouter();
 
+    // 인증
+    const isAuthenticated = useIsAuthenticated();
+
     // 상품 & 거래 상태
     const tradeStatusText = getTradeStatusText(tradeStatus);
     const productStatusText = getProductStatusText(productStatus);
@@ -53,6 +57,12 @@ const ProductCard = ({
     // ✅ 찜하기 / 찜취소
     const handleWishlistClick = async (e) => {
         e.stopPropagation();
+
+        if (!isAuthenticated) {
+            e.preventDefault?.();
+            router.push('/login');
+            return;
+        }
 
         try {
             if (isWishlisted) {
