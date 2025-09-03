@@ -1,5 +1,7 @@
 'use client';
 
+import { useCallback } from 'react';
+
 import { TradeStatus, getTradeStatusText } from '@/enums/tradeStatus';
 import { ProductStatus, getProductStatusText } from '@/enums/productStatus';
 import { timeAgo } from '@/utils/format';
@@ -35,6 +37,7 @@ const ProductDetail = () => {
     const [sellerInfo, setSellerInfo] = useState(null);
     const [sellerRecentProducts, setSellerRecentProducts] = useState(null);
     const [isMyProduct, setIsMyProduct] = useState(false);
+    const [relatedProducts, setRelatedProducts] = useState([]);
 
     const [categoryPath, setCategoryPath] = useState([]);
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -107,6 +110,23 @@ const ProductDetail = () => {
 
         fetchProductData();
     }, [id, categories]);
+
+    const fetchSimilarProducts = useCallback(async (keyword) => {
+        try {
+            const res = await productAPI.getSimilarProducts(keyword);
+            // API 응답 형식에 맞게 data 꺼내오기
+            setRelatedProducts(res.data.data || []);
+        } catch (err) {
+            console.error('유사상품 조회 실패:', err);
+        }
+    }, []);
+
+    // ✅ product 불러온 뒤 유사상품도 같이 호출
+    useEffect(() => {
+        if (product?.name) {
+            fetchSimilarProducts(product.name);
+        }
+    }, [product, fetchSimilarProducts]);
 
     // ✅ 거래 상태 변경 함수
     const handleChangeTradeStatus = async (newStatus) => {
@@ -211,166 +231,6 @@ const ProductDetail = () => {
 
     // if (!product) return <div>상품 정보를 불러오는 중...</div>;
     if (!product) return null;
-
-    // 관련 상품
-    const relatedProducts = [
-        {
-            id: 1,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 2,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 3,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 4,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 5,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 6,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 7,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 8,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 9,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 10,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 11,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-        {
-            id: 12,
-            productName: '상품명 ㅋㅋ',
-            price: '5,000원',
-            location: '송림 1동',
-            timeAgo: '9시간 전',
-            imageUrl:
-                'https://img2.joongna.com/media/original/2025/08/02/1754123031593IIO_ka4X1.jpg?impolicy=resizeWatermark3&ftext=%EA%B0%80%EA%B2%8C180474',
-            trade_status: 'ON_SALE',
-            status: 'NEW',
-            hasWrittenReview: false,
-            showReviewButton: false,
-        },
-    ];
 
     return (
         <div className='product-detail-container'>
@@ -644,7 +504,10 @@ const ProductDetail = () => {
                     <div className='product-detail-store-info-section'>
                         <div className='product-detail-section-header'>
                             <h2>가게 정보</h2>
-                            <button className='product-detail-more-link'>
+                            <button
+                                className='product-detail-more-link'
+                                onClick={() => router.push(`/user-profile/${sellerInfo.id}`)}
+                            >
                                 <svg width='26' height='26' viewBox='0 0 26 26' fill='none'>
                                     <path d='M9.75 6.5L16.25 13L9.75 19.5' stroke='black' strokeWidth='2' />
                                 </svg>

@@ -9,7 +9,7 @@ import ChatRoomSidebar from "./ChatRoomSidebar";
 import ChatRoomCard from "./ChatRoomCard";
 import ChatListEmpty from "./ChatListEmpty";
 import ChatListHeader from "./ChatListHeader";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useUser, /* useIsAuthenticated, */ useCheckAuthStatus } from "../../../store/userStore";
 import { useSidebar } from "../../../hooks/useSidebar";
 import { chatApi } from "@/app/chat/api/chatApi";
@@ -34,42 +34,45 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
   };
 
   /** 채팅방 목록 조회 */
-  const fetchChatRooms = async (isRefresh = false) => {
-    if (!user?.id) return; // 전이 상태에선 목록을 비우지 않고 조용히 반환
+  const fetchChatRooms = useCallback(
+    async (isRefresh = false) => {
+      if (!user?.id) return; // 전이 상태에선 목록을 비우지 않고 조용히 반환
 
-    if (isRefresh) {
-      setRefreshing(true);
-    } else if (!isInitialized) {
-      setLoading(true);
-    }
-    setError(null);
+      if (isRefresh) {
+        setRefreshing(true);
+      } else if (!isInitialized) {
+        setLoading(true);
+      }
+      setError(null);
 
-    try {
-      const response = await chatApi.getMyRooms();
-      if (response?.data?.success) {
-        const roomsData = response.data.data || [];
+      try {
+        const response = await chatApi.getMyRooms();
+        if (response?.data?.success) {
+          const roomsData = response.data.data || [];
 
-        // 참여자 정보를 가져와서 name 설정
-        const roomsWithNames = await loadParticipantNames(roomsData, user.id);
-        setChatRooms(roomsWithNames);
-      } else {
+          // 참여자 정보를 가져와서 name 설정
+          const roomsWithNames = await loadParticipantNames(roomsData, user.id);
+          setChatRooms(roomsWithNames);
+        } else {
+          setError("채팅방 목록을 불러올 수 없습니다.");
+          setChatRooms([]);
+        }
+      } catch (e) {
+        console.error("채팅방 목록 조회 오류:", e);
         setError("채팅방 목록을 불러올 수 없습니다.");
         setChatRooms([]);
+      } finally {
+        if (isRefresh) setRefreshing(false);
+        else if (!isInitialized) setLoading(false);
       }
-    } catch (e) {
-      console.error("채팅방 목록 조회 오류:", e);
-      setError("채팅방 목록을 불러올 수 없습니다.");
-      setChatRooms([]);
-    } finally {
-      if (isRefresh) setRefreshing(false);
-      else if (!isInitialized) setLoading(false);
-    }
-  };
+    },
+    [user?.id, isInitialized]
+  );
 
   /** 수동 새로고침 */
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     await fetchChatRooms(true);
-  };
+  }, [fetchChatRooms]);
 
   /** 초기화: 인증 확인 → userId 확보되면 fetch → 초기화 해제 */
   useEffect(() => {
@@ -121,21 +124,28 @@ export default function ChatListSidebar({ trigger, children, sidebarKey = "chatL
 
   /** 채팅방 클릭 핸들러 */
   const handleChatClick = (chat) => {
-    const chatData = {
-      ...chat,
-      roomId: chat.roomId, // roomId로 통일
-      message: chat.lastMessage ?? chat.message,
-      date: chat.lastSentAt ? new Date(chat.lastSentAt).toLocaleString() : chat.date ?? "",
-      currentUserId: user?.id,
-      currentUserNickname: user?.nickname || user?.name || user?.loginId || "사용자",
-    };
+    // 이전 채팅방 정보 완전 초기화
+    setSelectedChat(null);
 
-    setSelectedChat(chatData);
-    chatRoomSidebar.open();
-
+    // 잠시 대기 후 새로운 채팅방 정보 설정 (상태 초기화 완료 대기)
     setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("chatRoomOpened", { detail: { roomId: chat.roomId } }));
-    }, 150);
+      const chatData = {
+        ...chat,
+        roomId: chat.roomId, // roomId로 통일
+        message: chat.lastMessage ?? chat.message,
+        date: chat.lastSentAt ? new Date(chat.lastSentAt).toLocaleString() : chat.date ?? "",
+        currentUserId: user?.id,
+        currentUserNickname: user?.nickname || user?.name || user?.loginId || "사용자",
+      };
+
+      // 새로운 채팅방 정보 설정
+      setSelectedChat(chatData);
+      chatRoomSidebar.open();
+
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent("chatRoomOpened", { detail: { roomId: chat.roomId } }));
+      }, 150);
+    }, 100); // 100ms 대기하여 상태 초기화 완료
   };
 
   return (
