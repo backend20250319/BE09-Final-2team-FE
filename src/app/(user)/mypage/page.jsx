@@ -291,16 +291,34 @@ const MyPage = () => {
     // 프로필 수정
     const handleProfileUpdate = async (updatedData) => {
         try {
+            const changes = {};
 
-            // 전화번호에서 하이픈(-)을 제거
+            // 닉네임 변경 여부 확인
+            if (updatedData.nickname !== (profileInfo?.nickname || '')) {
+                changes.nickname = updatedData.nickname;
+            }
+
+            // 이메일 변경 여부 확인
+            if (updatedData.email !== (profileInfo?.email || '')) {
+                changes.email = updatedData.email;
+            }
+
+            // 전화번호 변경 여부 확인 및 하이픈 제거
             const cleanedPhoneNumber = extractPhoneNumbers(updatedData.phone);
+            if (cleanedPhoneNumber !== (profileInfo?.phoneNumber || '')) {
+                changes.phoneNumber = cleanedPhoneNumber;
+            }
 
-            // 백엔드 API 호출
-            const response = await userAPI.updateProfile({
-                nickname: updatedData.nickname,
-                email: updatedData.email,
-                phoneNumber: cleanedPhoneNumber
-            });
+            // 변경된 사항이 없으면 API 호출하지 않고 종료
+            if (Object.keys(changes).length === 0) {
+                console.log('변경된 사항이 없어 프로필 업데이트를 건너뜁니다.');
+                return { success: true };
+            }
+
+            console.log('최종 전송 데이터:', changes);
+
+            // 백엔드 API 호출 - 변경된 데이터만 전송
+            const response = await userAPI.updateProfile(changes);
 
             console.log('프로필 수정 성공:', response.data);
 

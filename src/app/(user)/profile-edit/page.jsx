@@ -52,18 +52,20 @@ const ProfileEdit = ({ currentUserInfo, onProfileUpdate }) => {
 
     // 컴포넌트 마운트 시 현재 사용자 정보로 초기화
     useEffect(() => {
+        // currentUserInfo가 존재하면 폼 데이터를 업데이트
         if (currentUserInfo) {
             setFormData({
                 nickname: currentUserInfo.nickname || '',
                 email: currentUserInfo.email || '',
-                phone: currentUserInfo.phoneNumber || currentUserInfo.phone || ''
+                phone: currentUserInfo.phoneNumber || ''
             });
         }
-    }, [currentUserInfo]);
+    }, [currentUserInfo]); // currentUserInfo가 바뀔 때마다 실행
 
     // 변경사항 감지
     useEffect(() => {
         if (currentUserInfo) {
+            // formData가 업데이트된 후 변경사항을 감지
             const isChanged =
                 formData.nickname !== (currentUserInfo.nickname || '') ||
                 formData.email !== (currentUserInfo.email || '') ||
@@ -153,11 +155,28 @@ const ProfileEdit = ({ currentUserInfo, onProfileUpdate }) => {
         setIsCompleteModalOpen(false);
     };
 
+    // 변경사항이 있는지 확인하는 헬퍼 함수
+    const hasFieldChanged = (field) => {
+        // 백엔드 키와 프론트엔드 키를 매핑
+        const userInfoKey = {
+            'nickname': 'nickname',
+            'email': 'email',
+            'phone': 'phoneNumber',
+        };
+
+        const key = userInfoKey[field];
+
+        if (!currentUserInfo) return false;
+
+        // 기존 값과 현재 폼 데이터 값을 비교
+        return formData[field] !== (currentUserInfo[key] || '');
+    };
+
     // 저장 버튼 활성화 조건
-    const isSaveEnabled = hasChanges && currentUserInfo &&
-        (validationStates.nickname.checked || formData.nickname === (currentUserInfo.nickname || '')) &&
-        (validationStates.email.checked || formData.email === (currentUserInfo.email || '')) &&
-        (validationStates.phone.status === 'success' || validationStates.phone.status === 'default');
+    const isSaveEnabled = hasChanges &&
+        (!hasFieldChanged('nickname') || validationStates.nickname.checked) &&
+        (!hasFieldChanged('email') || validationStates.email.checked) &&
+        (!hasFieldChanged('phone') || validationStates.phone.status === 'success');
 
     return (
         <>
