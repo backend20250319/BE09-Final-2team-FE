@@ -1,5 +1,3 @@
-// app/ClientLayout.jsx
-"use client";
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
