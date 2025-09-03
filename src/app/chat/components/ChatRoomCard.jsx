@@ -10,13 +10,12 @@
   - chat.otherUserNickname: 상대방 닉네임
 */
 
+import { getProfileImageUrl } from "@/utils/profileImageUtils";
 import { User, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
-import { numberWithCommas } from "@/utils/format";
 import Image from "next/image";
 
 export default function ChatRoomCard({ chat, isSelected, onClick }) {
-  // console.log("chat =====> ", chat);
+  console.log("chat =====> ", chat);
 
   return (
     <div
@@ -28,28 +27,19 @@ export default function ChatRoomCard({ chat, isSelected, onClick }) {
       <div className="flex items-start space-x-3">
         {/* 왼쪽: 사용자 프로필 이미지 (원형) */}
         <div className="flex-shrink-0">
-          {chat.otherUserProfileImageUrl ? (
-            <Image
-              src={chat.otherUserProfileImageUrl}
-              alt="profile"
-              width={48}
-              height={48}
-              className="w-12 h-12 rounded-full object-cover"
-              onError={(e) => {
-                console.warn("프로필 이미지 로드 실패", e?.nativeEvent || e);
-                // 이미지 로드 실패 시 기본 아이콘으로 대체
-                e.target.style.display = "none";
-                e.target.nextSibling.style.display = "flex";
-              }}
-            />
-          ) : null}
-          <div
-            className={`w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden ${
-              chat.otherUserProfileImageUrl ? "hidden" : ""
-            }`}
-          >
-            <User className="w-6 h-6 text-gray-500" />
-          </div>
+          <Image
+            src={getProfileImageUrl(chat.otherUserProfileImageUrl, chat.otherUserId)}
+            alt="profile"
+            width={48}
+            height={48}
+            className="w-12 h-12 rounded-full object-cover"
+            onError={(e) => {
+              console.warn("프로필 이미지 로드 실패", e?.nativeEvent || e);
+              // 이미지 로드 실패 시 기본 아이콘으로 대체
+              e.target.style.display = "none";
+              e.target.nextSibling.style.display = "flex";
+            }}
+          />
         </div>
 
         {/* 중앙: 채팅 정보 */}
