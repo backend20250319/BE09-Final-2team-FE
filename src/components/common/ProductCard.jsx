@@ -17,7 +17,14 @@ const CARD_SIZES = {
     size3: 235,
 };
 
-const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemoveFromWishlist, onProductClick }) => {
+const ProductCard = ({
+    product,
+    size,
+    variant = 'normal',
+    onRemoveFromWishlist,
+    onProductClick,
+    showReviewButton = false, // 기본값 false
+}) => {
     const {
         id,
         name,
@@ -29,7 +36,6 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
         tradeStatus,
         productStatus,
         hasWrittenReview,
-        showReviewButton,
     } = product;
 
     const [isWishlisted, setIsWishlisted] = useState(inWishlist);
@@ -67,13 +73,6 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
         }
     };
 
-    const handleRemoveFromWishlist = (e) => {
-        e.stopPropagation(); // 상품 클릭 이벤트와 분리
-        if (onRemoveFromWishlist) {
-            onRemoveFromWishlist(product.id);
-        }
-    };
-
     const handleProductClick = () => {
         console.log('handleProductClick');
         // 리뷰 폼이 열려있으면 상품 클릭 무시
@@ -90,12 +89,7 @@ const ProductCard = ({ product, onReviewClick, size, variant = 'normal', onRemov
     };
 
     const handleReviewClick = () => {
-        if (onReviewClick) {
-            onReviewClick();
-        } else {
-            // 리뷰 폼 표시
-            setShowReviewForm(true);
-        }
+        setShowReviewForm(true);
     };
 
     const handleReviewFormClose = () => {
