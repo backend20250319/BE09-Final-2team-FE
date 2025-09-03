@@ -14,6 +14,8 @@ import './search.css';
 
 // TODO: 무한스크롤 구현/ api 응답 page객체 활용
 export default function Page() {
+    const [totalCount, setTotalCount] = useState(0);
+
     const [loading, setLoading] = useState(false);
 
     const [searchQuery, setSearchQuery] = useState(''); // 검색
@@ -218,7 +220,7 @@ export default function Page() {
         try {
             const searchRequest = {
                 query: searchQuery || null,
-                categoryId: selectedCategory.id,
+                categoryId: selectedCategory?.id || null,
                 ageGroups: selectedAgeGroups,
                 priceMin: appliedPriceRange.min ? Number(appliedPriceRange.min) : null,
                 priceMax: appliedPriceRange.max ? Number(appliedPriceRange.max) : null,
@@ -238,6 +240,8 @@ export default function Page() {
                 const content = data.data.content;
                 setProducts((prev) => (append ? [...prev, ...content] : content));
                 setHasMore(!data.data.last); // 마지막 페이지 여부
+
+                setTotalCount(data.data.totalElements);
             }
         } catch (err) {
             console.error('상품 검색 실패:', err);
@@ -296,7 +300,7 @@ export default function Page() {
                         <>
                             <h1 className='search-search-query'>{searchQuery}</h1>
                             <span className='search-search-result-text'>검색 결과</span>
-                            <span className='search-total-count'>총 4,036개</span>
+                            <span className='search-total-count'>총 {totalCount.toLocaleString()}개</span>
                         </>
                     )}
                 </div>
