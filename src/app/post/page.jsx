@@ -74,7 +74,7 @@ export default function PostBoardPage() {
         id: x.id ?? x.postId ?? x.uuid,
         title: x.title,
         content: x.contentHtml ?? x.content,
-        writer: x.writer ?? x.author ?? "익명",
+        writer: tipsPage.data.data.content.nickName?? x.writer ,
         date: x.createdAt
           ? x.createdAt.slice(0, 10).replaceAll("-", ".")
           : x.date,
@@ -84,7 +84,7 @@ export default function PostBoardPage() {
       const tipsArr = Array.isArray(tipsPage.data.data?.content)
         ? tipsPage.data.data?.content.map(mapItem)
         : [];
-      const auctionArr = Array.isArray(auctionPage.data.data?.content)
+      const auctionArr = Array.isArray(auctionPage.data?.content)
         ? auctionPage.data.data.content.map(mapItem)
         : [];
 
@@ -344,7 +344,7 @@ function TipsTable({ posts }) {
                 )}
               </div>
             </td>
-            <td className="py-2">{p.writer || p.author || "익명"}</td>
+            <td className="py-2">{p.writer || p.author ||p.nickName}</td>
             <td className="py-2">{p.date}</td>
             <td className="py-2">{p.views ?? 0}</td>
           </tr>

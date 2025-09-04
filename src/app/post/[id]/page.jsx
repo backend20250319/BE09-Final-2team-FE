@@ -176,9 +176,10 @@ export default function PostDetailPage() {
         content: p?.contentHtml ?? p?.content ?? "", // 본문 키 보정
         category:
           p?.category ?? (p?.type ? String(p.type).toLowerCase() : undefined),
-        writer: p?.writer ?? p?.author ?? "익명",
+        writer: p?.nickName ?? p?.userId ?? [],
         bids: Array.isArray(p?.bids) ? p.bids : [],
         images: Array.isArray(p?.images) ? p.images : [],
+        date: payload?.data?.timestamp ?? [],
       };
 
       setPost(normalized);
@@ -520,75 +521,6 @@ export default function PostDetailPage() {
           />
         )}
 
-        {/* 공동구매 영역 (옵션) */}
-        {isGroupbuy && (
-          <div className="mb-8">
-            {isOwner ? (
-              <div className="flex justify-center">
-                <button
-                  onClick={() => setShowCloseModal(true)}
-                  disabled={
-                    isClosedRecruit || participants.length < maxParticipants
-                  }
-                  className={`px-8 py-3 rounded-md text-white font-medium ${
-                    isClosedRecruit || participants.length < maxParticipants
-                      ? "cursor-not-allowed"
-                      : "cursor-pointer hover:brightness-95"
-                  }`}
-                  style={{
-                    backgroundColor:
-                      participants.length < maxParticipants
-                        ? "#999999"
-                        : isClosedRecruit
-                        ? "#65A2EE"
-                        : "#85B3EB",
-                  }}
-                >
-                  참여 마감
-                  <div className="text-xs opacity-90 mt-1">
-                    {participants.length} / {maxParticipants}
-                  </div>
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <button
-                  onClick={onJoin}
-                  disabled={isClosedRecruit || isFull}
-                  className={`px-8 py-3 rounded-md text-white font-medium ${
-                    isClosedRecruit || isFull
-                      ? "cursor-not-allowed"
-                      : "cursor-pointer hover:brightness-95"
-                  }`}
-                  style={{
-                    backgroundColor:
-                      isClosedRecruit || isFull
-                        ? "#999999"
-                        : joinedHere
-                        ? "#65A2EE"
-                        : "#85B3EB",
-                  }}
-                >
-                  참여하기
-                  <div className="text-xs opacity-90 mt-1">
-                    {participants.length} / {maxParticipants}
-                  </div>
-                </button>
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={() => setShowListModal(true)}
-                className="text-xs text-gray-500 hover:underline"
-                type="button"
-              >
-                참여자 명단
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* 좋아요/댓글 바 */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-6 text-sm text-gray-700">
@@ -791,38 +723,6 @@ export default function PostDetailPage() {
                   </button>
                 </div>
               )}
-            </div>
-          </div>
-        )}
-
-        {/* 공동구매: 마감 확인 모달 */}
-        {showCloseModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-[460px] rounded-3xl bg-white p-8 shadow-xl">
-              <h3 className="text-center text-2xl font-bold mb-4">메시지</h3>
-              <p className="text-center mb-6">
-                공동구매 인원모집을
-                <br />
-                마감 하시겠습니까?
-              </p>
-              <div className="flex justify-center gap-4">
-                <button
-                  onClick={() => setShowCloseModal(false)}
-                  className="h-12 w-36 rounded-xl border border-gray-300 bg-white text-gray-400"
-                >
-                  취소
-                </button>
-                <button
-                  onClick={() => {
-                    setShowCloseModal(false);
-                    doCloseRecruitment();
-                  }}
-                  className="h-12 w-36 rounded-xl text-white hover:brightness-95"
-                  style={{ backgroundColor: "#85B3EB" }}
-                >
-                  확인
-                </button>
-              </div>
             </div>
           </div>
         )}
