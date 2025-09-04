@@ -2,5 +2,9 @@
 import React from "react";
 
 export default function Test() {
-  return <>test</>;
+  return (
+    <div>
+      <p>배포 테스트 1</p>
+    </div>
+  );
 }
