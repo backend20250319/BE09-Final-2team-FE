@@ -1,13 +1,12 @@
 'use client';
 
-import { productAPI } from '@/lib/api';
-
+import { productAPI, reviewAPI } from '@/lib/api'; // reviewAPI 추가
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../../components/common/ProductCard';
 import './Main.css';
 
 export default function MainPage() {
-    // 슬라이드 상태 관리 - 스르륵 슬라이드
+    // 슬라이드 상태 관리
     const [popularSlideIndex, setPopularSlideIndex] = useState(0);
     const [recommendedSlideIndex, setRecommendedSlideIndex] = useState(0);
     const [newSlideIndex, setNewSlideIndex] = useState(0);
@@ -16,6 +15,9 @@ export default function MainPage() {
     const [popularProducts, setPopularProducts] = useState([]);
     const [recommendedProducts, setRecommendedProducts] = useState([]);
     const [newProducts, setNewProducts] = useState([]);
+
+    // 명예의 전당 유저 리스트
+    const [hallOfFameUsers, setHallOfFameUsers] = useState([]);
 
     useEffect(() => {
         const fetchSections = async () => {
@@ -31,19 +33,45 @@ export default function MainPage() {
             }
         };
 
+        const fetchHallOfFame = async () => {
+            try {
+                const { data } = await reviewAPI.getReviewRanking();
+                if (data.success) {
+                    const rankingUsers = data.data;
+
+                    // 각 유저 리뷰 개수 추가 조회
+                    const usersWithCounts = await Promise.all(
+                        rankingUsers.map(async (user) => {
+                            try {
+                                const res = await reviewAPI.getUserReviewCount(user.userId);
+                                const reviewCount = res.data?.count ?? 0; // ✅ count 로 접근
+                                return { ...user, totalReviews: reviewCount };
+                            } catch (err) {
+                                console.error(`리뷰 개수 조회 실패 (userId=${user.userId})`, err);
+                                return { ...user, totalReviews: 0 };
+                            }
+                        })
+                    );
+
+                    setHallOfFameUsers(usersWithCounts);
+                }
+            } catch (err) {
+                console.error('명예의 전당 조회 실패:', err);
+            }
+        };
+
         fetchSections();
+        fetchHallOfFame();
     }, []);
 
     // 슬라이드 관련
-    const itemsPerSlide = 6; // 한 번에 보여줄 아이템 수
-    const cardWidth = 157; // 카드 너비
-    const gap = 10; // 카드 간격
-    const slideDistance = cardWidth + gap; // 슬라이드 거리
+    const itemsPerSlide = 6;
+    const cardWidth = 157;
+    const gap = 10;
+    const slideDistance = cardWidth + gap;
 
-    // 슬라이드 함수들 - 스르륵 움직임
     const handleSlide = (direction, currentIndex, setIndex, totalItems) => {
         const maxIndex = Math.ceil(totalItems / itemsPerSlide) - 1;
-
         if (direction === 'next') {
             setIndex(currentIndex < maxIndex ? currentIndex + 1 : 0);
         } else {
@@ -51,65 +79,35 @@ export default function MainPage() {
         }
     };
 
-    const hallOfFameUsers = [
-        {
-            id: 1,
-            rank: 1,
-            nickname: 'rank111',
-            profileImage:
-                'https://cdn.discordapp.com/attachments/1389474412801298547/1410893672714866729/raw.png?ex=68b2aca0&is=68b15b20&hm=2cb2ed7b5681e41264e0e9c16fcfdff9cde07509f290834c3db8a201208b7ca5&',
-            weeklyReviews: 11,
-            averageRating: 4.8,
-        },
-        {
-            id: 2,
-            rank: 2,
-            nickname: 'rank222',
-            profileImage:
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
-            weeklyReviews: 222,
-            averageRating: 4.8,
-        },
-        {
-            id: 3,
-            rank: 3,
-            nickname: 'rank333',
-            profileImage:
-                'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
-            weeklyReviews: 5000,
-            averageRating: 4.8,
-        },
-    ];
-
     return (
         <div className='main-container'>
             {/* 명예의 전당 섹션 */}
             <section className='main-hall-of-fame-section'>
                 <h2 className='main-section-title'>명예의 전당</h2>
                 <div className='main-hall-of-fame-content'>
-                    {hallOfFameUsers.map((user) => (
-                        <div key={user.id} className={`main-hall-of-fame-container rank-${user.rank}`}>
+                    {hallOfFameUsers.map((user, index) => (
+                        <div key={user.userId} className={`main-hall-of-fame-container rank-${index + 1}`}>
                             <div className='main-hall-of-fame-card'>
                                 <div className='main-user-profile'>
                                     <div className='main-profile-header'>
-                                        <span className='main-rank-number'>{user.rank}</span>
+                                        <span className='main-rank-number'>{index + 1}</span>
                                     </div>
                                     <div className='main-profile-content'>
                                         <div className='main-profile-info'>
                                             <div className='main-profile-image-container'>
                                                 <img
-                                                    src={user.profileImage}
+                                                    src={user.profileImage || '/images/main/default-profile.png'}
                                                     alt={`${user.nickname} 프로필`}
                                                     className='main-profile-image'
                                                 />
                                                 <div className='main-medal-container'>
                                                     <img
                                                         src={
-                                                            user.rank === 1
+                                                            index + 1 === 1
                                                                 ? '/images/main/icon-medal-gold.svg'
-                                                                : user.rank === 2
-                                                                ? '/images/main/icon-medal-silver.svg'
-                                                                : '/images/main/icon-medal-bronze.svg'
+                                                                : index + 1 === 2
+                                                                    ? '/images/main/icon-medal-silver.svg'
+                                                                    : '/images/main/icon-medal-bronze.svg'
                                                         }
                                                         alt='메달'
                                                         className='main-medal-image'
@@ -125,8 +123,8 @@ export default function MainPage() {
                                                             alt='캘린더'
                                                             className='main-stat-icon'
                                                         />
-                                                        <span className='main-stat-label'>이번 주 리뷰: </span>
-                                                        <span className='main-stat-value'>{user.weeklyReviews}개</span>
+                                                        <span className='main-stat-label'>총 리뷰: </span>
+                                                        <span className='main-stat-value'>{user.totalReviews}개</span>
                                                     </div>
                                                     <div className='main-stat-item'>
                                                         <img
@@ -138,7 +136,7 @@ export default function MainPage() {
                                                         <span className='main-stat-value'>{user.averageRating} 점</span>
                                                     </div>
                                                     <div className='main-rank-badge'>
-                                                        <span className='main-rank-text'>#{user.rank}위</span>
+                                                        <span className='main-rank-text'>#{index + 1}위</span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -147,15 +145,12 @@ export default function MainPage() {
                                 </div>
                             </div>
                             <div className='main-podium'>
-                                <span className='main-podium-number'>{user.rank}</span>
+                                <span className='main-podium-number'>{index + 1}</span>
                             </div>
                         </div>
                     ))}
                 </div>
             </section>
-
-            {/* 구분선 */}
-            <div className='main-section-divider'></div>
 
             {/* 인기 상품 섹션 */}
             <section className='main-products-section'>
