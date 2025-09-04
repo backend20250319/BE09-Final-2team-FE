@@ -16,42 +16,56 @@ const UserReviewList = ({ onClose, open, pId }) => {
     const [negativeSummary, setNegativeSummary] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [targetNickname, setTargetNickname] = useState('사용자');
-    const userId = pId;
+    const [userId, setUserId] = useState(null);
 
-    // 닉네임 가져오기
+    // 상품에서 판매자 ID 가져오기
     useEffect(() => {
-        if (!userId) return;
+        if (!pId) return;
 
-        const fetchNickname = async () => {
+        const fetchSellerId = async () => {
             try {
-                const res = await userAPI.getUserInfo(userId);
-                const nickname = res.data?.data?.nickname || `사용자 ${userId}`;
-                setTargetNickname(nickname);
+                const productRes = await reviewAPI.getProductInfo(pId);
+                const productData = productRes.data?.data;
+                console.log("상품 상세:", productData);
+
+                // 응답 구조에 따라 sellerId 추출
+                const resolvedSellerId = productData?.product?.sellerId || productData?.sellerInfo?.id;
+                console.log("Resolved Seller ID:", resolvedSellerId);
+                setUserId(resolvedSellerId);
+
+                // 닉네임도 바로 가져오기
+                if (resolvedSellerId) {
+                    const res = await userAPI.getUserInfo(resolvedSellerId);
+                    setTargetNickname(res.data?.data?.nickname || `사용자 ${resolvedSellerId}`);
+                }
             } catch (err) {
-                console.error('닉네임 가져오기 실패', err);
-                setTargetNickname(`사용자 ${userId}`);
+                console.error("판매자 정보 가져오기 실패:", err);
             }
         };
 
-        fetchNickname();
-    }, [userId]);
+        fetchSellerId();
+    }, [pId]);
 
     // 리뷰 및 통계 데이터 가져오기
     useEffect(() => {
-        if (!open) return;
+        if (!open || !userId) return; // 🔑 sellerId 있을 때만 실행
 
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // 리뷰 목록
                 const reviewsResponse = await reviewAPI.userReviewList(userId);
-                setReviews(reviewsResponse.data.data || []);
+                const userReviews = reviewsResponse.data?.data || [];
+                setReviews(userReviews);
 
-                // 통계
-                const statsResponse = await reviewAPI.getReviewStats(userId);
-                setStats(statsResponse.data.data || { averageRating: 0, totalReviews: 0, positiveReviews: 0, negativeReviews: 0 });
-
-                // 종합 긍정/부정 요약
+                const statsResponse = await reviewAPI.getReviewStatsForUser(userId);
+                const statData = statsResponse.data?.data || {};
+                setStats({
+                    averageRating: statData.averageRating || 0,
+                    totalReviews: statData.totalReviews || userReviews.length,
+                    positiveReviews: statData.positiveReviews || userReviews.filter(r => r.sentiment === '긍정적').length,
+                    negativeReviews: statData.negativeReviews || userReviews.filter(r => r.sentiment === '부정적').length,
+                });
+                // 요약 가져오기
                 try {
                     const posSummaryRes = await reviewAPI.getSummary(null, '긍정적');
                     setPositiveSummary(posSummaryRes.data.data || '긍정적 리뷰가 존재하지 않습니다.');
@@ -65,7 +79,6 @@ const UserReviewList = ({ onClose, open, pId }) => {
                 } catch {
                     setNegativeSummary('부정적 리뷰가 존재하지 않습니다.');
                 }
-
             } catch (error) {
                 console.error('리뷰 데이터 가져오기 실패', error);
                 setPositiveSummary('긍정적 리뷰가 존재하지 않습니다.');

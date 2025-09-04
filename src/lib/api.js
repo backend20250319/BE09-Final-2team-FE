@@ -202,7 +202,7 @@ export const reviewAPI = {
 
     // 사용자 리뷰 통계 조회 (신규 추가)
     getReviewStatsForUser: (userId) =>
-        api.get(`/review-service/reviews/users/${userId}/stats`),
+        api.get(`/review-service/reviews/users/${userId}/status`),
 
     // 리뷰 요약 조회
     getSummary: (productId, sentiment) =>
@@ -237,9 +237,15 @@ export const reviewAPI = {
         api.get(`/review-service/reviews/my/count`),
 
     // 명예의 전당 (사용자별 총 리뷰 개수, 평균 별점 순위) 조회
-    getReviewRanking: () => api.get('/review-service/reviews/ranking'),
+    getReviewRanking: () => api.get('/review-service/reviews/top3'),
 
     // 사용자별 평균 별점 조회
     getUserAverageRating: (userId) => api.get(`/review-service/reviews/users/${userId}/average-rating`),
+
+    // 상품 정보 API 호출
+    getProductInfo: (pId) => api.get(`/product-service/products/${pId}`),
+
+    // 판매자 닉네임 API 호출
+    getSellerNickName: (sellerId) => api.get(`/user-service/users/${sellerId}`),
 };
 export default api;

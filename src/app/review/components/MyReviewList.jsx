@@ -18,7 +18,7 @@ export default function MyReviewList({ open, onClose, user }) {
         if (open) {
             const fetchReviews = async () => {
                 try {
-                    const { data } = await reviewAPI.getAllReviews();
+                    const { data } = await reviewAPI.getMyReviews();
                     setReviews(data.data);
                 } catch (error) {
                     console.error("Error fetching reviews:", error);

@@ -247,7 +247,7 @@ const ProductCard = ({
                 )}
 
                 {/* 리뷰 폼이 표시될 때만 렌더링 */}
-                {showReviewForm && <MyReviewAddForm onClose={handleReviewFormClose} />}
+                {showReviewForm && <MyReviewAddForm onClose={handleReviewFormClose} pId={product.id} />}
             </div>
         </div>
     );
