@@ -134,6 +134,7 @@ export default function MyReviewDetail({ review, onClose, animateClass, onSave: 
                     animateClass={editAnimateClass}
                     user={user}
                     review={reviewData}
+                    pId={reviewData.userId} // 리뷰 작성자 ID를 상대방 ID로 전달
                 />
             )}
         </>
