@@ -15,7 +15,7 @@ import { User, Clock } from "lucide-react";
 import Image from "next/image";
 
 export default function ChatRoomCard({ chat, isSelected, onClick }) {
-  console.log("chat =====> ", chat);
+  // console.log("chat =====> ", chat);
 
   return (
     <div
