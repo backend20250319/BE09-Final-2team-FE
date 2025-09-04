@@ -186,5 +186,66 @@ export const productAPI = {
     params: { keyword },
   }),
 };
+// Review Service API 함수들
+export const reviewAPI = {
+    // 리뷰 생성
+    createReview: (productId, userId, reviewInfo) =>
+        api.post(`/review-service/reviews/users/${userId}/products/${productId}`, reviewInfo),
 
+    // 상품별 리뷰 조회
+    getReviewsByProduct: (productId) =>
+        api.get(`/review-service/reviews?productId=${productId}`),
+
+    // 상품별 리뷰 통계 조회 (기존 함수)
+    getReviewStatsForProduct: (productId) =>
+        api.get(`/review-service/reviews/status?productId=${productId}`),
+
+    // 사용자 리뷰 통계 조회 (신규 추가)
+    getReviewStatsForUser: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}/status`),
+
+    // 리뷰 요약 조회
+    getSummary: (productId, sentiment) =>
+        api.get(`/review-service/reviews/summary?productId=${productId}&sentiment=${sentiment}`),
+
+    // 사용자 리뷰 목록 조회 (상품 정보와 판매자 정보 포함)
+    userReviewList: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}`),
+
+    // 내 리뷰 목록 조회 (상품 정보와 판매자 정보 포함)
+    getMyReviews: () =>
+        api.get(`/review-service/reviews/my`),
+
+    // 특정 리뷰 상세 조회
+    getReviewById: (reviewId) =>
+        api.get(`/review-service/reviews/${reviewId}`),
+
+    // 리뷰 수정
+    updateReview: (reviewId, reviewInfo) =>
+        api.put(`/review-service/reviews/${reviewId}`, reviewInfo),
+
+    // 리뷰 삭제
+    deleteReview: (reviewId) =>
+        api.delete(`/review-service/reviews/${reviewId}`),
+
+    // 사용자별 리뷰 개수 조회
+    getUserReviewCount: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}/count`),
+
+    // 내 리뷰 개수 조회
+    getMyReviewCount: () =>
+        api.get(`/review-service/reviews/my/count`),
+
+    // 명예의 전당 (사용자별 총 리뷰 개수, 평균 별점 순위) 조회
+    getReviewRanking: () => api.get('/review-service/reviews/top3'),
+
+    // 사용자별 평균 별점 조회
+    getUserAverageRating: (userId) => api.get(`/review-service/reviews/users/${userId}/average-rating`),
+
+    // 상품 정보 API 호출
+    getProductInfo: (pId) => api.get(`/product-service/products/${pId}`),
+
+    // 판매자 닉네임 API 호출
+    getSellerNickName: (sellerId) => api.get(`/user-service/users/${sellerId}`),
+};
 export default api;
