@@ -11,6 +11,7 @@ export default function Test() {
       <p>ver-5 : EC2 인스턴스 프로파일(aws-elasticbeanstalk-ec2-role)에 AmazonEC2ContainerRegistryReadOnly 권한 추가</p>
       <p>ver-6 : ElasticBeanstalk 환경 구성에서 인스턴스 크기 변경 t3.small를 t3.medium로 변경</p>
       <p>ver-7 : ElasticBeanstalk 환경 구성에서 VPC 퍼블릭 IP 주소를 true로 활성화</p>
+      <p>ver-8 : docker 이미지 최적화 작업</p>
     </div>
   );
 }

@@ -1,8 +1,9 @@
 node_modules
-npm-debug.log
-yarn-error.log
-.next/cache
-*.md
-.git
 .dockerignore
 Dockerfile
+.git
+.gitignore
+.next/cache
+*.md
+npm-debug.log
+yarn-error.log
