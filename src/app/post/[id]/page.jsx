@@ -1,74 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState, useCallback, useRef } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import ConfirmModal, { MODAL_TYPES } from "@/components/common/ConfirmModal";
-import { loadPosts, removePost } from "../lib/postStorage";
-
-/* =========================
-   LocalStorage helpers
-========================= */
-const safeParse = (s, fb) => { try { return JSON.parse(s); } catch { return fb; } };
-const readLS = (key, fb = []) =>
-  typeof window === "undefined" ? fb : safeParse(localStorage.getItem(key) || "[]", fb);
-const writeLS = (key, value) => {
-  if (typeof window !== "undefined") localStorage.setItem(key, JSON.stringify(value));
-};
-
-// 카테고리 정규화
-const norm = (s) => String(s || "").trim();
-const isAuctionCat = (c) => norm(c) === "경매";
-
-/** 어느 저장소에 있든 id로 글 찾기 */
-function getPostLocal(id) {
-  const tips = loadPosts("tips") || [];
-  const auction = readLS("posts:auction", []);
-  const groupbuy = readLS("posts:groupbuy", []).concat(loadPosts("groupbuy") || []);
-  const all = [...tips, ...auction, ...groupbuy];
-  return all.find((p) => String(p?.id) === String(id)) || null;
-}
-
-/** 글을 올바른 저장소로 재배치(upsert) */
-function upsertPostLocal(next) {
-  if (typeof window === "undefined" || !next) return;
-  const id = String(next.id);
-  const tips = readLS("posts:tips", []).filter((p) => String(p.id) !== id);
-  const auction = readLS("posts:auction", []).filter((p) => String(p.id) !== id);
-  const groupbuy = readLS("posts:groupbuy", []).filter((p) => String(p.id) !== id);
-
-  if (isAuctionCat(next.category)) {
-    writeLS("posts:auction", [next, ...auction]);
-    writeLS("posts:tips", tips);
-    writeLS("posts:groupbuy", groupbuy);
-  } else if (norm(next.category) === "공동구매") {
-    writeLS("posts:groupbuy", [next, ...groupbuy]);
-    writeLS("posts:tips", tips);
-    writeLS("posts:auction", auction);
-  } else {
-    writeLS("posts:tips", [next, ...tips]);
-    writeLS("posts:auction", auction);
-    writeLS("posts:groupbuy", groupbuy);
-  }
-
-  try {
-    window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: next.id, action: "update" } }));
-  } catch {}
-}
-
-/** 글 삭제(세 곳 모두 시도) */
-function deletePostEverywhere(id) {
-  const sId = String(id);
-  try { removePost?.("tips", id); } catch {}
-  try { removePost?.("groupbuy", id); } catch {}
-  writeLS("posts:tips", readLS("posts:tips", []).filter((p) => String(p.id) !== sId));
-  writeLS("posts:auction", readLS("posts:auction", []).filter((p) => String(p.id) !== sId));
-  writeLS("posts:groupbuy", readLS("posts:groupbuy", []).filter((p) => String(p.id) !== sId));
-
-  try {
-    window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id, action: "delete" } }));
-  } catch {}
-}
+import { postAPI } from "@/lib/api";
 
 /* =========================
    Utils
@@ -78,11 +14,18 @@ function getOrCreateDeviceId() {
   const KEY = "device_id";
   let id = localStorage.getItem(KEY);
   if (!id) {
-    id = "dev-" + Math.random().toString(36).slice(2, 8) + "-" + Date.now().toString(36).slice(-6);
+    id =
+      "dev-" +
+      Math.random().toString(36).slice(2, 8) +
+      "-" +
+      Date.now().toString(36).slice(-6);
     localStorage.setItem(KEY, id);
   }
   return id;
 }
+const norm = (s) => String(s || "").trim();
+const isAuctionCat = (c) =>
+  norm(c) === "경매" || String(c).toLowerCase() === "auction";
 
 function sanitize(html = "") {
   if (!html) return "";
@@ -91,7 +34,8 @@ function sanitize(html = "") {
     doc.querySelectorAll("script, style, iframe").forEach((el) => el.remove());
     doc.querySelectorAll("*").forEach((el) => {
       [...el.attributes].forEach((attr) => {
-        if (attr.name.toLowerCase().startsWith("on")) el.removeAttribute(attr.name);
+        if (attr.name.toLowerCase().startsWith("on"))
+          el.removeAttribute(attr.name);
       });
     });
     return doc.body.innerHTML;
@@ -116,22 +60,34 @@ function parseDateAny(v) {
 const pad2 = (n) => String(n).padStart(2, "0");
 function formatDateTime(d) {
   if (!(d instanceof Date)) return "";
-  return `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(d.getDate())} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  return `${d.getFullYear()}.${pad2(d.getMonth() + 1)}.${pad2(
+    d.getDate()
+  )} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
 }
-
 const nowISO = () => new Date().toISOString();
 
 /* ===== Auction helpers ===== */
 function useCountdown(endTime) {
-  const [ms, setMs] = useState(() => Math.max(0, new Date(endTime).getTime() - Date.now()));
+  const [ms, setMs] = useState(() =>
+    Math.max(0, new Date(endTime).getTime() - Date.now())
+  );
   useEffect(() => {
-    const t = setInterval(() => setMs(Math.max(0, new Date(endTime).getTime() - Date.now())), 1000);
+    const t = setInterval(
+      () => setMs(Math.max(0, new Date(endTime).getTime() - Date.now())),
+      1000
+    );
     return () => clearInterval(t);
   }, [endTime]);
   const h = Math.floor(ms / 3600000);
   const m = Math.floor((ms % 3600000) / 60000);
   const s = Math.floor((ms % 60000) / 1000);
-  return { ms, h, m, s, label: ms === 0 ? "경매 종료" : `${h}시간${m}분${s}초` };
+  return {
+    ms,
+    h,
+    m,
+    s,
+    label: ms === 0 ? "경매 종료" : `${h}시간${m}분${s}초`,
+  };
 }
 const bidListOf = (p) => (Array.isArray(p?.bids) ? p.bids : []);
 const currentPriceOf = (p) => {
@@ -139,8 +95,6 @@ const currentPriceOf = (p) => {
   if (!bids.length) return Number(p?.startingPrice ?? 0) || 0;
   return Number(bids[bids.length - 1].price) || 0;
 };
-/** 새 규칙: 최소 입찰가 = 현재가 + 1원 */
-const minNextBidOf = (p) => currentPriceOf(p) + 1;
 const isAuctionClosed = (p) => {
   if (!p) return false;
   const st = String(p.status || "");
@@ -148,16 +102,6 @@ const isAuctionClosed = (p) => {
   if (p.endTime) return new Date(p.endTime).getTime() <= Date.now();
   return false;
 };
-
-/* ===== Groupbuy helpers (레거시 유지용) ===== */
-function extractMaxParticipants(p) {
-  const candidates = [p?.maxParticipants, p?.max, p?.people, p?.capacity, p?.limit, p?.headcount, p?.count, p?.quota];
-  for (const v of candidates) {
-    const n = Number(v);
-    if (Number.isFinite(n) && n > 0) return n;
-  }
-  return 5;
-}
 
 /* =========================
    Component
@@ -182,7 +126,7 @@ export default function PostDetailPage() {
   const [comments, setComments] = useState([]);
   const [commentInput, setCommentInput] = useState("");
 
-  // groupbuy (레거시)용
+  // groupbuy (옵션)
   const [joinedHere, setJoinedHere] = useState(false);
   const [lastJoinedName, setLastJoinedName] = useState("");
   const [showCloseModal, setShowCloseModal] = useState(false);
@@ -201,82 +145,75 @@ export default function PostDetailPage() {
     return "tips";
   }, [searchParams, post]);
 
-  const isAuction = isAuctionCat(post?.category) || searchParams.get("tab") === "auction";
+  const isAuction =
+    isAuctionCat(post?.category) || searchParams.get("tab") === "auction";
   const isGroupbuy = norm(post?.category) === "공동구매";
 
-  const participants = Array.isArray(post?.participants) ? post.participants : [];
-  const maxParticipants = extractMaxParticipants(post || {});
+  const participants = Array.isArray(post?.participants)
+    ? post.participants
+    : [];
+  const maxParticipants = Number(post?.maxParticipants || 5);
   const isFull = participants.length >= maxParticipants;
-  const isClosedRecruit = Boolean(post?.closed) || (post?.status && post.status !== "모집중");
+  const isClosedRecruit =
+    Boolean(post?.closed) || (post?.status && post.status !== "모집중");
   const isOwner = post?.ownerDeviceId === deviceId;
 
-  /* ---------- bump view once ---------- */
-  const viewBumpedRef = useRef(false);
-  const bumpViewOnce = useCallback((p) => {
-    if (!p || viewBumpedRef.current) return;
-    try {
-      viewBumpedRef.current = true;
-      const next = { ...p, views: (p.views || 0) + 1 };
-      setPost(next);
-      upsertPostLocal(next);
-    } catch {}
-  }, []);
-
-  /* ---------- load ---------- */
-  useEffect(() => {
+  /* ---------- load (from API) ---------- */
+  const fetchPost = useCallback(async () => {
     if (!id) return;
     setLoading(true);
     setError("");
     try {
-      const found = getPostLocal(id);
-      if (!found) {
-        setError("게시글을 찾을 수 없습니다.");
-        setPost(null);
-      } else {
-        let normalized = { ...found };
+      // postAPI.getPost(id) => ApiResponse.data => { post, comments, like }
+      const payload = await postAPI.getPost(id);
+      const p =
+        payload.data.data?.post ||
+        payload.data?.data?.post ||
+        payload?.data?.data; // 안전장치
 
-        // 공동구매 보정(레거시)
-        if (norm(normalized.category) === "공동구매") {
-          const writer = normalized.author || normalized.writer || "익명";
-          const arr = Array.isArray(normalized.participants) ? [...normalized.participants] : [];
-          if (!arr.includes(writer)) normalized.participants = [writer, ...arr];
-          if (!normalized.ownerDeviceId) normalized.ownerDeviceId = deviceId;
-          normalized.maxParticipants = extractMaxParticipants(normalized);
-        }
+      const normalized = {
+        ...p,
+        content: p?.contentHtml ?? p?.content ?? "", // 본문 키 보정
+        category:
+          p?.category ?? (p?.type ? String(p.type).toLowerCase() : undefined),
+        writer: p?.nickName ?? p?.userId ?? [],
+        bids: Array.isArray(p?.bids) ? p.bids : [],
+        images: Array.isArray(p?.images) ? p.images : [],
+        date: payload?.data?.timestamp ?? [],
+      };
 
-        // 경매 보정(기본값 채움 + 상태 한글화)
-        if (isAuctionCat(normalized.category)) {
-          if (typeof normalized.startingPrice === "undefined")
-            normalized.startingPrice = Number(normalized.price ?? 5000) || 5000;
-          if (!normalized.endTime)
-            normalized.endTime = new Date(Date.now() + 24 * 3600 * 1000).toISOString();
-          if (!Array.isArray(normalized.bids)) normalized.bids = [];
-          normalized.status = isAuctionClosed(normalized) ? "경매완료" : "진행중";
-        }
-
-        setPost(normalized);
-        setLikes(normalized.likes || 0);
-        setComments(Array.isArray(normalized.comments) ? normalized.comments : []);
-        bumpViewOnce(normalized);
-      }
-    } catch {
-      setError("게시글을 불러오는 중 오류가 발생했습니다.");
+      setPost(normalized);
+      setLikes(payload?.data?.data?.like?.likeCount ?? 0);
+      setComments(
+        Array.isArray(payload.data.data?.comments)
+          ? payload.data.data.comments
+          : []
+      );
+    } catch (e) {
+      console.error(e);
+      setError("게시글을 불러오지 못했습니다.");
       setPost(null);
     } finally {
       setLoading(false);
     }
-  }, [id, bumpViewOnce, deviceId]);
+  }, [id]);
 
-  /* ---------- actions ---------- */
-  const onDelete = useCallback(() => {
-    if (!post) return;
-    try {
-      deletePostEverywhere(post.id);
-      router.push(`/post?tab=${backTab}`);
-    } catch {
-      alert("삭제 중 오류가 발생했습니다.");
-    }
-  }, [post, router, backTab]);
+  useEffect(() => {
+    fetchPost();
+  }, [fetchPost]);
+
+  /* ---------- actions (현재 백엔드 미구현: 알림/낙관적 UI 처리) ---------- */
+  const onDelete = useCallback(
+    async () => {
+      // alert("서버에 삭제 API가 아직 없어요. 백엔드 준비되면 연결할게요!");
+      // 준비 후:
+      await postAPI.deletePost(post.id);
+      // router.push(`/post?tab=${backTab}`);
+    },
+    [
+      /* post, router, backTab */
+    ]
+  );
 
   const onEdit = useCallback(() => {
     if (!post) return;
@@ -293,94 +230,83 @@ export default function PostDetailPage() {
     }
   }, []);
 
-  const onToggleLike = useCallback(() => {
+  const onToggleLike = useCallback(async () => {
     if (!post) return;
-    const nextLikes = likes > 0 ? likes - 1 : 1;
-    setLikes(nextLikes);
-    const next = { ...post, likes: nextLikes };
-    setPost(next);
-    upsertPostLocal(next);
-  }, [likes, post]);
+    // 서버 미구현 → 로컬 토글만
+    setLikes((v) => (v > 0 ? 0 : 1));
+    // 준비 후:
+    // if (nextLikes > 0) await postAPI.like(post.id);
+    // else await postAPI.unlike(post.id);
+  }, [post]);
 
-  const onAddComment = useCallback(() => {
+  const onAddComment = useCallback(async () => {
     if (!post) return;
     const text = commentInput.trim();
     if (!text) return;
-    const newC = { id: Date.now(), author: "익명맘", content: text, createdAt: nowISO() };
-    const nextComments = [...(comments || []), newC];
-    setComments(nextComments);
+
+    // 서버 미구현 → 로컬로만 추가
+    const newC = {
+      id: Date.now(),
+      author: "익명맘",
+      content: text,
+      createdAt: nowISO(),
+    };
+    setComments((prev) => [...prev, newC]);
     setCommentInput("");
-    const next = { ...post, comments: nextComments };
-    setPost(next);
-    upsertPostLocal(next);
-    try {
-      window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: post.id, action: "comment" } }));
-    } catch {}
-  }, [commentInput, comments, post]);
 
-  const onDeleteComment = useCallback((commentId) => {
-    if (!post) return;
-    const nextComments = (comments || []).filter((c) => c.id !== commentId);
-    setComments(nextComments);
-    const next = { ...post, comments: nextComments };
-    setPost(next);
-    upsertPostLocal(next);
-  }, [post, comments]);
+    // 준비 후:
+    // const saved = await postAPI.addComment(post.id, { content: text });
+    // setComments((prev) => [...prev, saved]);
+  }, [commentInput, post]);
 
-  // groupbuy 참여 (프롬프트/모달 없이 즉시)
-  const onJoin = useCallback(() => {
+  const onDeleteComment = useCallback(
+    async (commentId) => {
+      if (!post) return;
+      // 서버 미구현 → 로컬 삭제
+      setComments((prev) => prev.filter((c) => c.id !== commentId));
+      // 준비 후: await postAPI.deleteComment(post.id, commentId);
+    },
+    [post]
+  );
+
+  // groupbuy (옵션)
+  const onJoin = useCallback(async () => {
     if (!post || isFull || isClosedRecruit) return;
-    const base = getOrCreateDeviceId().split("-").pop()?.slice(-4) || Math.floor(Math.random() * 9000 + 1000);
-    const name = `익명맘-${base}`;
-    const names = participants.map((x) => (typeof x === "string" ? x : x?.name || ""));
-    if (names.includes(name)) return;
-    const addValue = participants.length && typeof participants[0] === "string" ? name : { name, joinedAt: nowISO() };
-    const next = { ...post, participants: [...participants, addValue] };
-    setPost(next);
-    setJoinedHere(true);
-    setLastJoinedName(name);
-    upsertPostLocal(next);
-    try {
-      window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: post.id, action: "join" } }));
-    } catch {}
-  }, [post, participants, isFull, isClosedRecruit]);
+    alert("공동구매 참여 API 미구현 상태입니다.");
+    // 준비 후:
+    // const name = `익명맘-${deviceId.slice(-4)}`;
+    // await postAPI.joinGroupbuy(post.id, { name });
+    // setJoinedHere(true);
+    // setLastJoinedName(name);
+    // await fetchPost();
+  }, [post, isFull, isClosedRecruit /*, deviceId, fetchPost */]);
 
-  const onCancelJoin = useCallback(() => {
+  const onCancelJoin = useCallback(async () => {
     if (!post || !joinedHere || isOwner) return;
-    const names = participants.map((x) => (typeof x === "string" ? x : x?.name || ""));
-    if (!lastJoinedName || !names.includes(lastJoinedName)) return;
-    const filtered = participants.filter((x) => (typeof x === "string" ? x !== lastJoinedName : x?.name !== lastJoinedName));
-    const next = { ...post, participants: filtered };
-    setPost(next);
-    setJoinedHere(false);
-    upsertPostLocal(next);
-    setShowListModal(false);
-    try {
-      window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: post.id, action: "leave" } }));
-    } catch {}
-  }, [post, joinedHere, isOwner, lastJoinedName, participants]);
+    alert("공동구매 참여취소 API 미구현 상태입니다.");
+    // 준비 후:
+    // await postAPI.cancelJoin(post.id);
+    // setJoinedHere(false);
+    // setShowListModal(false);
+    // await fetchPost();
+  }, [post, joinedHere, isOwner /*, fetchPost */]);
 
-  const doCloseRecruitment = useCallback(() => {
+  const doCloseRecruitment = useCallback(async () => {
     if (!post) return;
-    const next = { ...post, closed: true, status: "모집완료", closedAt: nowISO() };
-    setPost(next);
-    upsertPostLocal(next);
-    try {
-      window.dispatchEvent(new CustomEvent("posts:changed", { detail: { id: post.id, action: "close" } }));
-    } catch {}
-  }, [post]);
+    alert("공동구매 마감 API 미구현 상태입니다.");
+    // 준비 후:
+    // await postAPI.closeGroupbuy(post.id);
+    // setShowCloseModal(false);
+    // await fetchPost();
+  }, [post /*, fetchPost */]);
 
-  const onCloseRecruitmentClick = useCallback(() => {
+  // auction
+  const onBid = useCallback(async () => {
     if (!post) return;
-    if (!isOwner) { alert("작성자(이 글의 소유 기기)만 마감할 수 있어요."); return; }
-    if (isClosedRecruit || participants.length < maxParticipants) return;
-    setShowCloseModal(true);
-  }, [post, isOwner, isClosedRecruit, participants.length, maxParticipants]);
-
-  // 경매 입찰: 현재가 + 1원 이상이면 OK
-  const onBid = useCallback(() => {
-    if (!post) return;
-    if (isAuctionClosed(post)) { alert("경매가 마감되었습니다."); return; }
+    if (isAuctionClosed(post)) {
+      alert("경매가 마감되었습니다.");
+      return;
+    }
     const cur = currentPriceOf(post);
     const minNext = cur + 1;
     const nextPrice = Number(bidInput);
@@ -388,14 +314,12 @@ export default function PostDetailPage() {
       alert(`최소 입찰가는 ${minNext.toLocaleString()}원 입니다.`);
       return;
     }
-    const bidderId = getOrCreateDeviceId();
-    const bids = bidListOf(post).slice();
-    bids.push({ bidderId, price: nextPrice, time: nowISO() });
-    const updated = { ...post, bids, status: isAuctionClosed({ ...post, bids }) ? "경매완료" : "진행중" };
-    setPost(updated);
-    upsertPostLocal(updated);
-    setBidInput("");
-  }, [post, bidInput]);
+    alert("입찰 API 미구현 상태입니다.");
+    // 준비 후:
+    // await postAPI.placeBid(post.id, { price: nextPrice });
+    // setBidInput("");
+    // await fetchPost();
+  }, [post, bidInput /*, fetchPost */]);
 
   /* ---------- render ---------- */
   if (loading) {
@@ -413,9 +337,14 @@ export default function PostDetailPage() {
   if (error) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-10">
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">{error}</div>
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-6 text-red-700">
+          {error}
+        </div>
         <div className="mt-6">
-          <Link href="/post" className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm hover:bg-gray-50">
+          <Link
+            href="/post"
+            className="inline-flex items-center gap-2 rounded-xl border px-4 py-2 text-sm hover:bg-gray-50"
+          >
             ← 목록으로
           </Link>
         </div>
@@ -423,17 +352,28 @@ export default function PostDetailPage() {
     );
   }
 
-  const createdAt = parseDateAny(post?.createdAt) || parseDateAny(post?.date) || null;
-  const writtenDateTime = createdAt ? formatDateTime(createdAt) : "";
-
-  const participantsCount = participants.length;
-  const joinBtnColor = isClosedRecruit || isFull ? "#999999" : joinedHere ? "#65A2EE" : "#85B3EB";
-  const closeBtnColor = participantsCount < maxParticipants ? "#999999" : isClosedRecruit ? "#65A2EE" : "#85B3EB";
-
-  const normalizedParticipants = (Array.isArray(participants) ? participants : []).map((x) =>
-    typeof x === "string" ? { name: x, joinedAt: post?.createdAt || null } : { name: x?.name || "", joinedAt: x?.joinedAt || post?.createdAt || null }
+  const createdAt =
+    parseDateAny(post?.createdAt) || parseDateAny(post?.date) || null;
+  const participantsCount = (Array.isArray(participants) ? participants : [])
+    .length;
+  const joinBtnColor =
+    isClosedRecruit || isFull ? "#999999" : joinedHere ? "#65A2EE" : "#85B3EB";
+  const closeBtnColor =
+    participantsCount < maxParticipants
+      ? "#999999"
+      : isClosedRecruit
+      ? "#65A2EE"
+      : "#85B3EB";
+  const normalizedParticipants = (
+    Array.isArray(participants) ? participants : []
+  ).map((x) =>
+    typeof x === "string"
+      ? { name: x, joinedAt: post?.createdAt || null }
+      : {
+          name: x?.name || "",
+          joinedAt: x?.joinedAt || post?.createdAt || null,
+        }
   );
-
   const auctionClosed = isAuctionClosed(post);
   const currentPrice = isAuction ? currentPriceOf(post) : 0;
 
@@ -463,26 +403,54 @@ export default function PostDetailPage() {
         <div className="mb-2 flex items-center justify-between text-[13px] text-gray-500">
           <div className="space-x-2">
             <Link href={`/post?tab=${backTab}`} className="hover:underline">
-              {backTab === "auction" ? "경매" : backTab === "groupbuy" ? "공동구매" : "육아꿀팁"}
+              {backTab === "auction"
+                ? "경매"
+                : backTab === "groupbuy"
+                ? "공동구매"
+                : "육아꿀팁"}
             </Link>
             <span className="text-gray-300">›</span>
             <span className="text-gray-400">상세</span>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={onEdit} className="text-gray-400 hover:text-gray-600" type="button">수정</button>
+            <button
+              onClick={onEdit}
+              className="text-gray-400 hover:text-gray-600"
+              type="button"
+            >
+              수정
+            </button>
             <span className="text-gray-300">|</span>
-            <button onClick={() => setShowDeletePostModal(true)} className="text-gray-400 hover:text-red-500" type="button">삭제</button>
+            <button
+              onClick={() => setShowDeletePostModal(true)}
+              className="text-gray-400 hover:text-red-500"
+              type="button"
+            >
+              삭제
+            </button>
             <span className="text-gray-300">|</span>
             <a
-              onClick={(e) => { e.preventDefault(); document.querySelector("#comments li")?.scrollIntoView({ behavior: "smooth", block: "start" }); }}
+              onClick={(e) => {
+                e.preventDefault();
+                document
+                  .querySelector("#comments li")
+                  ?.scrollIntoView({ behavior: "smooth", block: "start" });
+              }}
               className="inline-flex items-center gap-1 hover:underline text-gray-700 cursor-pointer"
             >
-              <span className="inline-block w-5 h-5 text-[16px] leading-5">💬</span>
+              <span className="inline-block w-5 h-5 text-[16px] leading-5">
+                💬
+              </span>
               <span className="text-[14px]">댓글 {comments.length}</span>
             </a>
             <span className="text-gray-300">|</span>
-            <button onClick={onCopyUrl} className="inline-flex items-center gap-1 hover:underline text-gray-700">
-              <span className="inline-block w-5 h-5 text-[16px] leading-5">🔗</span>
+            <button
+              onClick={onCopyUrl}
+              className="inline-flex items-center gap-1 hover:underline text-gray-700"
+            >
+              <span className="inline-block w-5 h-5 text-[16px] leading-5">
+                🔗
+              </span>
               <span className="text-[14px]">url 복사</span>
             </button>
           </div>
@@ -492,12 +460,18 @@ export default function PostDetailPage() {
         <div className="pb-4 border-b">
           <h1 className="mb-1 text-[22px] font-semibold tracking-tight flex items-center gap-2">
             {isGroupbuy && (
-              <span className={post?.status === "모집중" ? "text-red-500" : "text-gray-400"}>
+              <span
+                className={
+                  post?.status === "모집중" ? "text-red-500" : "text-gray-400"
+                }
+              >
                 {post?.status || "모집중"}
               </span>
             )}
             {isAuction && (
-              <span className={auctionClosed ? "text-gray-400" : "text-red-500"}>
+              <span
+                className={auctionClosed ? "text-gray-400" : "text-red-500"}
+              >
                 {auctionClosed ? "경매완료" : "진행중"}
               </span>
             )}
@@ -505,7 +479,12 @@ export default function PostDetailPage() {
           </h1>
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-500">
             <span>{post?.author || post?.writer || "익명"}</span>
-            {writtenDateTime && (<><span className="text-gray-300">·</span><span>{writtenDateTime}</span></>)}
+            {createdAt && (
+              <>
+                <span className="text-gray-300">·</span>
+                <span>{formatDateTime(createdAt)}</span>
+              </>
+            )}
             <span className="text-gray-300">·</span>
             <span>조회 {post?.views || 0}</span>
           </div>
@@ -513,11 +492,17 @@ export default function PostDetailPage() {
 
         {/* 본문 */}
         <article className="mb-8 mt-6 text-[15px] leading-7 text-gray-800">
-          <div dangerouslySetInnerHTML={{ __html: sanitize(post?.content || "") }} />
+          <div
+            dangerouslySetInnerHTML={{ __html: sanitize(post?.content || "") }}
+          />
           {Array.isArray(post?.images) && post.images.length > 0 && (
             <div className="mt-6">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={post.images[0]} alt="post-image" className="w-full max-w-xl rounded-md border object-cover" />
+              <img
+                src={post.images[0]}
+                alt="post-image"
+                className="w-full max-w-xl rounded-md border object-cover"
+              />
             </div>
           )}
         </article>
@@ -528,7 +513,7 @@ export default function PostDetailPage() {
             endTime={post.endTime}
             status={post.status}
             currentPrice={currentPrice}
-            minNext={minNextBidOf(post)}      // 현재가 + 1원
+            minNext={(currentPrice || 0) + 1} // 현재가 + 1원
             onBid={onBid}
             bidInput={bidInput}
             setBidInput={setBidInput}
@@ -536,56 +521,23 @@ export default function PostDetailPage() {
           />
         )}
 
-        {/* 공동구매 영역 (명단/참여 버튼만 유지) */}
-        {isGroupbuy && (
-          <div className="mb-8">
-            {isOwner ? (
-              <div className="flex justify-center">
-                <button
-                  onClick={onCloseRecruitmentClick}
-                  disabled={isClosedRecruit || participants.length < maxParticipants}
-                  className={`px-8 py-3 rounded-md text-white font-medium ${
-                    isClosedRecruit || participants.length < maxParticipants ? "cursor-not-allowed" : "cursor-pointer hover:brightness-95"
-                  }`}
-                  style={{ backgroundColor: closeBtnColor }}
-                >
-                  참여 마감
-                  <div className="text-xs opacity-90 mt-1">{participantsCount} / {maxParticipants}</div>
-                </button>
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <button
-                  onClick={onJoin}
-                  disabled={isClosedRecruit || isFull}
-                  className={`px-8 py-3 rounded-md text-white font-medium ${
-                    isClosedRecruit || isFull ? "cursor-not-allowed" : "cursor-pointer hover:brightness-95"
-                  }`}
-                  style={{ backgroundColor: joinBtnColor }}
-                >
-                  참여하기
-                  <div className="text-xs opacity-90 mt-1">{participantsCount} / {maxParticipants}</div>
-                </button>
-              </div>
-            )}
-
-            <div className="mt-6 flex justify-end">
-              <button onClick={() => setShowListModal(true)} className="text-xs text-gray-500 hover:underline" type="button">
-                참여자 명단
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* 좋아요/댓글 바 */}
         <div className="mb-6 flex items-center justify-between">
           <div className="flex items-center gap-6 text-sm text-gray-700">
-            <button onClick={onToggleLike} className="group inline-flex items-center gap-1">
-              <span className="text-[18px] leading-5">{likes > 0 ? "❤️" : "♡"}</span>
+            <button
+              onClick={onToggleLike}
+              className="group inline-flex items-center gap-1"
+            >
+              <span className="text-[18px] leading-5">
+                {likes > 0 ? "❤️" : "♡"}
+              </span>
               <span>좋아요 {likes}</span>
             </button>
           </div>
-          <Link href={`/post?tab=${backTab}`} className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50">
+          <Link
+            href={`/post?tab=${backTab}`}
+            className="rounded-md border px-3 py-1 text-sm hover:bg-gray-50"
+          >
             목록
           </Link>
         </div>
@@ -607,14 +559,26 @@ export default function PostDetailPage() {
                     <div className="min-w-0 flex-1">
                       <div className="mb-1 flex items-center justify-between text-sm text-gray-500">
                         <div>
-                          <span className="font-medium text-gray-700">{c.author || "익명"}</span>
-                          {when && (<><span className="mx-2 text-gray-300">·</span><span>{when}</span></>)}
+                          <span className="font-medium text-gray-700">
+                            {c.author || "익명"}
+                          </span>
+                          {when && (
+                            <>
+                              <span className="mx-2 text-gray-300">·</span>
+                              <span>{when}</span>
+                            </>
+                          )}
                         </div>
-                        <button onClick={() => setDeleteTargetCommentId(c.id)} className="text-xs text-gray-400 hover:text-red-500">
+                        <button
+                          onClick={() => setDeleteTargetCommentId(c.id)}
+                          className="text-xs text-gray-400 hover:text-red-500"
+                        >
                           삭제
                         </button>
                       </div>
-                      <div className="whitespace-pre-wrap text-[15px] leading-7 text-gray-800">{c.content}</div>
+                      <div className="whitespace-pre-wrap text-[15px] leading-7 text-gray-800">
+                        {c.content}
+                      </div>
                     </div>
                   </li>
                 );
@@ -630,7 +594,10 @@ export default function PostDetailPage() {
             title="댓글 삭제"
             message="댓글을 삭제하시겠습니까?"
             onCancel={() => setDeleteTargetCommentId(null)}
-            onConfirm={() => { onDeleteComment(deleteTargetCommentId); setDeleteTargetCommentId(null); }}
+            onConfirm={() => {
+              onDeleteComment(deleteTargetCommentId);
+              setDeleteTargetCommentId(null);
+            }}
             confirmText="삭제"
             cancelText="취소"
             type={MODAL_TYPES.CONFIRM_CANCEL}
@@ -643,34 +610,55 @@ export default function PostDetailPage() {
           title="게시글 삭제"
           message="정말로 삭제하시겠습니까?<br/>삭제 후 되돌릴 수 없습니다."
           onCancel={() => setShowDeletePostModal(false)}
-          onConfirm={() => { setShowDeletePostModal(false); onDelete(); }}
+          onConfirm={() => {
+            setShowDeletePostModal(false);
+            onDelete();
+          }}
           confirmText="삭제"
           cancelText="취소"
           type={MODAL_TYPES.CONFIRM_CANCEL}
         />
 
         {/* 댓글 입력칸 */}
-        <div id="commentInput" className="mt-8 rounded-2xl border bg-white p-4 shadow-sm">
-          <div className="mb-3 text-sm font-medium text-gray-700">의견을 남겨보세요</div>
+        <div
+          id="commentInput"
+          className="mt-8 rounded-2xl border bg-white p-4 shadow-sm"
+        >
+          <div className="mb-3 text-sm font-medium text-gray-700">
+            의견을 남겨보세요
+          </div>
           <div className="flex items-end gap-2">
             <textarea
               className={`min-h-[44px] w-full resize-none rounded-xl border px-4 py-3 text-[15px] outline-none 
-                ${commentInput.length > 1000 ? "border-red-500" : "focus:ring-2 focus:ring-gray-200"}`}
+                ${
+                  commentInput.length > 1000
+                    ? "border-red-500"
+                    : "focus:ring-2 focus:ring-gray-200"
+                }`}
               placeholder="댓글을 작성하여 게시글에 참여해보세요 !"
               value={commentInput}
               onChange={(e) => setCommentInput(e.target.value)}
               maxLength={1001}
             />
             <div className="flex flex-col items-center gap-1">
-              <span className={commentInput.length > 1000 ? "text-[12px] text-red-500" : "text-[12px] text-gray-400"}>
+              <span
+                className={
+                  commentInput.length > 1000
+                    ? "text-[12px] text-red-500"
+                    : "text-[12px] text-gray-400"
+                }
+              >
                 {commentInput.length} / 1000
               </span>
               <button
                 onClick={onAddComment}
-                disabled={commentInput.trim().length === 0 || commentInput.length > 1000}
+                disabled={
+                  commentInput.trim().length === 0 || commentInput.length > 1000
+                }
                 className={`h-10 shrink-0 rounded-xl px-4 text-sm font-medium whitespace-nowrap
                   ${
-                    commentInput.trim().length === 0 || commentInput.length > 1000
+                    commentInput.trim().length === 0 ||
+                    commentInput.length > 1000
                       ? "bg-gray-300 cursor-not-allowed text-white"
                       : "bg-[#85B3EB] cursor-pointer hover:brightness-95 text-white"
                   }`}
@@ -687,8 +675,12 @@ export default function PostDetailPage() {
             <div className="w-[460px] h-[520px] max-w-[90vw] rounded-3xl bg-white p-6 shadow-xl flex flex-col">
               <div className="mb-2 flex items-start justify-between">
                 <div className="w-full text-center">
-                  <div className="text-[18px] font-semibold leading-tight">공동 구매</div>
-                  <div className="text-[18px] font-semibold leading-tight">참여자 명단</div>
+                  <div className="text-[18px] font-semibold leading-tight">
+                    공동 구매
+                  </div>
+                  <div className="text-[18px] font-semibold leading-tight">
+                    참여자 명단
+                  </div>
                 </div>
                 <button
                   onClick={() => setShowListModal(false)}
@@ -700,15 +692,22 @@ export default function PostDetailPage() {
               </div>
               <ul className="mt-4 mb-6 space-y-3 overflow-y-auto">
                 {normalizedParticipants.map((p, idx) => {
-                  const when = p.joinedAt ? formatDateTime(parseDateAny(p.joinedAt) || new Date()) : "";
+                  const when = p.joinedAt
+                    ? formatDateTime(parseDateAny(p.joinedAt) || new Date())
+                    : "";
                   const isCrowned = idx === 0;
                   return (
-                    <li key={`${p.name}-${idx}`} className="flex items-center justify-between px-1">
+                    <li
+                      key={`${p.name}-${idx}`}
+                      className="flex items-center justify-between px-1"
+                    >
                       <div className="flex items-center gap-2">
                         {isCrowned && <span className="text-sm">👑</span>}
                         <span className="text-[15px]">{p.name}</span>
                       </div>
-                      <div className="text-[13px] text-gray-500 tabular-nums">{when}</div>
+                      <div className="text-[13px] text-gray-500 tabular-nums">
+                        {when}
+                      </div>
                     </li>
                   );
                 })}
@@ -727,26 +726,6 @@ export default function PostDetailPage() {
             </div>
           </div>
         )}
-
-        {/* 공동구매: 마감 확인 모달 */}
-        {showCloseModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div className="w-[460px] rounded-3xl bg-white p-8 shadow-xl">
-              <h3 className="text-center text-2xl font-bold mb-4">메시지</h3>
-              <p className="text-center mb-6">공동구매 인원모집을<br />마감 하시겠습니까?</p>
-              <div className="flex justify-center gap-4">
-                <button onClick={() => setShowCloseModal(false)} className="h-12 w-36 rounded-xl border border-gray-300 bg-white text-gray-400">취소</button>
-                <button
-                  onClick={() => { setShowCloseModal(false); doCloseRecruitment(); }}
-                  className="h-12 w-36 rounded-xl text-white hover:brightness-95"
-                  style={{ backgroundColor: "#85B3EB" }}
-                >
-                  확인
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </>
   );
@@ -759,7 +738,7 @@ function AuctionHeader({
   endTime,
   status,
   currentPrice,
-  minNext,           // 현재가 + 1원
+  minNext, // 현재가 + 1원
   onBid,
   bidInput,
   setBidInput,
@@ -775,7 +754,7 @@ function AuctionHeader({
           마감까지 남은 시간 : <b>{label}</b>
         </div>
         <div className="mt-1 text-[14px]">
-          낙찰가(현재가) : <b>{currentPrice.toLocaleString()} 원</b>
+          낙찰가(현재가) : <b>{(currentPrice || 0).toLocaleString()} 원</b>
         </div>
         {closed && <div className="mt-1 text-sm text-gray-500">경매 완료</div>}
       </div>
@@ -796,7 +775,11 @@ function AuctionHeader({
               placeholder="입찰가 입력"
               className="w-48 rounded-lg border px-3 py-2 text-sm"
             />
-            <button onClick={onBid} className="rounded-lg px-5 py-2 text-white hover:brightness-95" style={{ backgroundColor: "#85B3EB" }}>
+            <button
+              onClick={onBid}
+              className="rounded-lg px-5 py-2 text-white hover:brightness-95"
+              style={{ backgroundColor: "#85B3EB" }}
+            >
               참여 하기
             </button>
           </div>
@@ -813,9 +796,16 @@ function AuctionHeader({
             <li className="text-sm text-gray-500">아직 입찰이 없습니다.</li>
           ) : (
             bids.map((b, i) => (
-              <li key={i} className="flex justify-between rounded-xl border p-2 text-sm">
-                <span className="text-gray-600">{b.bidderId}</span>
-                <span className="font-semibold">{Number(b.price).toLocaleString()} 원</span>
+              <li
+                key={i}
+                className="flex justify-between rounded-xl border p-2 text-sm"
+              >
+                <span className="text-gray-600">
+                  {b.bidderId || b.user || "익명"}
+                </span>
+                <span className="font-semibold">
+                  {Number(b.price).toLocaleString()} 원
+                </span>
                 <span className="text-gray-500">
                   {formatDateTime(parseDateAny(b.time) || new Date(b.time))}
                 </span>
