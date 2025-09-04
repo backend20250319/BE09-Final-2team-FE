@@ -1,0 +1,4 @@
+option_settings:
+  aws:autoscaling:launchconfiguration:
+    RootVolumeType: gp3
+    RootVolumeSize: 30 # 디스크 크기
