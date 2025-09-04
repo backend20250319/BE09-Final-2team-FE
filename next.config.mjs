@@ -2,19 +2,22 @@
 const nextConfig = {
   reactStrictMode: true,
 
+  // standalone 모드 추가
+  output: "standalone",
+
   images: {
     remotePatterns: [
       {
         protocol: "https",
         hostname: "img2.joongna.com",
         port: "",
-        pathname: "/media/**", // 기존 경로
+        pathname: "/media/**",
       },
       {
         protocol: "https",
         hostname: "via.placeholder.com",
         port: "",
-        pathname: "/**", // placeholder는 전체 허용
+        pathname: "/**",
       },
       {
         protocol: "http",

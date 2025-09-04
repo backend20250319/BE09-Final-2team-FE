@@ -2,7 +2,6 @@
 import "./globals.css";
 import ClientLayout from "./ClientLayout";
 
-// ✅ 메타데이터 추가
 export const metadata = {
   title: "Momnect",
   description: "육아맘을 위한 중고거래와 공동구매 커뮤니티 플랫폼",
