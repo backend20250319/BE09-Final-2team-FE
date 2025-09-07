@@ -346,7 +346,7 @@ const ProductForm = () => {
           <div className="input-container">
             <input
               type="text"
-              placeholder="상품명 (30자 이내)"
+              placeholder="상품명 (20자 이내)"
               value={formData.productName}
               onChange={(e) => setFormData((prev) => ({ ...prev, productName: e.target.value }))}
               className="form-input"

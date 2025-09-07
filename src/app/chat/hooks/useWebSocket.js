@@ -43,7 +43,7 @@ export const useWebSocket = (roomId, userId, onMessageReceived) => {
       // STOMP Client 생성 (SockJS 사용)
       const client = new Client({
         webSocketFactory: () => {
-          const url = process.env.NEXT_PUBLIC_SOCKJS_URL ?? "http://localhost:8000/ws-stomp";
+          const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL ?? "http://localhost:8000/ws-stomp";
           console.log("연결 URL:", url);
           console.log("사용된 URL:", url);
           return new SockJS(url, null, {
