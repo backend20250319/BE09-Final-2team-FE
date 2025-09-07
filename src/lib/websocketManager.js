@@ -20,7 +20,7 @@ class WebSocketManager {
 
     return new Promise((resolve, reject) => {
       try {
-        const url = process.env.NEXT_PUBLIC_SOCKJS_URL ?? "http://localhost:8000/ws-stomp";
+        const url = process.env.NEXT_PUBLIC_WEBSOCKET_URL ?? "http://localhost:8000/ws-stomp";
 
         // 사용자 정보를 포함한 연결 헤더 설정
         const connectHeaders = {};

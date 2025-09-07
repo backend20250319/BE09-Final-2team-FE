@@ -23,6 +23,16 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Create .env file
+        run: |
+          echo "NEXT_PUBLIC_WEBSOCKET_URL=${{ secrets.NEXT_PUBLIC_WEBSOCKET_URL }}" >> .env
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> .env
+          echo "NEXT_PUBLIC_CHAT_API_URL=${{ secrets.NEXT_PUBLIC_CHAT_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_USER_API_URL=${{ secrets.NEXT_PUBLIC_USER_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_PRODUCT_API_URL=${{ secrets.NEXT_PUBLIC_PRODUCT_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_REVIEW_API_URL=${{ secrets.NEXT_PUBLIC_REVIEW_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_POST_API_URL=${{ secrets.NEXT_PUBLIC_POST_API_URL }}" >> .env
+
       - name: Build, Tag, and Push Docker image
         run: |
           IMAGE_REPO=${{ steps.login-ecr.outputs.registry }}/momnect-frontend
