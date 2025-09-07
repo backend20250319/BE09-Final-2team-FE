@@ -1,6 +1,6 @@
 'use client';
 
-import { productAPI, reviewAPI } from '@/lib/api'; // reviewAPI 추가
+import { productAPI, reviewAPI } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../../components/common/ProductCard';
 import './Main.css';
@@ -44,7 +44,7 @@ export default function MainPage() {
                         rankingUsers.map(async (user) => {
                             try {
                                 const res = await reviewAPI.getUserReviewCount(user.userId);
-                                const reviewCount = res.data?.count ?? 0; // ✅ count 로 접근
+                                const reviewCount = res.data?.count ?? 0;
                                 return { ...user, totalReviews: reviewCount };
                             } catch (err) {
                                 console.error(`리뷰 개수 조회 실패 (userId=${user.userId})`, err);

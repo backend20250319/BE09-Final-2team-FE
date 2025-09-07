@@ -310,5 +310,6 @@ export const reviewAPI = {
 
     // 판매자 닉네임 API 호출
     getSellerNickName: (sellerId) => api.get(`/user-service/users/${sellerId}`),
+
 };
 export default api;

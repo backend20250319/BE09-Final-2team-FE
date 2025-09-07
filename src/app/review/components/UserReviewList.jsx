@@ -48,7 +48,7 @@ const UserReviewList = ({ onClose, open, pId }) => {
 
     // 리뷰 및 통계 데이터 가져오기
     useEffect(() => {
-        if (!open || !userId) return; // 🔑 sellerId 있을 때만 실행
+        if (!open || !userId) return;
 
         const fetchData = async () => {
             setIsLoading(true);
