@@ -54,10 +54,14 @@ export default function MyReviewDetail({ review, onClose, animateClass, onSave: 
                 <div className="review-detail-content">
                     <div className="product-summary">
                         <div className="product-image-container">
-                            <img src={reviewData.image || "https://via.placeholder.com/100"} alt={reviewData.title || "상품 이미지"} className="product-image" />
+                            <img
+                                src={reviewData.image} // 부모로부터 받은 image 속성 사용
+                                alt={reviewData.title} // 부모로부터 받은 title 속성 사용
+                                className="product-image"
+                            />
                         </div>
                         <div className="product-info">
-                            <h2 className="product-title">{reviewData.title || "상품명은 추후 추가"}</h2>
+                            <h2 className="product-title">{reviewData.title}</h2>
                             <p className="review-date">{new Date(reviewData.createdAt).toLocaleDateString()}</p>
                             <div className="star-rating">
                                 {[1, 2, 3, 4, 5].map((num) => {

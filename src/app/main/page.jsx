@@ -1,9 +1,16 @@
 "use client";
 
+<<<<<<< HEAD
+import { productAPI, reviewAPI,userAPI } from '@/lib/api';
+import React, { useState, useEffect } from 'react';
+import ProductCard from '../../components/common/ProductCard';
+import './Main.css';
+=======
 import { productAPI, reviewAPI } from "@/lib/api"; // reviewAPI 추가
 import React, { useState, useEffect } from "react";
 import ProductCard from "../../components/common/ProductCard";
 import "./Main.css";
+>>>>>>> 495b7f9d595d130741a39c6e75f91c3bcc6ba5ef
 
 export default function MainPage() {
   // 슬라이드 상태 관리
@@ -19,6 +26,100 @@ export default function MainPage() {
   // 명예의 전당 유저 리스트
   const [hallOfFameUsers, setHallOfFameUsers] = useState([]);
 
+<<<<<<< HEAD
+    useEffect(() => {
+        const fetchSections = async () => {
+            try {
+                const { data } = await productAPI.getHomeSections();
+                if (data.success) {
+                    setPopularProducts(data.data.popular);
+                    setRecommendedProducts(data.data.recommended);
+                    setNewProducts(data.data.latest);
+                }
+            } catch (err) {
+                console.error('홈 섹션 조회 실패:', err);
+            }
+        };
+
+        const fetchHallOfFame = async () => {
+            try {
+                const { data } = await reviewAPI.getReviewRanking();
+                if (data.success) {
+                    const rankingUsers = data.data;
+
+                    // 각 유저 리뷰 개수, 평균 별점, 프로필 정보 추가 조회
+                    const usersWithDetails = await Promise.all(
+                        rankingUsers.map(async (user) => {
+                            let totalReviews = 0;
+                            let averageRating = 0;
+                            let profileImage = '';
+                            let nickname = user.nickname || '';
+
+                            // 유저 ID의 마지막 숫자를 가져와서 1~4 사이의 값으로 변환
+                            // user.userId가 문자열이면 마지막 문자를, 숫자면 마지막 자릿수를 사용
+                            const userIdLastDigit = user.userId.toString().slice(-1);
+                            const defaultImageIndex = (parseInt(userIdLastDigit) % 4) + 1; // 1, 2, 3, 4 중 하나
+                            const defaultProfileImagePath = `/images/common/default-profile-${defaultImageIndex}.png`;
+
+                            // 1️⃣ 리뷰 가져와서 총 리뷰 수와 평균 별점 계산
+                            try {
+                                const reviewsRes = await reviewAPI.userReviewList(user.userId);
+                                const reviews = reviewsRes.data?.data || [];
+                                totalReviews = reviews.length;
+                                if (reviews.length > 0) {
+                                    averageRating =
+                                        reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
+                                }
+                            } catch (err) {
+                                console.error(`리뷰 조회 실패 (userId=${user.userId})`, err);
+                            }
+
+                            // 2️⃣ 프로필 정보 가져오기
+                            try {
+                                const profileRes = await userAPI.getOtherUserProfile(user.userId);
+                                const profileData = profileRes.data?.data;
+                                // API에서 받은 프로필 이미지가 없으면 동적으로 생성된 기본 이미지 사용
+                                profileImage = profileData?.profileImage || defaultProfileImagePath;
+                                nickname = profileData?.nickname || nickname;
+                            } catch (err) {
+                                console.error(`유저 프로필 조회 실패 (userId=${user.userId})`, err);
+                                // API 호출에 실패하면 동적으로 생성된 기본 이미지 사용
+                                profileImage = defaultProfileImagePath;
+                            }
+
+                            return {
+                                ...user,
+                                totalReviews,
+                                averageRating: averageRating.toFixed(1),
+                                profileImage,
+                                nickname,
+                            };
+                        })
+                    );
+
+                    setHallOfFameUsers(usersWithDetails);
+                }
+            } catch (err) {
+                console.error('명예의 전당 조회 실패:', err);
+            }
+        };
+        fetchSections();
+        fetchHallOfFame();
+    }, []);
+
+    // 슬라이드 관련
+    const itemsPerSlide = 6;
+    const cardWidth = 157;
+    const gap = 10;
+    const slideDistance = cardWidth + gap;
+
+    const handleSlide = (direction, currentIndex, setIndex, totalItems) => {
+        const maxIndex = Math.ceil(totalItems / itemsPerSlide) - 1;
+        if (direction === 'next') {
+            setIndex(currentIndex < maxIndex ? currentIndex + 1 : 0);
+        } else {
+            setIndex(currentIndex > 0 ? currentIndex - 1 : maxIndex);
+=======
   useEffect(() => {
     const fetchSections = async () => {
       try {
@@ -27,6 +128,7 @@ export default function MainPage() {
           setPopularProducts(data.data.popular);
           setRecommendedProducts(data.data.recommended);
           setNewProducts(data.data.latest);
+>>>>>>> 495b7f9d595d130741a39c6e75f91c3bcc6ba5ef
         }
       } catch (err) {
         console.error("홈 섹션 조회 실패:", err);
