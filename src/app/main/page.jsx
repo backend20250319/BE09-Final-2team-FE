@@ -1,6 +1,6 @@
 'use client';
 
-import { productAPI, reviewAPI } from '@/lib/api';
+import { productAPI, reviewAPI,userAPI } from '@/lib/api';
 import React, { useState, useEffect } from 'react';
 import ProductCard from '../../components/common/ProductCard';
 import './Main.css';
@@ -39,27 +39,62 @@ export default function MainPage() {
                 if (data.success) {
                     const rankingUsers = data.data;
 
-                    // 각 유저 리뷰 개수 추가 조회
-                    const usersWithCounts = await Promise.all(
+                    // 각 유저 리뷰 개수, 평균 별점, 프로필 정보 추가 조회
+                    const usersWithDetails = await Promise.all(
                         rankingUsers.map(async (user) => {
+                            let totalReviews = 0;
+                            let averageRating = 0;
+                            let profileImage = '';
+                            let nickname = user.nickname || '';
+
+                            // 유저 ID의 마지막 숫자를 가져와서 1~4 사이의 값으로 변환
+                            // user.userId가 문자열이면 마지막 문자를, 숫자면 마지막 자릿수를 사용
+                            const userIdLastDigit = user.userId.toString().slice(-1);
+                            const defaultImageIndex = (parseInt(userIdLastDigit) % 4) + 1; // 1, 2, 3, 4 중 하나
+                            const defaultProfileImagePath = `/images/common/default-profile-${defaultImageIndex}.png`;
+
+                            // 1️⃣ 리뷰 가져와서 총 리뷰 수와 평균 별점 계산
                             try {
-                                const res = await reviewAPI.getUserReviewCount(user.userId);
-                                const reviewCount = res.data?.count ?? 0;
-                                return { ...user, totalReviews: reviewCount };
+                                const reviewsRes = await reviewAPI.userReviewList(user.userId);
+                                const reviews = reviewsRes.data?.data || [];
+                                totalReviews = reviews.length;
+                                if (reviews.length > 0) {
+                                    averageRating =
+                                        reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
+                                }
                             } catch (err) {
-                                console.error(`리뷰 개수 조회 실패 (userId=${user.userId})`, err);
-                                return { ...user, totalReviews: 0 };
+                                console.error(`리뷰 조회 실패 (userId=${user.userId})`, err);
                             }
+
+                            // 2️⃣ 프로필 정보 가져오기
+                            try {
+                                const profileRes = await userAPI.getOtherUserProfile(user.userId);
+                                const profileData = profileRes.data?.data;
+                                // API에서 받은 프로필 이미지가 없으면 동적으로 생성된 기본 이미지 사용
+                                profileImage = profileData?.profileImage || defaultProfileImagePath;
+                                nickname = profileData?.nickname || nickname;
+                            } catch (err) {
+                                console.error(`유저 프로필 조회 실패 (userId=${user.userId})`, err);
+                                // API 호출에 실패하면 동적으로 생성된 기본 이미지 사용
+                                profileImage = defaultProfileImagePath;
+                            }
+
+                            return {
+                                ...user,
+                                totalReviews,
+                                averageRating: averageRating.toFixed(1),
+                                profileImage,
+                                nickname,
+                            };
                         })
                     );
 
-                    setHallOfFameUsers(usersWithCounts);
+                    setHallOfFameUsers(usersWithDetails);
                 }
             } catch (err) {
                 console.error('명예의 전당 조회 실패:', err);
             }
         };
-
         fetchSections();
         fetchHallOfFame();
     }, []);
