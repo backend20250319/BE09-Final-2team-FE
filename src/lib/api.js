@@ -1,6 +1,8 @@
 import axios from "axios";
-import { useUserStore } from "@/store/userStore";
 import { TradeStatus } from "@/enums/tradeStatus";
+if (typeof process === 'undefined') {
+    global.process = { env: {} };
+}
 
 // 환경변수에서 API URL 가져오기
 const API_BASE_URL =
@@ -13,7 +15,7 @@ const POST_URL = "/post-service";
 // axios 기본 설정 (쿠키 기반 인증)
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000, // 15초로 변경
   headers: {
     "Content-Type": "application/json",
   },
@@ -23,34 +25,51 @@ const api = axios.create({
 // 요청 인터셉터 - accessToken 자동 주입
 api.interceptors.request.use(
   (config) => {
-    // localStorage에서 직접 토큰 가져오기
-    const userStorage = localStorage.getItem("user-storage");
-    let token = null;
-    if (userStorage) {
-      try {
-        const parsed = JSON.parse(userStorage);
-        token = parsed.state?.accessToken;
-      } catch (e) {
-        console.error("localStorage 파싱 실패:", e);
+
+      // 회원가입과 로그인은 토큰이 필요 없으므로 건너뛰기
+      const authNotRequired = [
+          '/user-service/auth/signup',
+          '/user-service/auth/login',
+          '/user-service/users/check'
+      ];
+
+      console.log("요청 URL 전체:", config.url); // 디버깅 추가
+
+      if (authNotRequired.some(path => config.url && config.url.includes(path))) {
+          console.log("인증 불필요 요청:", config.url);
+          console.log("헤더에 Authorization 있는지:", config.headers.Authorization); // 추가
+          delete config.headers.Authorization; // 강제로 제거
+          return config; // 토큰 없이 그대로 전송
       }
-    }
 
-    // 디버깅
-    console.log("API 요청 토큰:", token ? "존재함" : "없음");
-    console.log("요청 URL:", config.url);
+      // 나머지 요청에만 토큰 추가
+      const userStorage = localStorage.getItem("user-storage");
+      let token = null;
+      if (userStorage) {
+          try {
+              const parsed = JSON.parse(userStorage);
+              token = parsed.state?.accessToken;
+          } catch (e) {
+              console.error("localStorage 파싱 실패:", e);
+          }
+      }
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn("액세스 토큰이 없습니다");
-    }
+      // 디버깅
+      console.log("API 요청 토큰:", token ? "존재함" : "없음");
+      console.log("요청 URL:", config.url);
 
-    return config;
+      if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+      } else {
+          console.warn("액세스 토큰이 없습니다");
+      }
+
+      return config;
   },
-  (error) => {
-    console.error("요청 인터셉터 오류:", error);
-    return Promise.reject(error);
-  }
+    (error) => {
+        console.error("요청 인터셉터 오류:", error);
+        return Promise.reject(error);
+    }
 );
 
 // 응답 인터셉터 - 에러 처리

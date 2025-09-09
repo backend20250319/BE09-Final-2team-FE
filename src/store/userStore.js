@@ -105,28 +105,26 @@ export const useUserStore = create(
                 }
             },
 
-            // 회원가입 - Axios 기반으로 통일, JSON 파싱으로 코드
+            // 회원가입 - userAPI 사용하도록 수정
             signup: async (signupData) => {
                 try {
                     set({ loading: true, error: null });
-                    console.log('회원가입 요청 URL:', `${API_BASE_URL}/user-service/auth/signup`);
 
-                    const response = await axios.post(
-                        `${API_BASE_URL}/user-service/auth/signup`,
-                        {
-                            ...signupData,
-                            isTermsAgreed: signupData.agreements?.terms || false,
-                            isPrivacyAgreed: signupData.agreements?.privacy || false,
-                            oauthProvider: 'LOCAL',
-                            role: 'USER',
-                        },
-                        { withCredentials: true }
-                    );
+                    // userAPI.signup 사용 (데이터 변환 없이 그대로 전달)
+                    const response = await userAPI.signup(signupData);
 
                     console.log('회원가입 성공:', response.data);
-                    // response.data.data가 { accessToken, refreshToken, user: {...} } 구조인지 확인
-                    const userData = response.data.data.user || response.data.data;
-                    set({ user: userData, isAuthenticated: true, loading: false });
+
+                    // 백엔드 응답에서 사용자 데이터 추출
+                    const { user, accessToken, refreshToken } = response.data.data;
+
+                    set({
+                        user: user,
+                        accessToken: accessToken,
+                        refreshToken: refreshToken,
+                        isAuthenticated: true,
+                        loading: false
+                    });
 
                     return { success: true, data: response.data.data, message: '회원가입이 완료되었습니다!' };
                 } catch (error) {
@@ -186,8 +184,11 @@ export const useUserStore = create(
                     console.error('로그아웃 실패:', errorMessage, '상태 코드:', status);
 
                     // 401(Unauthorized) 또는 403(Forbidden) 에러는 이미 인증 정보가 없다는 뜻이므로 로컬 상태 정리
-                    if (status === 401 || status === 403) {
-                        console.log('인증 정보가 유효하지 않아 로컬 상태를 정리합니다.');
+                    // 또는 타임아웃 에러는 로컬 상태 정리
+                    if (status === 401 ||
+                        status === 403 ||
+                        errorMessage.includes('timeout')) {  // ← 타임아웃 처리 추가
+                        console.log('인증 정보가 유효하지 않거나 서버 응답 없음 - 로컬 상태를 정리합니다.');
                         clearLocalState();
                         return { success: true, message: '로그아웃되었습니다.' };
                     } else {

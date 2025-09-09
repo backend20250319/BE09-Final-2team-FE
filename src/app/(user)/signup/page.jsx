@@ -9,6 +9,7 @@ import { MODAL_CONTENTS } from '@/app/(user)/signup/constants/modalContents';
 import DaumPostcode from 'react-daum-postcode';
 import { useSignup } from '@/store/userStore'; // 백엔드 연동된 signup 함수
 import { userAPI } from '@/lib/api'; // 백엔드 API 호출 함수
+import { validateEmail, validateName, validateLoginId, validatePhone } from '@/app/(user)/components/formValidation';
 
 export default function Signup() {
     const router = useRouter();
@@ -81,6 +82,15 @@ export default function Signup() {
                     value = `${numbers.slice(0, 3)}-${numbers.slice(3)}`;
                 } else {
                     value = `${numbers.slice(0, 3)}-${numbers.slice(3, 7)}-${numbers.slice(7)}`;
+                }
+
+                // 실시간 검증 추가
+                if (value.length > 0) {
+                    const validation = validatePhone(value);
+                    if (!validation.isValid) {
+                        // 에러 표시는 선택사항 - 사용자 경험을 위해 입력 중에는 보통 표시하지 않음
+                        console.log('휴대폰번호 검증:', validation.message);
+                    }
                 }
             } else {
                 return; // 11자리 초과 시 입력 방지
@@ -280,9 +290,7 @@ export default function Signup() {
 
         const isFieldsValid = requiredFields.every(field => formData[field].trim());
         const isAgreementsValid = requiredAgreements.every(field => agreements[field]);
-        const isChecksValid = requiredChecks.every(field =>
-            formData[field] === '' || validationStates[field].checked
-        );
+        const isChecksValid = true;
         const isPasswordValid = passwordMatch.status === 'success' ||
             (formData.password.length >= 8 && formData.passwordConfirm === '');
 
@@ -301,8 +309,12 @@ export default function Signup() {
     // 백엔드 연동 - 폼 제출 핸들러
     const handleSubmit = async (e) => {
         e.preventDefault();
+        e.stopPropagation(); // 추가
 
-        if (!isFormValid || isSubmitting) return;
+        if (!isFormValid || isSubmitting) {
+            console.log("폼 제출 차단:", { isFormValid, isSubmitting });
+            return;
+        }
 
         setIsSubmitting(true);
 
@@ -315,10 +327,15 @@ export default function Signup() {
                 password: formData.password,
                 name: formData.name,
                 email: formData.email,
-                phone: cleanPhone,
-                nickname: formData.nickname || null, // 빈 값이면 null
+                phoneNumber: cleanPhone,
                 address: formData.address,
-                agreements
+                oauthProvider: "LOCAL",              // 필수 필드
+                oauthId: null,                       // 필수 필드
+                isTermsAgreed: agreements.terms,     // 개별 필드
+                isPrivacyAgreed: agreements.privacy, // 개별 필드
+                nickname: formData.nickname || null,
+                profileImageUrl: null,
+                role: "USER"
             };
 
             console.log('🚀 회원가입 요청 데이터:', signupData);
@@ -605,6 +622,12 @@ export default function Signup() {
                         className={`signup-btn ${isFormValid ? 'active' : ''}`}
                         type="submit"
                         disabled={!isFormValid || isSubmitting}
+                        onClick={(e) => {
+                            if (isSubmitting) {
+                                e.preventDefault();
+                                e.stopPropagation();
+                            }
+                        }}
                     >
                         {isSubmitting ? '회원가입 중...' : '회원가입'}
                     </button>

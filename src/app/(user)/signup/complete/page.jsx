@@ -13,9 +13,9 @@ const SignupComplete = () => {
     // Zustand 스토어 사용
     const { userInfo, setLoginStatus } = useUserStore();
 
-    // 직접 닉네임 계산
-    const nickname = userInfo.nickname || userInfo.loginId || userInfo.name || userInfo.kakaoNickname || searchParams.get('nickname') || '사용자';
-    const isFromKakao = userInfo.signupType === 'kakao' || searchParams.get('from') === 'kakao';
+    // 안전한 닉네임 계산 (옵셔널 체이닝 추가)
+    const nickname = userInfo?.nickname || userInfo?.loginId || userInfo?.name || userInfo?.kakaoNickname || searchParams.get('nickname') || '사용자';
+    const isFromKakao = userInfo?.signupType === 'kakao' || searchParams.get('from') === 'kakao';
 
     // 동적 메시지 설정
     const getWelcomeMessages = () => {
@@ -39,14 +39,14 @@ const SignupComplete = () => {
     useEffect(() => {
         let mounted = true;
 
-        if (mounted && userInfo.signupStep === 3) {
+        if (mounted && userInfo?.signupStep === 3) {
             // 필요한 완료 처리 로직만 유지
         }
 
         return () => {
             mounted = false;
         };
-    }, [userInfo.signupStep]);
+    }, [userInfo?.signupStep]);
 
     // 로그인 핸들러
     const handleLogin = () => {
@@ -92,12 +92,13 @@ const SignupComplete = () => {
                             서비스 시작하기
                         </button>
                     ) : (
+                        // 일반 회원가입 후 (이미 로그인된 상태)
                         <>
-                            <button className="login-button" onClick={handleLogin}>
-                                로그인 하기
+                            <button className="login-button" onClick={handleGoToMain}>
+                                Momnect 시작하기
                             </button>
-                            <button className="main-page-link" onClick={handleGoToMain}>
-                                메인 페이지로 가기
+                            <button className="main-page-link" onClick={() => router.push('/mypage')}>
+                                내 정보 확인하기
                             </button>
                         </>
                     )}
