@@ -27,29 +27,29 @@ export default function MainPage() {
             {
                 id: 1,
                 rank: 1,
-                nickname: 'rank111',
+                nickname: '만두야',
                 profileImage:
-                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
-                totalReviews: 11,
+                    '/images/common/default-profile-1.png',
+                totalReviews: 312,
                 averageRating: 4.8,
             },
             {
                 id: 2,
                 rank: 2,
-                nickname: 'rank222',
+                nickname: '송이맘',
                 profileImage:
-                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
-                totalReviews: 222,
-                averageRating: 4.8,
+                    '/images/common/default-profile-2.png',
+                totalReviews: 126,
+                averageRating: 4.2,
             },
             {
                 id: 3,
                 rank: 3,
-                nickname: 'rank333',
+                nickname: '듀듀',
                 profileImage:
-                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQWzYXkVFhflifovTly-AUwXvU5clKQDybxow&s',
-                totalReviews: 5000,
-                averageRating: 4.8,
+                    '/images/common/default-profile-3.png',
+                totalReviews: 96,
+                averageRating: 3.8,
             },
         ];
 
@@ -128,7 +128,7 @@ export default function MainPage() {
                                                 <div className="main-user-stats">
                                                     <div className="main-stat-item">
                                                         <img src="/images/main/uil-calender.svg" alt="캘린더" className="main-stat-icon" />
-                                                        <span className="main-stat-label">총 리뷰: </span>
+                                                        <span className="main-stat-label">긍정 리뷰: </span>
                                                         <span className="main-stat-value">{user.totalReviews}개</span>
                                                     </div>
                                                     <div className="main-stat-item">

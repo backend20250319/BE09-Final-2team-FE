@@ -3,10 +3,28 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { postAPI } from "@/lib/api";
 
 /* 고정 높이 */
 const LIST_MIN_HEIGHT = 400;
+/* 페이지당 글 수(무조건 10) */
+const PAGE_SIZE = 10;
+
+/* 게이트웨이 절대 경로 */
+const API_BASE_URL = (process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000/api/v1").replace(/\/$/, "");
+const POST_URL = "/post-service";
+
+/* 토큰 안전 읽기 (localStorage: user-storage.state.accessToken) */
+function getAccessToken() {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem("user-storage");
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return parsed?.state?.accessToken || null;
+  } catch {
+    return null;
+  }
+}
 
 /* 썸네일 추출 */
 const firstImgSrc = (html = "") => {
@@ -44,52 +62,67 @@ export default function PostBoardPage() {
 
   const [selectedTab, setSelectedTab] = useState(defaultTab);
   const [sort, setSort] = useState("latest");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [excludeCompleted, setExcludeCompleted] = useState(false);
 
+  // 1-based 페이지
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const [excludeCompleted, setExcludeCompleted] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [tips, setTips] = useState([]);
-  const [auctions, setAuctions] = useState([]);
+  // 서버 페이지 응답 보관 (탭별)
+  const [tipsPage, setTipsPage] = useState({
+    content: [],
+    totalPages: 1,
+    number: 0, // 0-based
+    totalElements: 0,
+  });
+  const [auctionPage, setAuctionPage] = useState({
+    content: [],
+    totalPages: 1,
+    number: 0,
+    totalElements: 0,
+  });
+
   const [loading, setLoading] = useState(false);
 
-  // 탭 변경 반영
+  // 탭 변경 시 1페이지로 이동
   useEffect(() => {
-    setSelectedTab(sp.get("tab") === "auction" ? "auction" : "tips");
+    const t = sp.get("tab") === "auction" ? "auction" : "tips";
+    setSelectedTab(t);
     setCurrentPage(1);
   }, [sp]);
 
-  // 서버에서 로드
-  const reload = async () => {
+  // 서버 호출: 현재 탭/페이지 기준, 항상 size=10
+  const fetchPage = async () => {
     setLoading(true);
     try {
-      // category는 백엔드에서 어떤 값을 기대하는지에 따라 전달 (예: "육아 꿀팁" or "tips")
-      const [tipsPage, auctionPage] = await Promise.all([
-        postAPI.getPosts({ category: "육아 꿀팁", page: 0, size: 200 }),
-        postAPI.getPosts({ category: "경매", page: 0, size: 200 }),
-      ]);
-      const mapItem = (x) => ({
-        ...x,
-        id: x.id ?? x.postId ?? x.uuid,
-        title: x.title,
-        content: x.contentHtml ?? x.content,
-        writer: tipsPage.data.data.content.nickName?? x.writer ,
-        date: x.createdAt
-          ? x.createdAt.slice(0, 10).replaceAll("-", ".")
-          : x.date,
-        views: x.views ?? x.viewCount ?? 0,
+      const category = selectedTab === "tips" ? "육아 꿀팁" : "경매"; // 백엔드에서 Tip/Auction으로 정규화
+      const qs = new URLSearchParams();
+      qs.set("category", category);
+      qs.set("page", String(currentPage - 1)); // 0-based
+      qs.set("size", String(PAGE_SIZE));
+      qs.set("sort", "createdAt,desc"); // 서버 정렬 고정
+
+      const url = `${API_BASE_URL}${POST_URL}/posts?${qs.toString()}`;
+
+      // 인증 헤더 + 쿠키 포함 (401 방지)
+      const token = getAccessToken();
+      const headers = { "Content-Type": "application/json" };
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
+      const resp = await fetch(url, {
+        method: "GET",
+        headers,
+        credentials: "include",
+        cache: "no-store",
       });
+      if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+      const json = await resp.json();
+      const page = json?.data ?? json;
 
-      const tipsArr = Array.isArray(tipsPage.data.data?.content)
-        ? tipsPage.data.data?.content.map(mapItem)
-        : [];
-      const auctionArr = Array.isArray(auctionPage.data?.content)
-        ? auctionPage.data.data.content.map(mapItem)
-        : [];
-
-      setTips(tipsArr);
-      setAuctions(auctionArr);
+      if (selectedTab === "tips") setTipsPage(page);
+      else setAuctionPage(page);
     } catch (e) {
       console.error("게시글 목록 로드 실패:", e);
     } finally {
@@ -97,58 +130,75 @@ export default function PostBoardPage() {
     }
   };
 
+  // 탭/페이지 바뀔 때마다 재요청
   useEffect(() => {
-    reload();
-  }, []);
+    fetchPage();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedTab, currentPage]);
 
+  // 현재 탭의 페이지 객체
+  const pageObj = selectedTab === "tips" ? tipsPage : auctionPage;
+
+  // 서버 totalPages 기준으로 현재 페이지 보정
+  useEffect(() => {
+    const tp = Math.max(1, pageObj?.totalPages || 1);
+    if (currentPage > tp) setCurrentPage(tp);
+  }, [pageObj?.totalPages]); // totalPages 변하면 체크
+
+  // 화면 표시용 매핑
   const normalize = (v) => (typeof v === "string" ? v.toLowerCase() : "");
   const query = normalize(searchQuery);
 
-  const filteredTips = useMemo(() => {
-    const arr = tips;
-    if (!query) return arr;
-    return arr.filter(
-      (p) =>
-        normalize(p.title).includes(query) ||
-        normalize(p.content).includes(query)
-    );
-  }, [tips, query]);
+  const mapped = useMemo(() => {
+    const list = Array.isArray(pageObj?.content) ? pageObj.content : [];
+    return list.map((x) => ({
+      ...x,
+      id: x.id ?? x.postId ?? x.uuid,
+      title: x.title,
+      content: x.contentHtml ?? x.content,
+      writer: x.nickName ?? x.writer ?? x.author ?? "익명",
+      date: x.createdAt
+        ? String(x.createdAt).slice(0, 10).replaceAll("-", ".")
+        : x.date,
+      views: x.views ?? x.viewCount ?? 0,
+      createdAt: x.createdAt,
+    }));
+  }, [pageObj?.content]);
 
-  const filteredAuction = useMemo(() => {
-    let arr = auctions;
-    if (excludeCompleted) arr = arr.filter((p) => !isAuctionClosed(p));
-    if (!query) return arr;
-    return arr.filter(
-      (p) =>
-        normalize(p.title).includes(query) ||
-        normalize(p.content).includes(query)
-    );
-  }, [auctions, query, excludeCompleted]);
+  // (선택) 현재 페이지 내에서만 검색/필터/정렬
+  const filtered = useMemo(() => {
+    let arr = mapped;
+    if (selectedTab === "auction" && excludeCompleted) {
+      arr = arr.filter((p) => !isAuctionClosed(p));
+    }
+    if (query) {
+      arr = arr.filter(
+        (p) =>
+          normalize(p.title).includes(query) ||
+          normalize(p.content).includes(query)
+      );
+    }
+    return arr;
+  }, [mapped, query, excludeCompleted, selectedTab]);
 
-  const getSorted = (posts) =>
-    [...posts].sort((a, b) =>
+  const prepared = useMemo(() => {
+    return [...filtered].sort((a, b) =>
       sort === "views"
         ? (b.views ?? 0) - (a.views ?? 0)
         : new Date(b.createdAt || 0).getTime() -
             new Date(a.createdAt || 0).getTime() || (b.id ?? 0) - (a.id ?? 0)
     );
+  }, [filtered, sort]);
 
-  const prepared =
-    selectedTab === "tips"
-      ? getSorted(filteredTips)
-      : getSorted(filteredAuction);
-
-  const postsPerPage = selectedTab === "tips" ? 10 : 12;
-  const totalPages = Math.ceil(prepared.length / postsPerPage) || 1;
+  // 서버가 이미 10개로 잘라서 줌 → slice 불필요
+  const currentPosts = prepared;
+  const totalPages = Math.max(1, pageObj?.totalPages || 1);
   const safePage = Math.min(currentPage, totalPages);
-  const currentPosts = prepared.slice(
-    (safePage - 1) * postsPerPage,
-    safePage * postsPerPage
-  );
 
   const submitSearch = () => {
     setSearchQuery(searchInput.trim());
-    setCurrentPage(1);
+    // 검색은 현재 페이지에서만 필터링(원하면 1페이지로 이동)
+    // setCurrentPage(1);
   };
   const onKeyDownSearch = (e) => {
     if (e.key === "Enter") {
@@ -228,9 +278,7 @@ export default function PostBoardPage() {
             <button
               onClick={() => setSort("latest")}
               className={
-                sort === "latest"
-                  ? "text-blue-500 font-semibold"
-                  : "text-gray-500"
+                sort === "latest" ? "text-blue-500 font-semibold" : "text-gray-500"
               }
             >
               최신순
@@ -238,9 +286,7 @@ export default function PostBoardPage() {
             <button
               onClick={() => setSort("views")}
               className={
-                sort === "views"
-                  ? "text-blue-500 font-semibold"
-                  : "text-gray-500"
+                sort === "views" ? "text-blue-500 font-semibold" : "text-gray-500"
               }
             >
               조회수순
@@ -252,25 +298,27 @@ export default function PostBoardPage() {
       {/* 목록 */}
       <div className="relative" style={{ minHeight: LIST_MIN_HEIGHT }}>
         {loading ? (
-          <div className="py-16 text-center text-sm text-gray-500">
-            불러오는 중…
-          </div>
+          <div className="py-16 text-center text-sm text-gray-500">불러오는 중…</div>
         ) : currentPosts.length === 0 ? (
-          <div className="py-8 text-center text-sm text-gray-500">
-            검색 결과가 없습니다.
-          </div>
+          <div className="py-8 text-center text-sm text-gray-500">검색 결과가 없습니다.</div>
         ) : selectedTab === "tips" ? (
-          <TipsTable posts={currentPosts} />
+          <TipsTable
+            posts={currentPosts}
+            pageObj={pageObj}
+            currentPage={currentPage}
+            pageSize={PAGE_SIZE}
+          />
         ) : (
           <AuctionCardGrid posts={currentPosts} />
         )}
       </div>
 
-      {/* 페이지네이션 */}
+      {/* 페이지네이션 (서버 totalPages 기준) */}
       <div className="flex justify-center items-center space-x-2 text-sm mt-2 pt-2 border-t border-gray-100">
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           className="text-gray-500 hover:text-blue-500"
+          disabled={safePage <= 1}
         >
           &lt; Back
         </button>
@@ -288,6 +336,7 @@ export default function PostBoardPage() {
         <button
           onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
           className="text-gray-500 hover:text-blue-500"
+          disabled={safePage >= totalPages}
         >
           Next &gt;
         </button>
@@ -308,8 +357,9 @@ export default function PostBoardPage() {
   );
 }
 
-/* 꿀팁 표 */
-function TipsTable({ posts }) {
+/* 꿀팁 표 — 번호가 전체 기준으로 이어짐 */
+function TipsTable({ posts, pageObj, currentPage, pageSize }) {
+  const total = pageObj?.totalElements ?? 0;
   return (
     <table className="w-full text-sm text-center border-t border-gray-300">
       <thead className="bg-gray-100">
@@ -322,33 +372,32 @@ function TipsTable({ posts }) {
         </tr>
       </thead>
       <tbody>
-        {posts.map((p, idx) => (
-          <tr
-            key={p.id ?? `${p.title}-${idx}`}
-            className="border-b hover:bg-gray-50"
-          >
-            <td className="py-2">{idx + 1}</td>
-            <td className="py-2 text-left pl-2">
-              <div className="flex items-center gap-2 min-w-0">
-                <Link
-                  href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`}
-                  className="truncate hover:underline"
-                  title={p.title}
-                >
-                  {p.title}
-                </Link>
-                {Number(p.commentCount ?? 0) > 0 && (
-                  <span className="text-blue-500 ml-1 flex-none">
-                    💬{p.commentCount}
-                  </span>
-                )}
-              </div>
-            </td>
-            <td className="py-2">{p.writer || p.author ||p.nickName}</td>
-            <td className="py-2">{p.date}</td>
-            <td className="py-2">{p.views ?? 0}</td>
-          </tr>
-        ))}
+        {posts.map((p, idx) => {
+          // 최신순 번호(전체 기준): total - (현재페이지-1)*size - idx
+          const no = Math.max(1, total - (currentPage - 1) * pageSize - idx);
+          return (
+            <tr key={p.id ?? `${p.title}-${idx}`} className="border-b hover:bg-gray-50">
+              <td className="py-2">{no}</td>
+              <td className="py-2 text-left pl-2">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Link
+                    href={`/post/${encodeURIComponent(p.id ?? p.title)}?tab=tips`}
+                    className="truncate hover:underline"
+                    title={p.title}
+                  >
+                    {p.title}
+                  </Link>
+                  {Number(p.commentCount ?? 0) > 0 && (
+                    <span className="text-blue-500 ml-1 flex-none">💬{p.commentCount}</span>
+                  )}
+                </div>
+              </td>
+              <td className="py-2">{p.writer || p.author || p.nickName}</td>
+              <td className="py-2">{p.date}</td>
+              <td className="py-2">{p.views ?? 0}</td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
@@ -370,9 +419,7 @@ function AuctionCardGrid({ posts }) {
           ? "경매완료"
           : "진행중";
         const closed = label === "경매완료";
-        const statusClass = closed
-          ? "bg-gray-200 text-gray-600"
-          : "bg-red-100 text-red-600";
+        const statusClass = closed ? "bg-gray-200 text-gray-600" : "bg-red-100 text-red-600";
         const price = currentPriceOf(p);
         const remain = mounted ? remainLabel(p.endTime) : "";
 
@@ -391,9 +438,7 @@ function AuctionCardGrid({ posts }) {
                   className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.02]"
                 />
               ) : (
-                <div className="h-full w-full flex items-center justify-center text-4xl">
-                  🧸
-                </div>
+                <div className="h-full w-full flex items-center justify-center text-4xl">🧸</div>
               )}
               <span
                 suppressHydrationWarning
@@ -434,10 +479,7 @@ function AuctionCardGrid({ posts }) {
               </div>
               <div className="flex items-center justify-between text-sm">
                 <div className="font-medium">
-                  현재가{" "}
-                  <span className="text-gray-900">
-                    {price.toLocaleString()}원
-                  </span>
+                  현재가 <span className="text-gray-900">{price.toLocaleString()}원</span>
                 </div>
                 {typeof p.minIncrement !== "undefined" && (
                   <div className="text-xs text-gray-500">
