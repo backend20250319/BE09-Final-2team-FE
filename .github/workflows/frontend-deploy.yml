@@ -1,0 +1,56 @@
+name: Frontend Deploy to Elastic Beanstalk
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ap-northeast-2
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Create .env file
+        run: |
+          echo "NEXT_PUBLIC_WEBSOCKET_URL=${{ secrets.NEXT_PUBLIC_WEBSOCKET_URL }}" >> .env
+          echo "NEXT_PUBLIC_API_BASE_URL=${{ secrets.NEXT_PUBLIC_API_BASE_URL }}" >> .env
+          echo "NEXT_PUBLIC_CHAT_API_URL=${{ secrets.NEXT_PUBLIC_CHAT_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_USER_API_URL=${{ secrets.NEXT_PUBLIC_USER_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_PRODUCT_API_URL=${{ secrets.NEXT_PUBLIC_PRODUCT_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_REVIEW_API_URL=${{ secrets.NEXT_PUBLIC_REVIEW_API_URL }}" >> .env
+          echo "NEXT_PUBLIC_POST_API_URL=${{ secrets.NEXT_PUBLIC_POST_API_URL }}" >> .env
+
+      - name: Build, Tag, and Push Docker image
+        run: |
+          IMAGE_REPO=${{ steps.login-ecr.outputs.registry }}/momnect-frontend
+          IMAGE_TAG=latest
+          docker build -t $IMAGE_REPO:$IMAGE_TAG .
+          docker push $IMAGE_REPO:$IMAGE_TAG
+
+      - name: Prepare Dockerrun.aws.json
+        run: |
+          sed -i "s|<AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/momnect-frontend:latest|${{ steps.login-ecr.outputs.registry }}/momnect-frontend:latest|g" Dockerrun.aws.json
+
+      - name: Deploy to Elastic Beanstalk
+        uses: einaregilsson/beanstalk-deploy@v22
+        with:
+          aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          application_name: momnect-frontend # EB 애플리케이션 이름
+          environment_name: momnect-frontend-env # EB 환경 이름
+          version_label: github-${{ github.run_id }}
+          region: ap-northeast-2
+          deployment_package: Dockerrun.aws.json

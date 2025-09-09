@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
+import { reviewAPI } from '@/lib/api';
+import { useUserStore } from '@/store/userStore';
 import '../css/MyReviewAddForm.css';
 
-const MyReviewAddForm = ({ onClose ,nickname }) => {
+const MyReviewAddForm = ({ onClose, pId }) => {
     const [animateClass, setAnimateClass] = useState('animate-slide-in');
+    const { user } = useUserStore();
     const [rating, setRating] = useState(0);
     const [answers, setAnswers] = useState({
         kind: true,
@@ -21,31 +24,79 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
         confirmText: '확인',
         cancelText: '취소',
         onConfirm: () => {},
-        onCancel: () => {}, // onCancel 추가
+        onCancel: () => {},
     });
-    const [isLoading, setIsLoading] = useState(false);
+
+    // 🔹 상태 분리
+    const [dataLoading, setDataLoading] = useState(false);    // 사이드바 데이터 fetch용
+    const [submitLoading, setSubmitLoading] = useState(false); // 리뷰 등록용 로딩
+
+    const [targetNickname, setTargetNickname] = useState('사용자');
+    const [product, setProduct] = useState(null);
+
+    const userId = user?.id;
+
+    // 🔹 상품 정보와 판매자 닉네임 fetch
+    useEffect(() => {
+        if (!pId) {
+            console.error('pId가 제공되지 않았습니다.');
+            return;
+        }
+
+        const fetchProductAndSeller = async () => {
+            setDataLoading(true);
+            try {
+                const productRes = await reviewAPI.getProductInfo(pId);
+                const productData = productRes.data.data;
+                setProduct(productData.currentProduct);
+
+                const sellerId = productData.sellerInfo.id;
+                const userRes = await reviewAPI.getSellerNickName(sellerId);
+                const userData = await userRes.data.data;
+                setTargetNickname(userData.nickname);
+
+            } catch (err) {
+                console.error('데이터 불러오기 실패:', err);
+                setModalConfig({
+                    title: '오류',
+                    message: '상품 정보를 불러오지 못했습니다.',
+                    type: MODAL_TYPES.CONFIRM_ONLY,
+                    confirmText: '확인',
+                    onConfirm: () => {
+                        setModalOpen(false);
+                        handleClose();
+                    },
+                });
+                setModalOpen(true);
+            } finally {
+                setDataLoading(false);
+            }
+        };
+
+        fetchProductAndSeller();
+    }, [pId]);
 
     const toggleAnswer = (key, value) => {
         setAnswers(prev => ({ ...prev, [key]: value }));
     };
 
     const handleSubmit = async () => {
-        // if (reviewText.length < 20) {
-        //     setModalConfig({
-        //         title: '알림',
-        //         message: '리뷰 내용을 20자 이상 입력해주세요.',
-        //         type: MODAL_TYPES.CONFIRM_ONLY,
-        //         confirmText: '확인',
-        //         onConfirm: () => setModalOpen(false),
-        //     });
-        //     setModalOpen(true);
-        //     return;
-        // }
-
         if (reviewText.length > 1000) {
             setModalConfig({
                 title: '알림',
                 message: '리뷰 내용은 1000자를 초과할 수 없습니다.',
+                type: MODAL_TYPES.CONFIRM_ONLY,
+                confirmText: '확인',
+                onConfirm: () => setModalOpen(false),
+            });
+            setModalOpen(true);
+            return;
+        }
+
+        if (!userId || !product?.id) {
+            setModalConfig({
+                title: '오류',
+                message: !userId ? '로그인 정보가 없습니다.' : '상품 정보가 없습니다.',
                 type: MODAL_TYPES.CONFIRM_ONLY,
                 confirmText: '확인',
                 onConfirm: () => setModalOpen(false),
@@ -62,22 +113,19 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
             cancelText: '취소',
             onConfirm: async () => {
                 setModalOpen(false);
-                setIsLoading(true);
+                setSubmitLoading(true);
+
+                const reviewInfo = {
+                    rating,
+                    kind: answers.kind,
+                    promise: answers.promise,
+                    satisfaction: answers.satisfaction,
+                    content: reviewText,
+                };
 
                 try {
-                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            rating,
-                            kind: answers.kind,
-                            promise: answers.promise,
-                            satisfaction: answers.satisfaction,
-                            content: reviewText,
-                        }),
-                    });
-
-                    if (!response.ok) throw new Error('등록 실패');
+                    const response = await reviewAPI.createReview(product.id, userId, reviewInfo);
+                    if (response.status !== 201) throw new Error('등록 실패');
 
                     setModalConfig({
                         title: '등록 완료',
@@ -88,7 +136,6 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                             setModalOpen(false);
                             handleClose();
                         },
-                        onCancel: null, // 취소 버튼 없음
                     });
                     setModalOpen(true);
                 } catch (error) {
@@ -98,11 +145,10 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                         type: MODAL_TYPES.CONFIRM_ONLY,
                         confirmText: '확인',
                         onConfirm: () => setModalOpen(false),
-                        onCancel: null, // 취소 버튼 없음
                     });
                     setModalOpen(true);
                 } finally {
-                    setIsLoading(false);
+                    setSubmitLoading(false);
                 }
             },
             onCancel: () => {
@@ -134,13 +180,10 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
     };
 
     const handleOutsideClick = (e) => {
-        // 로딩 중이 아닐 때만
-        if (!isLoading && e.target.classList.contains('review-add-backdrop')) {
-            // modalConfig에 onCancel 함수가 있을 경우에만 onCancel 실행
+        if (!submitLoading && e.target.classList.contains('review-add-backdrop')) {
             if (modalOpen && modalConfig.onCancel) {
                 modalConfig.onCancel();
             } else if (!modalOpen) {
-                // 모달이 열려 있지 않을 때만 폼 닫기
                 handleClose();
             }
         }
@@ -152,45 +195,28 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                 <aside className={`review-add-sidebar ${animateClass}`}>
                     <div className="sidebar-header">
                         <button className="back-button" onClick={handleClose}>
-                            <svg
-                                width="24"
-                                height="24"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="black"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="15 18 9 12 15 6" />
                             </svg>
                         </button>
-                        <h1 className="sidebar-title">{nickname || '사용자'} 님과의 거래 리뷰 작성하기</h1>
+                        <h1 className="sidebar-title">{targetNickname || '사용자'} 님과의 거래 리뷰 작성하기</h1>
                     </div>
 
                     <div className="review-edit-content">
                         <p className="section-title">별점을 선택해주세요.</p>
                         <div className="star-container">
-                            {[1, 2, 3, 4, 5].map((num) => {
+                            {[1,2,3,4,5].map((num) => {
                                 const isFull = rating >= num;
                                 const isHalf = rating >= num - 0.5 && rating < num;
                                 return (
-                                    <span
-                                        key={num}
-                                        className="star-wrapper"
-                                        onClick={(e) => {
-                                            const rect = e.target.getBoundingClientRect();
-                                            const clickX = e.clientX - rect.left;
-                                            const clickedHalf = clickX < rect.width / 2;
-                                            setRating(clickedHalf ? num - 0.5 : num);
-                                        }}
-                                    >
+                                    <span key={num} className="star-wrapper" onClick={(e) => {
+                                        const rect = e.target.getBoundingClientRect();
+                                        const clickX = e.clientX - rect.left;
+                                        const clickedHalf = clickX < rect.width / 2;
+                                        setRating(clickedHalf ? num - 0.5 : num);
+                                    }}>
                                         <span className="star-background">★</span>
-                                        {isFull ? (
-                                            <span className="star-foreground full">★</span>
-                                        ) : isHalf ? (
-                                            <span className="star-foreground half">★</span>
-                                        ) : null}
+                                        {isFull ? <span className="star-foreground full">★</span> : isHalf ? <span className="star-foreground half">★</span> : null}
                                     </span>
                                 );
                             })}
@@ -219,13 +245,7 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                         <div className="review-detail-section">
                             <p className="section-title">상세 리뷰 작성</p>
                             <div className="text-area-container">
-                                <textarea
-                                    className="review-textarea"
-                                    placeholder="리뷰를 입력하세요"
-                                    value={reviewText}
-                                    onChange={(e) => setReviewText(e.target.value)}
-                                    // minLength={20}
-                                />
+                                <textarea className="review-textarea" placeholder="리뷰를 입력하세요" value={reviewText} onChange={(e) => setReviewText(e.target.value)} />
                                 <div className="character-count">{reviewText.length}/1000</div>
                             </div>
                         </div>
@@ -238,7 +258,9 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                     </div>
                 </aside>
             </div>
-            {isLoading && (
+
+
+            {submitLoading && (
                 <div className="custom-loading-modal">
                     <div className="modal-content">
                         <div className="spinner"></div>
@@ -247,8 +269,9 @@ const MyReviewAddForm = ({ onClose ,nickname }) => {
                     </div>
                 </div>
             )}
+
             <ConfirmModal
-                open={modalOpen && !isLoading}
+                open={modalOpen && !submitLoading}
                 title={modalConfig.title}
                 message={modalConfig.message}
                 type={modalConfig.type}

@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import '../css/MyReviewEditForm.css';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
+import { reviewAPI } from '@/lib/api';
 
 const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialReviewText, onSave, reviewId, user, review }) => {
     const [rating, setRating] = useState(initialRating || 3);
@@ -111,17 +112,31 @@ const MyReviewEditForm = ({ onClose, initialRating, initialAnswers, initialRevie
                 };
 
                 try {
-                    const response = await fetch(`http://localhost:8000/api/v1/review-service/reviews/${reviewId}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify(updatedReviewData),
-                    });
+                    // 존재 여부 사전 확인
+                    try {
+                        await reviewAPI.getReviewById(reviewId);
+                    } catch (existErr) {
+                        const msg = existErr.response?.data?.message || '리뷰가 존재하지 않거나 삭제되었습니다.';
+                        setModalConfig({
+                            title: '오류',
+                            message: msg,
+                            type: MODAL_TYPES.CONFIRM_ONLY,
+                            confirmText: '확인',
+                            onConfirm: () => setModalOpen(false),
+                            onCancel: null,
+                        });
+                        return;
+                    }
 
-                    if (!response.ok) {
-                        const errorData = await response.json();
-                        throw new Error(errorData.message || '리뷰 수정에 실패했습니다.');
+                    const response = await reviewAPI.updateReview(
+                        reviewId,
+                        updatedReviewData,
+                        user?.id ?? review?.userId,
+                        review?.productId
+                    );
+
+                    if (response.status !== 200) {
+                        throw new Error('리뷰 수정에 실패했습니다.');
                     }
 
                     onSave && onSave({

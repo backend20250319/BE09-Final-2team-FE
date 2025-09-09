@@ -1,3 +1,5 @@
+// UserReviewDetail.jsx 파일
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -13,7 +15,6 @@ const UserReviewDetail = ({ review, onClose, user }) => {
         }, 300);
     };
 
-    // 리뷰 상세 항목을 동적으로 생성하는 함수
     const getReviewDetails = () => {
         const details = [];
         if (review.kind !== undefined && review.kind !== null) {
@@ -29,7 +30,7 @@ const UserReviewDetail = ({ review, onClose, user }) => {
     };
 
     const reviewDetailsItems = getReviewDetails();
-    const reviewTextContent = review.content || ''; // content가 없을 경우 빈 문자열로 처리
+    const reviewTextContent = review.content || '';
 
     return (
         <>
@@ -47,10 +48,12 @@ const UserReviewDetail = ({ review, onClose, user }) => {
                 <div className="review-detail-content">
                     <div className="product-summary">
                         <div className="product-image-container">
-                            <img src={review.img} alt={review.title} className="product-image" />
+                            {/* review.image 속성을 사용하여 이미지 경로를 동적으로 설정합니다. */}
+                            <img src={review.image} alt={review.title} className="product-image" />
                         </div>
                         <div className="product-info">
-                            <h2 className="product-title">상품명은 추후 추가</h2>
+                            {/* review.title 속성을 사용하여 상품명을 동적으로 설정합니다. */}
+                            <h2 className="product-title">{review.title}</h2>
                             <p className="review-date">{new Date(review.createdAt).toLocaleDateString()}</p>
                             <div className="star-rating">
                                 {[1, 2, 3, 4, 5].map((num) => {

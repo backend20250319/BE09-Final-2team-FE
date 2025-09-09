@@ -1,0 +1,12 @@
+{
+  "AWSEBDockerrunVersion": "1",
+  "Image": {
+    "Name": "479699168320.dkr.ecr.ap-northeast-2.amazonaws.com/momnect-frontend:latest",
+    "Update": "true"
+  },
+  "Ports": [
+    {
+      "ContainerPort": "3000"
+    }
+  ]
+}

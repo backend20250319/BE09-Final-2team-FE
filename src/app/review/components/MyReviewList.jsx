@@ -3,8 +3,11 @@
 import React, { useState, useEffect } from 'react';
 import '../css/MyReviewList.css';
 import MyReviewDetail from './MyReviewDetail';
+import { reviewAPI } from '@/lib/api';
+import { useUser } from '@/store/userStore';
 
 export default function MyReviewList({ open, onClose, user }) {
+    const currentUser = useUser();
     const [detailOpen, setDetailOpen] = useState(false);
     const [selectedReview, setSelectedReview] = useState(null);
     const [animateClass, setAnimateClass] = useState("animate-slide-in");
@@ -15,10 +18,7 @@ export default function MyReviewList({ open, onClose, user }) {
         if (open) {
             const fetchReviews = async () => {
                 try {
-                    const response = await fetch('http://localhost:8000/api/v1/review-service/reviews');
-                    if (!response.ok) throw new Error('Failed to fetch reviews');
-                    const data = await response.json();
-                    console.log('리뷰 데이터 구조:', data.data); // 데이터 구조 확인
+                    const { data } = await reviewAPI.getMyReviews();
                     setReviews(data.data);
                 } catch (error) {
                     console.error("Error fetching reviews:", error);
@@ -39,10 +39,28 @@ export default function MyReviewList({ open, onClose, user }) {
         }, 300);
     };
 
-    const handleReviewDetailOpen = (review) => {
-        setSelectedReview(review);
+    // 이 함수를 수정하여 review와 index를 모두 받도록 변경합니다.
+    const handleReviewDetailOpen = (review, index) => {
+        // 이미지와 상품명 배열을 정의합니다.
+        const imageFiles = ['test.jpg', 'baby1.png', 'toy.png','ball.png','toy1.png','zh.png'];
+        const productTitles = ['유아용 옷', '소베맘 귀저기갈이대', '장난감','에듀볼','아기 모빌','소독기'];
+
+        // index를 이용해 순서에 맞는 이미지와 상품명을 선택합니다.
+        const imageFileName = imageFiles[index % imageFiles.length];
+        const imagePath = `/images/${imageFileName}`;
+        const productTitle = productTitles[index % productTitles.length];
+
+        // 선택된 리뷰 객체에 이미지와 상품명 정보를 추가합니다.
+        const updatedReview = {
+            ...review,
+            image: imagePath,
+            title: productTitle
+        };
+
+        setSelectedReview(updatedReview);
         setDetailOpen(true);
     };
+
 
     const handleReviewDetailClose = () => {
         setDetailAnimateClass("animate-slide-out");
@@ -51,6 +69,7 @@ export default function MyReviewList({ open, onClose, user }) {
             setDetailAnimateClass("animate-slide-in");
         }, 300);
     };
+
     const handleReviewUpdate = (updatedReview) => {
         setReviews((prev) =>
             prev.map((r) =>
@@ -59,14 +78,14 @@ export default function MyReviewList({ open, onClose, user }) {
         );
         setSelectedReview(updatedReview);
     };
+
     const handleOverlayClick = () => {
-        // 수정 사이드바 열려있으면 → 그것만 닫기
         const editSidebar = document.querySelector(".review-edit-sidebar");
         if (editSidebar) {
             editSidebar.classList.add("animate-slide-out");
             setTimeout(() => {
                 const closeButton = editSidebar.querySelector(".back-button");
-                if (closeButton) closeButton.click(); // MyReviewEditForm 닫기 트리거
+                if (closeButton) closeButton.click();
             }, 300);
             return;
         }
@@ -93,57 +112,70 @@ export default function MyReviewList({ open, onClose, user }) {
 
                 <div className={`review-list ${reviews.length === 0 ? 'empty-state' : ''}`}>
                     {reviews.length > 0 ? (
-                        reviews.map((review) => (
-                            <div key={review.reviewId} className="review-item">
-                                <div className="review-image">
-                                    <img
-                                        src={review.image || "https://via.placeholder.com/100"}
-                                        alt={review.title || "상품 이미지"}
-                                        className="product-image"
-                                    />
-                                </div>
-                                <div className="review-content relative">
-                                    <a
-                                        href="#"
-                                        className="review-detail-link absolute top-0 right-0"
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            handleReviewDetailOpen(review);
-                                        }}
-                                    >
-                                        리뷰 상세
-                                    </a>
-                                    <h3 className="product-title">{review.title || "상품명은 추후 추가"}</h3>
-                                    <p className="review-date">{new Date(review.createdAt).toLocaleDateString()}</p>
-                                    <div className="review-stars">
-                                        {[1, 2, 3, 4, 5].map((num) => {
-                                            const isFull = review.rating >= num;
-                                            const isHalf = review.rating >= num - 0.5 && review.rating < num;
-                                            return (
-                                                <span key={num} className="star-wrapper">
-                                                    <span className="star-background">★</span>
-                                                    {isFull ? (
-                                                        <span className="star-foreground full">★</span>
-                                                    ) : isHalf ? (
-                                                        <span className="star-foreground half">★</span>
-                                                    ) : null}
-                                               </span>
-                                            );
-                                        })}
+                        reviews.map((review, index) => {
+                            const imageFiles = ['test.jpg', 'baby1.png', 'toy.png','ball.png','toy1.png','zh.png'];
+                            const imageFileName = imageFiles[index % imageFiles.length];
+                            const imagePath = `/images/${imageFileName}`;
+
+                            const productTitles = ['유아용 옷', '소베맘 귀저기갈이대', '장난감','에듀볼','아기 모빌','소독기'];
+                            const productTitle = productTitles[index % productTitles.length];
+                            return (
+                                <div key={review.reviewId} className="review-item">
+                                    <div className="review-image">
+                                        <img
+                                            src={imagePath}
+                                            alt={productTitle}
+                                            className="product-image"
+                                        />
                                     </div>
-                                    <div className="review-options">
-                                        {review.kind && <span className="review-badge kind-badge">친절해요</span>}
-                                        {!review.kind && <span className="review-badge unkind-badge">불친절해요</span>}
-                                        {review.promise && <span className="review-badge promise-badge">약속을 잘 지켜요</span>}
-                                        {!review.promise && <span className="review-badge unpromised-badge">약속을 안 지켜요</span>}
-                                        {review.satisfaction && <span className="review-badge satisfaction-badge">만족해요</span>}
-                                        {!review.satisfaction && <span className="review-badge unsatisfaction-badge">불만족스러워요</span>}
+                                    <div className="review-content relative">
+                                        <a
+                                            href="#"
+                                            className="review-detail-link absolute top-0 right-0"
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                // 여기에서 index를 handleReviewDetailOpen에 전달합니다.
+                                                handleReviewDetailOpen(review, index);
+                                            }}
+                                        >
+                                            리뷰 상세
+                                        </a>
+                                        <h3 className="product-title">{productTitle}</h3>
+                                        <p className="review-date">{new Date(review.createdAt).toLocaleDateString()}</p>
+                                        <div className="review-stars">
+                                            {[1, 2, 3, 4, 5].map((num) => {
+                                                const isFull = review.rating >= num;
+                                                const isHalf = review.rating >= num - 0.5 && review.rating < num;
+                                                return (
+                                                    <span key={num} className="star-wrapper">
+                                                        <span className="star-background">★</span>
+                                                        {isFull ? (
+                                                            <span className="star-foreground full">★</span>
+                                                        ) : isHalf ? (
+                                                            <span className="star-foreground half">★</span>
+                                                        ) : null}
+                                                    </span>
+                                                );
+                                            })}
+                                        </div>
+                                        <div className="review-options">
+                                            {review.kind && <span className="review-badge kind-badge">친절해요</span>}
+                                            {!review.kind && <span className="review-badge unkind-badge">불친절해요</span>}
+                                            {review.promise &&
+                                                <span className="review-badge promise-badge">약속을 잘 지켜요</span>}
+                                            {!review.promise &&
+                                                <span className="review-badge unpromised-badge">약속을 안 지켜요</span>}
+                                            {review.satisfaction &&
+                                                <span className="review-badge satisfaction-badge">만족해요</span>}
+                                            {!review.satisfaction &&
+                                                <span className="review-badge unsatisfaction-badge">불만족스러워요</span>}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     ) : (
-                        <p>작성된 리뷰가 없습니다.</p> // 글자 폰트 크기 조절 및 가운데 정렬
+                        <p>작성된 리뷰가 없습니다.</p>
                     )}
                 </div>
             </div>
@@ -152,9 +184,9 @@ export default function MyReviewList({ open, onClose, user }) {
                 <MyReviewDetail
                     review={selectedReview}
                     onClose={handleReviewDetailClose}
-                    onSave={handleReviewUpdate }
+                    onSave={handleReviewUpdate}
                     animateClass={detailAnimateClass}
-                    user={user}
+                    user={user || currentUser}
                 />
             )}
         </>

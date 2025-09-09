@@ -1,6 +1,8 @@
 import axios from "axios";
-import { useUserStore } from "@/store/userStore";
 import { TradeStatus } from "@/enums/tradeStatus";
+if (typeof process === 'undefined') {
+    global.process = { env: {} };
+}
 
 // 환경변수에서 API URL 가져오기
 const API_BASE_URL =
@@ -13,7 +15,7 @@ const POST_URL = "/post-service";
 // axios 기본 설정 (쿠키 기반 인증)
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  timeout: 15000, // 15초로 변경
   headers: {
     "Content-Type": "application/json",
   },
@@ -23,34 +25,51 @@ const api = axios.create({
 // 요청 인터셉터 - accessToken 자동 주입
 api.interceptors.request.use(
   (config) => {
-    // localStorage에서 직접 토큰 가져오기
-    const userStorage = localStorage.getItem("user-storage");
-    let token = null;
-    if (userStorage) {
-      try {
-        const parsed = JSON.parse(userStorage);
-        token = parsed.state?.accessToken;
-      } catch (e) {
-        console.error("localStorage 파싱 실패:", e);
+
+      // 회원가입과 로그인은 토큰이 필요 없으므로 건너뛰기
+      const authNotRequired = [
+          '/user-service/auth/signup',
+          '/user-service/auth/login',
+          '/user-service/users/check'
+      ];
+
+      console.log("요청 URL 전체:", config.url); // 디버깅 추가
+
+      if (authNotRequired.some(path => config.url && config.url.includes(path))) {
+          console.log("인증 불필요 요청:", config.url);
+          console.log("헤더에 Authorization 있는지:", config.headers.Authorization); // 추가
+          delete config.headers.Authorization; // 강제로 제거
+          return config; // 토큰 없이 그대로 전송
       }
-    }
 
-    // 디버깅
-    console.log("API 요청 토큰:", token ? "존재함" : "없음");
-    console.log("요청 URL:", config.url);
+      // 나머지 요청에만 토큰 추가
+      const userStorage = localStorage.getItem("user-storage");
+      let token = null;
+      if (userStorage) {
+          try {
+              const parsed = JSON.parse(userStorage);
+              token = parsed.state?.accessToken;
+          } catch (e) {
+              console.error("localStorage 파싱 실패:", e);
+          }
+      }
 
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.warn("액세스 토큰이 없습니다");
-    }
+      // 디버깅
+      console.log("API 요청 토큰:", token ? "존재함" : "없음");
+      console.log("요청 URL:", config.url);
 
-    return config;
+      if (token) {
+          config.headers.Authorization = `Bearer ${token}`;
+      } else {
+          console.warn("액세스 토큰이 없습니다");
+      }
+
+      return config;
   },
-  (error) => {
-    console.error("요청 인터셉터 오류:", error);
-    return Promise.reject(error);
-  }
+    (error) => {
+        console.error("요청 인터셉터 오류:", error);
+        return Promise.reject(error);
+    }
 );
 
 // 응답 인터셉터 - 에러 처리
@@ -249,5 +268,67 @@ export const postAPI = {
   /** 삭제 */
   deletePost: (postId) => api.delete(`${POST_URL}/posts/${postId}`),
 };
+// Review Service API 함수들
+export const reviewAPI = {
+    // 리뷰 생성
+    createReview: (productId, userId, reviewInfo) =>
+        api.post(`/review-service/reviews/users/${userId}/products/${productId}`, reviewInfo),
 
+    // 상품별 리뷰 조회
+    getReviewsByProduct: (productId) =>
+        api.get(`/review-service/reviews?productId=${productId}`),
+
+    // 상품별 리뷰 통계 조회 (기존 함수)
+    getReviewStatsForProduct: (productId) =>
+        api.get(`/review-service/reviews/status?productId=${productId}`),
+
+    // 사용자 리뷰 통계 조회 (신규 추가)
+    getReviewStatsForUser: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}/status`),
+
+    // 리뷰 요약 조회
+    getSummary: (productId, sentiment) =>
+        api.get(`/review-service/reviews/summary?productId=${productId}&sentiment=${sentiment}`),
+
+    // 사용자 리뷰 목록 조회 (상품 정보와 판매자 정보 포함)
+    userReviewList: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}`),
+
+    // 내 리뷰 목록 조회 (상품 정보와 판매자 정보 포함)
+    getMyReviews: () =>
+        api.get(`/review-service/reviews/my`),
+
+    // 특정 리뷰 상세 조회
+    getReviewById: (reviewId) =>
+        api.get(`/review-service/reviews/${reviewId}`),
+
+    // 리뷰 수정
+    updateReview: (reviewId, reviewInfo) =>
+        api.put(`/review-service/reviews/${reviewId}`, reviewInfo),
+
+    // 리뷰 삭제
+    deleteReview: (reviewId) =>
+        api.delete(`/review-service/reviews/${reviewId}`),
+
+    // 사용자별 리뷰 개수 조회
+    getUserReviewCount: (userId) =>
+        api.get(`/review-service/reviews/users/${userId}/count`),
+
+    // 내 리뷰 개수 조회
+    getMyReviewCount: () =>
+        api.get(`/review-service/reviews/my/count`),
+
+    // 명예의 전당 (사용자별 총 리뷰 개수, 평균 별점 순위) 조회
+    getReviewRanking: () => api.get('/review-service/reviews/top3'),
+
+    // 사용자별 평균 별점 조회
+    getUserAverageRating: (userId) => api.get(`/review-service/reviews/users/${userId}/average-rating`),
+
+    // 상품 정보 API 호출
+    getProductInfo: (pId) => api.get(`/product-service/products/${pId}`),
+
+    // 판매자 닉네임 API 호출
+    getSellerNickName: (sellerId) => api.get(`/user-service/users/${sellerId}`),
+
+};
 export default api;
