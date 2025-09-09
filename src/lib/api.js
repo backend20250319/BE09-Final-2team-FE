@@ -15,7 +15,7 @@ const POST_URL = "/post-service";
 // axios 기본 설정 (쿠키 기반 인증)
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 15000, // 15초로 변경
+  timeout: 30000, // 30초로 변경
   headers: {
     "Content-Type": "application/json",
   },

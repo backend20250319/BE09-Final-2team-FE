@@ -209,7 +209,7 @@ const MyPage = () => {
                         </div>
                         <div className="transaction-item">
                             <span className="transaction-label">총 판매</span>
-                            <span className="transaction-value">{tradingSummary?.saleCount || 0}</span>
+                            <span className="transaction-value">{tradingSummary?.totalSalesCount || 0}</span>
                             <span className="transaction-unit">건</span>
                         </div>
                         <div className="transaction-item">
