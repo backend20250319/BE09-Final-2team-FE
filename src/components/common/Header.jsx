@@ -59,14 +59,13 @@ export default function Header() {
     try {
       const result = await logout();
       if (result.success) {
-        alert("로그아웃되었습니다.");
-        router.push("/"); // 메인으로 이동
+        // userStore에서 이미 메인페이지로 리다이렉트됨
+        console.log("로그아웃 성공");
       } else {
-        alert("로그아웃 중 오류가 발생했습니다.");
+        console.error("로그아웃 실패:", result.message);
       }
     } catch (error) {
       console.error("로그아웃 에러:", error);
-      alert("로그아웃 중 오류가 발생했습니다.");
     }
   };
 

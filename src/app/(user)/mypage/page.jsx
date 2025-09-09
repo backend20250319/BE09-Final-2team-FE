@@ -78,7 +78,21 @@ const MyPage = () => {
 
                 // 2. 대시보드 기본 정보 로드 (user.id가 있을 때만)
                 if (mounted && user?.id) {
-                    await getMypageDashboard(user.id);
+                    try {
+                        await getMypageDashboard(user.id);
+                    } catch (dashboardError) {
+                        console.error('대시보드 로딩 실패:', dashboardError.message);
+
+                        // 타임아웃이거나 404 에러인 경우 (신규 회원)
+                        if (dashboardError.message.includes('timeout') ||
+                            dashboardError.response?.status === 404) {
+                            console.log('신규 회원으로 판단 - 기본값으로 처리');
+                            // 에러를 throw하지 않고 계속 진행
+                        } else {
+                            // 다른 심각한 에러는 다시 throw
+                            throw dashboardError;
+                        }
+                    }
                 }
 
                 // 3. 탭별 데이터 로드
