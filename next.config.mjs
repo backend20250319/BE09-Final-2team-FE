@@ -20,9 +20,8 @@ const nextConfig = {
         pathname: "/**",
       },
       {
-        protocol: "http",
+        protocol: "https",
         hostname: "dev.macacolabs.site",
-        port: "8008",
         pathname: "/**",
       },
     ],
