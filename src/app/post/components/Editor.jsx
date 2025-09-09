@@ -38,7 +38,6 @@ function injectTypeAroundKillerCSS() {
   const style = document.createElement("style");
   style.id = id;
   style.textContent = `
-/* CKEditor type-around (삼각형 버튼, fake caret 등) 제거 */
 .ck-widget__type-around,
 .ck-widget__type-around__button,
 .ck-widget__type-around__button_before,
@@ -77,7 +76,7 @@ export default function Editor({ value = "", onChange }) {
           "underline",
           "|",
           "link",
-          "imageUpload",
+          "imageUpload",   // 에디터 내부 업로드(=base64)만 사용
           "mediaEmbed",
           "insertTable",
           "blockQuote",
@@ -93,29 +92,10 @@ export default function Editor({ value = "", onChange }) {
       extraPlugins: [Base64UploadAdapterPlugin],
       heading: {
         options: [
-          {
-            model: "paragraph",
-            title: "Paragraph",
-            class: "ck-heading_paragraph",
-          },
-          {
-            model: "heading1",
-            view: "h1",
-            title: "Heading 1",
-            class: "ck-heading_heading1",
-          },
-          {
-            model: "heading2",
-            view: "h2",
-            title: "Heading 2",
-            class: "ck-heading_heading2",
-          },
-          {
-            model: "heading3",
-            view: "h3",
-            title: "Heading 3",
-            class: "ck-heading_heading3",
-          },
+          { model: "paragraph", title: "Paragraph", class: "ck-heading_paragraph" },
+          { model: "heading1", view: "h1", title: "Heading 1", class: "ck-heading_heading1" },
+          { model: "heading2", view: "h2", title: "Heading 2", class: "ck-heading_heading2" },
+          { model: "heading3", view: "h3", title: "Heading 3", class: "ck-heading_heading3" },
         ],
       },
       image: {
@@ -148,52 +128,19 @@ export default function Editor({ value = "", onChange }) {
           max-height: 400px !important;
           overflow-y: auto !important;
         }
-        .ck-content h1 {
-          font-size: 1.875rem;
-          line-height: 2.25rem;
-          font-weight: 700;
-        }
-        .ck-content h2 {
-          font-size: 1.5rem;
-          line-height: 2rem;
-          font-weight: 700;
-        }
-        .ck-content h3 {
-          font-size: 1.25rem;
-          line-height: 1.75rem;
-          font-weight: 700;
-        }
-        .ck-content ul {
-          list-style: disc !important;
-          margin-left: 1.25rem;
-          padding-left: 1rem;
-        }
-        .ck-content ol {
-          list-style: decimal !important;
-          margin-left: 1.25rem;
-          padding-left: 1rem;
-        }
-        .ck-content li {
-          margin: 0.25rem 0;
-        }
+        .ck-content h1 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 700; }
+        .ck-content h2 { font-size: 1.5rem; line-height: 2rem; font-weight: 700; }
+        .ck-content h3 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 700; }
+        .ck-content ul { list-style: disc !important; margin-left: 1.25rem; padding-left: 1rem; }
+        .ck-content ol { list-style: decimal !important; margin-left: 1.25rem; padding-left: 1rem; }
+        .ck-content li { margin: 0.25rem 0; }
         .ck-content blockquote {
-          border-left: 4px solid #e5e7eb;
-          margin: 1rem 0;
-          padding: 0.25rem 0 0.25rem 1rem;
-          color: #4b5563;
+          border-left: 4px solid #e5e7eb; margin: 1rem 0; padding: 0.25rem 0 0.25rem 1rem; color: #4b5563;
         }
-        .ck-content figure,
-        .ck-content figure.image,
-        .ck-content .image {
-          position: static !important;
-          background: none !important;
-          border: 0 !important;
+        .ck-content figure, .ck-content figure.image, .ck-content .image {
+          position: static !important; background: none !important; border: 0 !important;
         }
-        .ck-content img {
-          max-width: 100% !important;
-          height: auto !important;
-          display: block !important;
-        }
+        .ck-content img { max-width: 100% !important; height: auto !important; display: block !important; }
       `}</style>
 
       <CKEditor
@@ -203,25 +150,20 @@ export default function Editor({ value = "", onChange }) {
         onReady={(editor) => {
           editorRef.current = editor;
           try {
-            injectTypeAroundKillerCSS(); // 삼각형 제거 CSS 주입
-            // IME 입력 끝날 때 동기화
+            injectTypeAroundKillerCSS();
             editor.editing.view.document.on("compositionend", () => {
-              if (!destroyedRef.current) onChange?.(editor.getData());
+              if (!destroyedRef.current) onChange && onChange(editor.getData());
             });
           } catch {}
         }}
         onChange={(_, editor) => {
           if (!destroyedRef.current) {
-            try {
-              onChange?.(editor.getData());
-            } catch {}
+            try { onChange && onChange(editor.getData()); } catch {}
           }
         }}
         onBlur={(_, editor) => {
           if (!destroyedRef.current) {
-            try {
-              onChange?.(editor.getData());
-            } catch {}
+            try { onChange && onChange(editor.getData()); } catch {}
           }
         }}
       />

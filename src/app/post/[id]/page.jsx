@@ -121,6 +121,7 @@ export default function PostDetailPage() {
   const [toastVisible, setToastVisible] = useState(false);
   const [deleteTargetCommentId, setDeleteTargetCommentId] = useState(null);
   const [showDeletePostModal, setShowDeletePostModal] = useState(false);
+  const [deleting, setDeleting] = useState(false); // ✅ 중복 삭제 방지
 
   const [likes, setLikes] = useState(0);
   const [comments, setComments] = useState([]);
@@ -202,18 +203,30 @@ export default function PostDetailPage() {
     fetchPost();
   }, [fetchPost]);
 
-  /* ---------- actions (현재 백엔드 미구현: 알림/낙관적 UI 처리) ---------- */
-  const onDelete = useCallback(
-    async () => {
-      // alert("서버에 삭제 API가 아직 없어요. 백엔드 준비되면 연결할게요!");
-      // 준비 후:
-      await postAPI.deletePost(post.id);
-      // router.push(`/post?tab=${backTab}`);
-    },
-    [
-      /* post, router, backTab */
-    ]
-  );
+  /* ---------- actions ---------- */
+  const onDelete = useCallback(async () => {
+    if (!post?.id || deleting) return;
+    try {
+      setDeleting(true);
+      await postAPI.deletePost(post.id); // ✅ 소프트삭제 호출
+      // 목록으로 이동(뒤로 가기 눌러도 삭제된 상세가 안 남도록 replace)
+      router.replace(`/post?tab=${backTab}`);
+    } catch (e) {
+      console.error(e);
+      const status = e?.response?.status ?? e?.status;
+      if (status === 401) {
+        alert("로그인이 필요합니다.");
+      } else if (status === 403) {
+        alert("본인 글만 삭제할 수 있어요.");
+      } else if (status === 404) {
+        alert("이미 삭제되었거나 존재하지 않는 글입니다.");
+      } else {
+        alert("삭제에 실패했어요. 잠시 후 다시 시도해주세요.");
+      }
+    } finally {
+      setDeleting(false);
+    }
+  }, [post?.id, router, backTab, deleting]);
 
   const onEdit = useCallback(() => {
     if (!post) return;
@@ -234,9 +247,6 @@ export default function PostDetailPage() {
     if (!post) return;
     // 서버 미구현 → 로컬 토글만
     setLikes((v) => (v > 0 ? 0 : 1));
-    // 준비 후:
-    // if (nextLikes > 0) await postAPI.like(post.id);
-    // else await postAPI.unlike(post.id);
   }, [post]);
 
   const onAddComment = useCallback(async () => {
@@ -253,10 +263,6 @@ export default function PostDetailPage() {
     };
     setComments((prev) => [...prev, newC]);
     setCommentInput("");
-
-    // 준비 후:
-    // const saved = await postAPI.addComment(post.id, { content: text });
-    // setComments((prev) => [...prev, saved]);
   }, [commentInput, post]);
 
   const onDeleteComment = useCallback(
@@ -264,7 +270,6 @@ export default function PostDetailPage() {
       if (!post) return;
       // 서버 미구현 → 로컬 삭제
       setComments((prev) => prev.filter((c) => c.id !== commentId));
-      // 준비 후: await postAPI.deleteComment(post.id, commentId);
     },
     [post]
   );
@@ -273,32 +278,17 @@ export default function PostDetailPage() {
   const onJoin = useCallback(async () => {
     if (!post || isFull || isClosedRecruit) return;
     alert("공동구매 참여 API 미구현 상태입니다.");
-    // 준비 후:
-    // const name = `익명맘-${deviceId.slice(-4)}`;
-    // await postAPI.joinGroupbuy(post.id, { name });
-    // setJoinedHere(true);
-    // setLastJoinedName(name);
-    // await fetchPost();
-  }, [post, isFull, isClosedRecruit /*, deviceId, fetchPost */]);
+  }, [post, isFull, isClosedRecruit]);
 
   const onCancelJoin = useCallback(async () => {
     if (!post || !joinedHere || isOwner) return;
     alert("공동구매 참여취소 API 미구현 상태입니다.");
-    // 준비 후:
-    // await postAPI.cancelJoin(post.id);
-    // setJoinedHere(false);
-    // setShowListModal(false);
-    // await fetchPost();
-  }, [post, joinedHere, isOwner /*, fetchPost */]);
+  }, [post, joinedHere, isOwner]);
 
   const doCloseRecruitment = useCallback(async () => {
     if (!post) return;
     alert("공동구매 마감 API 미구현 상태입니다.");
-    // 준비 후:
-    // await postAPI.closeGroupbuy(post.id);
-    // setShowCloseModal(false);
-    // await fetchPost();
-  }, [post /*, fetchPost */]);
+  }, [post]);
 
   // auction
   const onBid = useCallback(async () => {
@@ -315,11 +305,7 @@ export default function PostDetailPage() {
       return;
     }
     alert("입찰 API 미구현 상태입니다.");
-    // 준비 후:
-    // await postAPI.placeBid(post.id, { price: nextPrice });
-    // setBidInput("");
-    // await fetchPost();
-  }, [post, bidInput /*, fetchPost */]);
+  }, [post, bidInput]);
 
   /* ---------- render ---------- */
   if (loading) {
@@ -422,9 +408,12 @@ export default function PostDetailPage() {
             </button>
             <span className="text-gray-300">|</span>
             <button
-              onClick={() => setShowDeletePostModal(true)}
-              className="text-gray-400 hover:text-red-500"
+              onClick={() => !deleting && setShowDeletePostModal(true)}
+              className={`text-gray-400 hover:text-red-500 ${
+                deleting ? "opacity-50 cursor-not-allowed" : ""
+              }`}
               type="button"
+              disabled={deleting}
             >
               삭제
             </button>
@@ -612,11 +601,12 @@ export default function PostDetailPage() {
           onCancel={() => setShowDeletePostModal(false)}
           onConfirm={() => {
             setShowDeletePostModal(false);
-            onDelete();
+            onDelete(); // ✅ 실제 삭제 실행
           }}
-          confirmText="삭제"
+          confirmText={deleting ? "삭제 중..." : "삭제"}
           cancelText="취소"
           type={MODAL_TYPES.CONFIRM_CANCEL}
+          disabled={deleting}
         />
 
         {/* 댓글 입력칸 */}
