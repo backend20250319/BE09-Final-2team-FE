@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import ConfirmModal, { MODAL_TYPES } from '@/components/common/ConfirmModal';
 import { validatePassword } from '@/app/(user)/components/passwordUtils';
 import { createValidationSetter } from '@/app/(user)/components/duplicateUtils';
-import { validateEmail, validateName, validateLoginId } from '@/app/(user)/components/emailUtils';
+import { validateEmail, validateName, validateLoginId } from '@/app/(user)/components/formValidation';
 import './find-account.css';
 
 const FindAccount = () => {

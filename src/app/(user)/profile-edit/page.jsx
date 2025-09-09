@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import Sidebar from "@/components/common/Sidebar";
 import ConfirmModal, { MODAL_TYPES } from "@/components/common/ConfirmModal";
 import { createValidationSetter, createDuplicateCheckHandler } from '@/app/(user)/components/duplicateUtils';
-import { validateEmail } from '@/app/(user)/components/emailUtils';
+import { validateEmail } from '@/app/(user)/components/formValidation';
 import { formatPhoneNumber, validatePhoneNumber } from '@/app/(user)/components/phoneUtils';
 import './profile-edit.css';
 import { userAPI } from '@/lib/api';

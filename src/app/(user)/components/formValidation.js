@@ -34,3 +34,27 @@ export const validateLoginId = (loginId) => {
 
     return { isValid: true, message: '' };
 };
+
+export const validatePhone = (phone) => {
+    if (!phone.trim()) {
+        return { isValid: false, message: '휴대폰번호를 입력해주세요' };
+    }
+
+    // 숫자만 추출
+    const numbers = phone.replace(/\D/g, '');
+
+    if (numbers.length < 10) {
+        return { isValid: false, message: '휴대폰번호가 너무 짧습니다' };
+    }
+
+    if (numbers.length > 11) {
+        return { isValid: false, message: '휴대폰번호가 너무 깁니다' };
+    }
+
+    // 백엔드 패턴과 일치: ^01[0-9]{8,9}$
+    if (!numbers.startsWith('01')) {
+        return { isValid: false, message: '01로 시작하는 번호를 입력해주세요' };
+    }
+
+    return { isValid: true, message: '' };
+};

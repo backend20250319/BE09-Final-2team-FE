@@ -16,10 +16,12 @@ export default function Login() {
     const [isButtonDisabled, setIsButtonDisabled] = useState(true);
     const [isLoading, setIsLoading] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
+    const [isRedirecting, setIsRedirecting] = useState(false);
 
     // 이미 로그인된 경우만 리다이렉트 (무한 루프 방지)
     useEffect(() => {
         if (isAuthenticated) {
+            setIsRedirecting(true);
             router.push('/');
         }
     }, [isAuthenticated, router]); // router는 Next.js에서 안정적이므로 생략 가능
@@ -32,6 +34,11 @@ export default function Login() {
             setIsButtonDisabled(true);
         }
     }, [loginId, password]);
+
+    // 조건부 return은 모든 hooks 이후에, 리다이렉트 중이면 로딩 화면 표시
+    if (isRedirecting) {
+        return <div className="login-root"><div>메인 페이지로 이동 중...</div></div>;
+    }
 
     const handleUserIdChange = (e) => {
         setLoginId(e.target.value);
